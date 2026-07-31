@@ -47,6 +47,8 @@
  */
 
 
+const MASK64 = (1n << 64n) - 1n
+
 /** Keccak-f[1600] round constants — the ι step. */
 const ROUND_CONSTANTS: readonly bigint[] = Object.freeze([
   0x0000000000000001n, 0x0000000000008082n, 0x800000000000808an, 0x8000000080008000n,
