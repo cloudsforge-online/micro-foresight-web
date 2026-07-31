@@ -36,12 +36,6 @@ import { OUTCOME_NO, OUTCOME_YES } from '../lib/abi.ts'
 import { oddsBps, totalOf, type Pools } from '../lib/pool.ts'
 import { formatBps, formatEmber } from '../lib/units.ts'
 
-/** The two sides, named once. `0` is YES and `1` is NO — `ForesightMarket.sol:59-60`. */
-export const SIDE = {
-  [OUTCOME_YES]: { label: 'Yes', className: 'fs-yes' },
-  [OUTCOME_NO]: { label: 'No', className: 'fs-no' },
-} as const
-
 export function PoolRatioBar({
   pools,
   note,
@@ -74,14 +68,24 @@ export function PoolRatioBar({
           aria-label={`Yes ${formatBps(yesBps)} of the pool, No ${formatBps(noBps)} of the pool.`}
         >
           {/*
-            Percentages as flex-basis rather than widths, so the 2px gap between the segments comes
-            out of the layout instead of out of the data. A gap subtracted from one segment's width
-            would make the two marks disagree with the numbers printed on them.
+            The share as flex-BASIS, not flex-grow, and the reason is the degenerate case. With
+            `flexGrow` a side holding 0% of the pool gets no growth and therefore falls back to its
+            content width — so a 100/0 market would draw a visible Yes segment wide enough to hold
+            the words "Yes 0.0%". A mark whose length disagrees with the number printed on it is
+            the whole failure a bar chart exists to avoid.
+
+            With a percentage basis the two bases sum to 100% while the line is 2px shorter (the
+            gap), so flex-shrink takes those 2px PROPORTIONALLY from both. The gap comes out of the
+            layout rather than out of one side's data, and `min-width: 0` in the stylesheet lets a
+            zero share reach zero width instead of being propped up by its own label.
           */}
-          <div className="fs-bar__seg fs-bar__seg--yes" style={{ flexGrow: yesBps }}>
+          <div
+            className="fs-bar__seg fs-bar__seg--yes"
+            style={{ flex: `0 1 ${yesBps / 100}%` }}
+          >
             <span className="fs-bar__label">Yes {formatBps(yesBps)}</span>
           </div>
-          <div className="fs-bar__seg fs-bar__seg--no" style={{ flexGrow: noBps }}>
+          <div className="fs-bar__seg fs-bar__seg--no" style={{ flex: `0 1 ${noBps / 100}%` }}>
             <span className="fs-bar__label">No {formatBps(noBps)}</span>
           </div>
         </div>
