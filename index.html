@@ -1,0 +1,46 @@
+<!doctype html>
+<!--
+  data-cf-product picks the accent ramp and data-cf-substrate the ash ramp, both from
+  @cloudsforge/ui/tokens.css. They are on <html> and set STATICALLY here rather than by React,
+  because a page that paints before the attributes land flashes the default and then changes
+  colour.
+
+  `foresight` HAS NO SELECTOR IN tokens.css, AND THAT IS THE CURRENT CORRECT ANSWER. The surface
+  registry in @cloudsforge/ui/surfaces.ts has no `foresight` key at all — this product was added
+  to the programme by docs/ecosystem/19-new-products.md after the registry was written, and
+  micro-ui is single-owner, so this repository reports the gap rather than editing it. An
+  unmatched value inherits `--cf-accent: var(--cf-ember)` from `:root`, which is the company
+  ember — exactly what `hub` and `site` are given explicitly. So the fallback is the answer we
+  would have chosen anyway, and the day the registry gains a `foresight` accent this page picks it
+  up with no change here. test/registry.test.ts pins both halves of that sentence.
+-->
+<html lang="en-GB" data-cf-product="foresight" data-cf-substrate="warm">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="colour-scheme" content="dark" />
+    <!--
+      The build that produced this bundle. Stamped by the Dockerfile, read by src/lib/obs.ts, and
+      the reason an error report can be pinned to the deploy that introduced it. It is an identity
+      rather than a configuration: it names the artefact, it does not tell it where it is running.
+    -->
+    <meta name="cf-release" content="dev" />
+
+    <title>Forge Foresight</title>
+    <meta
+      name="description"
+      content="Prediction markets on Hearth. Parimutuel, settled by the contract, with every market's sources and resolution criteria published before you stake."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Forge Foresight" />
+    <meta
+      property="og:description"
+      content="Prediction markets on Hearth. Parimutuel, settled by the contract, with every market's sources and resolution criteria published before you stake."
+    />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
