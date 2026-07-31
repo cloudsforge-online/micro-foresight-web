@@ -4,13 +4,12 @@
  * The bar is `CloudsForgeBar` from @cloudsforge/ui and is never reimplemented — it is the thing
  * that makes moving between surfaces feel like one application.
  *
- * `current={BAR_CURRENT}` marks NOTHING as current in the switcher, and that is correct: Forge
- * Foresight is not one of the five products and is not in the registry at all yet. See the header
- * of `lib/hosts.ts`.
+ * `current={PRODUCT}` marks Foresight as the current entry in the switcher, which it now is:
+ * `ui/packages/ui/src/surfaces.ts:169` registers it as a product with `inSwitcher: true`.
  */
 import { CloudsForgeBar } from '@cloudsforge/ui'
 import { NavLink, Outlet } from 'react-router-dom'
-import { BAR_CURRENT } from '../lib/hosts.ts'
+import { PRODUCT } from '../lib/hosts.ts'
 import { NAV } from '../lib/routes.ts'
 import { useSession } from '../lib/auth.tsx'
 
@@ -23,7 +22,7 @@ export function AppShell() {
         Skip to the markets
       </a>
       <CloudsForgeBar
-        current={BAR_CURRENT}
+        current={PRODUCT}
         account={account}
         onSignIn={() => signIn()}
         onSignOut={signOut}

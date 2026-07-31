@@ -1,0 +1,259 @@
+# Continuous integration.
+#
+# ────────────────────────────────────────────────────────────────────────────────────────────────
+# THE `check` AND `image` JOBS BELOW ARE TEMPORARY, for the same two reasons hub-web's are.
+#
+#   1. @cloudsforge/ui is unpublished, and this repository consumes it as `link:../ui/packages/ui`.
+#      The reusable `web-ci.yml` does a single checkout and then `pnpm install --frozen-lockfile`,
+#      which cannot resolve a sibling directory that is not there. The day the design system is
+#      published and the specifier becomes `^1.0.0`, everything from `check:` to the end of
+#      `image:` is deleted and replaced by:
+#
+#        jobs:
+#          ci:
+#            uses: cloudsforge-online/micro-org/.github/workflows/web-ci.yml@main
+#            with:
+#              app: foresight-web
+#              deep-link-path: /markets/11111111-2222-3333-4444-555555555555
+#            permissions:
+#              contents: read
+#              packages: read
+#
+#   2. The reusable workflow's `image` job checks a deep link returns 200, which this app satisfies
+#      — but it cannot also assert that an UNKNOWN path answers 404, and that is the rule this
+#      estate's nginx.conf exists to keep. So the image is checked here, where the probe can make
+#      both assertions.
+#
+# The measured target in docs/ecosystem/03 §5 is zero repositories with a bespoke CI file, so treat
+# every line from `check:` down as a liability with a deletion date rather than as something to
+# extend.
+# ────────────────────────────────────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: foresight-web }
+
+      # Temporary, for the same reason as the Dockerfile's second build context: the design system
+      # is unpublished and resolves through `link:../ui/packages/ui`.
+      - uses: actions/checkout@v4
+        with:
+          repository: cloudsforge-online/micro-ui
+          path: ui
+          # micro-ui is private; without a contents:read token this checkout 404s and the job dies
+          # before install. Same wiring as the service repos' runtime checkout.
+          token: ${{ secrets.ESTATE_READ_TOKEN }}
+
+      # Pinned, because the checkout lives at foresight-web/ and the action looks for the
+      # packageManager field in the workspace root, where there is no package.json.
+      - uses: pnpm/action-setup@v4
+        with: { version: 11.9.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: foresight-web/pnpm-lock.yaml }
+
+      # `link:` resolves to the sibling's own node_modules, so the design system must be installed
+      # before this repository is — without this, `tsc` cannot resolve ../ui's own imports (react,
+      # react/jsx-runtime) when it typechecks the linked sources.
+      - name: Install the sibling design system
+        run: pnpm --dir ui install --frozen-lockfile
+
+      - name: Install
+        working-directory: foresight-web
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        working-directory: foresight-web
+        run: pnpm typecheck
+
+      - name: Test
+        working-directory: foresight-web
+        run: pnpm test
+
+      - name: Build
+        working-directory: foresight-web
+        run: pnpm build
+
+      # A frontend that builds to nothing is a blank page, not a build failure. The previous estate
+      # served SPAs from the API process and shipped an image with no dist in it.
+      - name: The bundle exists
+        working-directory: foresight-web
+        run: |
+          test -f dist/index.html || { echo "::error::dist/index.html is missing after a successful build"; exit 1; }
+          echo "ok: $(find dist -type f | wc -l | tr -d ' ') files in dist"
+
+  rules:
+    name: Estate rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No build-time configuration
+        # The same rule as test/no-build-time-config.test.ts, checked again here so it fails even if
+        # somebody deletes the test along with the line it forbids. A `VITE_` variable is read at
+        # build time and frozen into the artefact, and an artefact with an environment frozen into it
+        # has to be rebuilt to be promoted — which means the thing that reaches production is not the
+        # thing that passed CI.
+        run: |
+          set -uo pipefail
+          if grep -rn --include='*.ts' --include='*.tsx' --include='*.html' \
+               -e 'import\.meta\.env' -e 'VITE_' src index.html; then
+            echo "::error::this bundle must read no build-time environment; hosts come from cloudsforgeHosts() at runtime"
+            exit 1
+          fi
+          echo "ok: no build-time environment"
+
+      - name: No hard-coded CloudsForge hostname
+        # A literal hostname is a second, unversioned copy of the surface registry, and the copy is
+        # the one that will be wrong.
+        run: |
+          set -uo pipefail
+          if grep -rn --include='*.ts' --include='*.tsx' 'cloudsforge\.online' src; then
+            echo "::error::resolve hosts through cloudsforgeHosts() rather than naming them"
+            exit 1
+          fi
+          echo "ok: no literal hostnames in src"
+
+      - name: The SPA fallback keeps its 404
+        # Comments are stripped first. nginx.conf's own header QUOTES the directive it forbids, in
+        # order to explain why the routes are enumerated by hand, so a grep over the raw file matches
+        # the warning and fails a correct config.
+        run: |
+          set -uo pipefail
+          directives=$(grep -v '^[[:space:]]*#' nginx.conf)
+          if printf '%s\n' "$directives" | grep -nE 'try_files[[:space:]]+\$uri[[:space:]]+(\$uri/[[:space:]]+)?/index\.html'; then
+            echo "::error::unknown paths must 404; serve the shell through error_page 404 /index.html"
+            exit 1
+          fi
+          printf '%s\n' "$directives" | grep -q 'error_page 404 /index.html'
+          echo "ok: unknown paths answer 404"
+
+      - name: The auth callback is redeemed before the app renders
+        # The hand-off code has to leave the address bar before the exchange goes over the wire, and
+        # that only happens if bootstrapSession() runs before React mounts.
+        run: grep -q 'bootstrapSession' src/main.tsx
+
+      - name: The route table, the navigation and nginx agree
+        # Already asserted by test/routes.test.ts; repeated here so deleting the test does not
+        # silently delete the rule. A route in the router but not in nginx works under `pnpm dev`
+        # and 404s on the first hard refresh in production.
+        run: test -f test/routes.test.ts && grep -q 'nginx.conf' test/routes.test.ts
+
+      - name: Every foresight route carries the line it was verified against
+        # THE RULE THIS REPOSITORY EXISTS TO NOT BREAK AGAIN. Two clients in this estate were
+        # written against imagined surfaces — `micro-wallet` called /v1/quotes at a service serving
+        # /rates, and `micro-market` 403'd every listing against a policy service with no /v1 routes
+        # at all. Every path in the client cites `server.ts:<line>`, and the test asserts the
+        # REQUEST rather than the response.
+        run: |
+          set -uo pipefail
+          if grep -n "'/v1" src/lib/foresight.ts; then
+            echo "::error::micro-foresight registers no /v1 routes; see foresight/src/server.ts:353-800"
+            exit 1
+          fi
+          grep -q 'server.ts:402' src/lib/foresight.ts
+          grep -q 'server.ts:417' src/lib/foresight.ts
+          grep -q 'server.ts:448' src/lib/foresight.ts
+          grep -q 'server.ts:483' src/lib/foresight.ts
+          grep -q 'server.ts:391' src/lib/foresight.ts
+          echo "ok: every route cites the line it was read from"
+
+      - name: Money is never a float
+        # `Number()` or `parseFloat` near a wei amount loses the bottom of an 18-decimal value,
+        # which is exactly the region a contract's integer division depends on.
+        run: |
+          set -uo pipefail
+          if grep -rn --include='*.ts' --include='*.tsx' -e 'parseFloat' -e 'toFixed' src; then
+            echo "::error::amounts are bigint end to end; see src/lib/units.ts"
+            exit 1
+          fi
+          echo "ok: no float arithmetic near an amount"
+
+  image:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: foresight-web }
+      - uses: actions/checkout@v4
+        with:
+          repository: cloudsforge-online/micro-ui
+          path: ui
+          token: ${{ secrets.ESTATE_READ_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: foresight-web
+          build-contexts: uipkg=ui
+          build-args: RELEASE=${{ github.sha }}
+          push: false
+          load: true
+          tags: foresight-web:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: The image serves the SPA, and 404s an address it does not own
+        run: |
+          set -euo pipefail
+          docker run -d --name ci-foresight-web -p 127.0.0.1:55480:8080 foresight-web:ci
+          for attempt in $(seq 1 20); do
+            code=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/ || true)
+            [ "$code" = "200" ] && break
+            sleep 1
+          done
+          [ "${code:-}" = "200" ] || { echo "::error::the image returned ${code:-no answer} for /"; docker logs --tail 60 ci-foresight-web; exit 1; }
+
+          # A route this app OWNS must survive a hard refresh. A market page is the address people
+          # paste at each other, so it is the one worth proving.
+          deep=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/markets/11111111-2222-3333-4444-555555555555 || true)
+          [ "$deep" = "200" ] || { echo "::error::a market deep link returned $deep — an owned route must be served the shell"; exit 1; }
+
+          portfolio=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/portfolio/0x00112233445566778899aabbccddeeff00112233 || true)
+          [ "$portfolio" = "200" ] || { echo "::error::a positions deep link returned $portfolio"; exit 1; }
+
+          # A route it does NOT own must answer 404 while still serving the shell, so the reader
+          # gets a real page and the status line tells the truth. This is the assertion the org's
+          # reusable image job cannot make, because it requires a 200 for any deep link.
+          unknown=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/nope/not/a/route || true)
+          [ "$unknown" = "404" ] || { echo "::error::an unknown address returned $unknown; it must be 404"; exit 1; }
+          curl -s -m 5 http://127.0.0.1:55480/nope/not/a/route | grep -q '<div id="root">' \
+            || { echo "::error::the 404 did not serve the app shell"; exit 1; }
+
+          # A missing asset must 404 on its own terms rather than being answered with HTML.
+          asset=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/assets/does-not-exist.js || true)
+          [ "$asset" = "404" ] || { echo "::error::a missing asset returned $asset"; exit 1; }
+
+          # The image must carry no environment file.
+          docker run --rm --entrypoint sh foresight-web:ci -c 'ls -a /usr/share/nginx/html | grep -c "^\.env" || true' | grep -qx 0 \
+            || { echo "::error::an env file reached the image"; exit 1; }
+
+          echo "ok: owned routes are served, unknown addresses 404 with the shell, no env in the image"
+      - name: Down
+        if: always()
+        run: docker rm -f ci-foresight-web || true
+
+  hygiene:
+    # The org's reusable secret check. Cheap, and it catches the failure that cannot be undone: a
+    # secret pushed to a repository is compromised the moment it lands, and rotating it is the only
+    # remedy.
+    uses: cloudsforge-online/micro-org/.github/workflows/secret-hygiene.yml@main
+    permissions:
+      contents: read

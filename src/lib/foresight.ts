@@ -201,9 +201,13 @@ export interface CategoryCatalogue {
  * checked here as well, so a bad value is a bug caught in a test rather than a 400 rendered at a
  * reader who cannot act on it.
  *
+ * `async` so that a refusal is a REJECTED PROMISE rather than a synchronous throw. `useResource`
+ * calls its loader inside an effect and catches on the promise; a throw from the call itself would
+ * escape that catch and take the render down instead of showing the failed state.
+ *
  * Unauthenticated: the route calls neither `authenticate` nor `requireAdmin`.
  */
-export function listMarkets(
+export async function listMarkets(
   opts: { status?: MarketStatus | undefined; limit?: number | undefined; signal?: AbortSignal } = {},
 ): Promise<{ markets: readonly MarketView[] }> {
   const query: Record<string, string | number> = {}
@@ -217,7 +221,7 @@ export function listMarkets(
     }
     query['limit'] = opts.limit
   }
-  return api<{ markets: readonly MarketView[] }>('/markets', {
+  return await api<{ markets: readonly MarketView[] }>('/markets', {
     // No token. Browsing is public, and sending one would make an anonymous read look
     // authenticated in the service's logs.
     auth: false,

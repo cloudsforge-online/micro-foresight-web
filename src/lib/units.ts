@@ -62,7 +62,9 @@ export function isStakeAmount(text: string): boolean {
  */
 export function toWei(text: string | null | undefined): bigint | null {
   if (text === null || text === undefined) return null
-  const match = /^(\d+)(?:\.(\d{0,18}))?$/.exec(text.trim())
+  // `\d{1,18}` and not `\d{0,18}`: a trailing bare dot (`1.`) is a typo, not the number one, and
+  // accepting it here would make this function disagree with `STAKE_AMOUNT` about the same string.
+  const match = /^(\d+)(?:\.(\d{1,18}))?$/.exec(text.trim())
   if (!match) return null
   const whole = match[1] ?? '0'
   const fraction = (match[2] ?? '').padEnd(EMBER_DECIMALS, '0')

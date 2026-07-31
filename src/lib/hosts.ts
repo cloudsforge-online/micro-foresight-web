@@ -2,28 +2,27 @@
  * Where this app talks to, resolved at runtime.
  *
  * `cloudsforgeHosts()` reads `window.location.hostname` on every call, so the same bundle
- * addresses `http://localhost:4021` when served from localhost and `https://foresight.<apex>`
+ * addresses this service on localhost when served from localhost and `https://foresight.<apex>`
  * when served from the apex. Nothing here reads a build-time constant; see vite.config.ts.
  *
- * ── THE SURFACE REGISTRY HAS NO `foresight` KEY, AND THIS FILE IS THE CONSEQUENCE ─────────────
+ * ── ONE LOCAL OVERRIDE, AND IT IS A DEFECT IN micro-ui, NOT A PREFERENCE ──────────────────────
  *
- * `@cloudsforge/ui/surfaces.ts` enumerates twenty-one surfaces and Forge Foresight is not one of
- * them: this product was added to the programme by `docs/ecosystem/19-new-products.md` after the
- * registry was written. `micro-ui` is single-owner, so this repository REPORTS that gap rather
- * than editing it, and resolves its own host here in the meantime.
+ * `@cloudsforge/ui/surfaces.ts` gives `foresight` `devPort: 4011`. Two things are wrong with that
+ * and both bite only in local development:
  *
- * The resolution is deliberately DERIVED FROM the registry rather than written beside it:
+ *   1. **It collides with `beacon`, which is also 4011.** Two surfaces cannot share a localhost
+ *      port, and whichever process bound it first answers for both.
+ *   2. **The service itself listens on 4021** — `micro-foresight/.env.example:13`, `PORT=4021`.
  *
- *   - `site` is the apex — its `subdomain` is `''` — so `cloudsforgeHosts().site` is exactly
- *     `https://<apex>` in production and `http://localhost:3000` in dev. Taking the apex from
- *     there means the known-subdomain stripping in `cloudsforgeHosts()` (which is what makes a
- *     preview deployment at `pr-42.example.dev` resolve to itself rather than to a guess) is
- *     applied to this host too, without being reimplemented.
- *   - The dev port is the service's own `PORT`, `foresight/.env.example:13`.
+ * So `cloudsforgeHosts().foresight` resolves to `http://localhost:4011` in a local stack, which is
+ * Beacon. Every request this app makes under `pnpm dev` would go to the wrong service and fail in
+ * a way that looks like this app being wrong.
  *
- * When the registry gains a `foresight` entry, `FORESIGHT_SUBDOMAIN` and `FORESIGHT_DEV_PORT`
- * below are deleted and `foresightBase()` becomes the same two lines every other app has.
- * `test/registry.test.ts` fails on the day that happens, so nobody has to remember.
+ * `micro-ui` is single-owner, so this repository REPORTS that and overrides only the port, only on
+ * a local host. The SUBDOMAIN comes from the registry and is correct, so production and every
+ * preview deployment resolve through `cloudsforgeHosts()` untouched. `test/registry.test.ts` fails
+ * the day the registry's port is corrected, at which point `LOCAL_SERVICE_PORT` and the branch
+ * that uses it are deleted and this file becomes the same six lines every other app has.
  */
 import { cloudsforgeHosts, type CloudsForgeHosts, type SurfaceKey } from '@cloudsforge/ui'
 
@@ -31,46 +30,41 @@ import { cloudsforgeHosts, type CloudsForgeHosts, type SurfaceKey } from '@cloud
 export const APP_NAME = 'foresight'
 
 /**
- * What is passed to the shared bar as `current`.
+ * The surface this application IS.
  *
- * The switcher marks an entry current by matching this against its own keys, and Foresight is in
- * neither the registry nor the switcher — so nothing is marked, the trigger reads "Products", and
- * that is the correct rendering: a reader on Foresight is not inside one of the five products.
- * `site` produces exactly that behaviour today and is type-legal, which a cast to a key the type
- * does not have would not be.
- *
- * This is a placeholder for a registry entry, not a claim that this app is the marketing site.
- * `test/registry.test.ts` pins the behaviour that makes it safe — `site` is `inSwitcher: false` —
- * so if that ever changes, the bar does not quietly start telling readers they are on the site.
+ * `foresight` is a product in the registry (`ui/packages/ui/src/surfaces.ts:169`) and IS a
+ * switcher entry, so passing it as `current` marks Foresight as the current product — which is
+ * correct, and is what a reader who opens the switcher from here should see.
  */
-export const BAR_CURRENT: SurfaceKey = 'site'
+export const PRODUCT: SurfaceKey = 'foresight'
 
-/** `foresight.<apex>` in production. Not in the registry yet; see the header. */
-const FORESIGHT_SUBDOMAIN = 'foresight'
-
-/** `micro-foresight/.env.example:13` — `PORT=4021`. */
-const FORESIGHT_DEV_PORT = 4021
+/**
+ * The port `micro-foresight` actually listens on locally — `micro-foresight/.env.example:13`.
+ *
+ * Delete with the branch that uses it when the registry's `devPort` is corrected; see the header.
+ */
+const LOCAL_SERVICE_PORT = 4021
 
 /** Every CloudsForge base URL, for the current environment. */
 export function hosts(): CloudsForgeHosts {
   return cloudsforgeHosts()
 }
 
+/** True for the hostnames `cloudsforgeHosts()` itself treats as a local stack. */
+function isLocal(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.local')
+}
+
 /**
- * The absolute base URL of `micro-foresight`, derived from the registry's apex.
+ * The absolute base URL of `micro-foresight`.
  *
- * Exported separately from `apiBase()` and taking `hosts` as an argument so the derivation can be
- * tested against a production apex, a localhost, and a preview deployment without a browser.
+ * The registry decides the host in every environment. The only thing this function changes is the
+ * PORT, and only on a local host, and only because the registry's is wrong — see the header.
  */
 export function foresightBase(hosts: CloudsForgeHosts): string {
-  // `site` is the apex itself, so its origin is the apex origin in every environment.
-  const apex = new URL(hosts.site)
-  // A local stack runs every service on its own port on one hostname; there are no subdomains to
-  // put a service under, so the port is the whole of the address.
-  if (apex.hostname === 'localhost' || apex.hostname === '127.0.0.1' || apex.hostname.endsWith('.local')) {
-    return `${apex.protocol}//${apex.hostname}:${FORESIGHT_DEV_PORT}`
-  }
-  return `${apex.protocol}//${FORESIGHT_SUBDOMAIN}.${apex.host}`
+  const own = new URL(hosts.foresight)
+  if (!isLocal(own.hostname)) return own.origin
+  return `${own.protocol}//${own.hostname}:${LOCAL_SERVICE_PORT}`
 }
 
 /**
