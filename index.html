@@ -27,22 +27,23 @@
       name="description"
       content="Prediction markets on Hearth. Parimutuel, settled by the contract, with every market's sources and resolution criteria published before you stake."
     />
+    <!--
+      ONE og block. There were two: og:type, og:title and og:description were each declared twice,
+      and twitter:card was declared as both `summary` and `summary_large_image`. The later
+      declaration wins in every crawler, so the first block's longer description — the one that
+      names what makes this market honest — was dead text that no share card ever showed.
+
+      The image path is relative, deliberately: the same bundle is served from localhost, a preview
+      host and the apex, and this file may name no hostname. Crawlers that want an absolute URL
+      resolve it against the page they fetched. `summary_large_image` is the correct card type
+      precisely because og:image is present.
+    -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Forge Foresight" />
     <meta
       property="og:description"
       content="Prediction markets on Hearth. Parimutuel, settled by the contract, with every market's sources and resolution criteria published before you stake."
     />
-    <meta name="twitter:card" content="summary" />
-  
-    <!--
-      A relative path, deliberately: the same bundle is served from localhost, a preview host and
-      the apex, and this file may name no hostname. Crawlers that want an absolute URL resolve it
-      against the page they fetched.
-    -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Forge Foresight" />
-    <meta property="og:description" content="Markets on what happens next, staked and settled on the Hearth chain." />
     <meta property="og:image" content="/og-1200x630.png" />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
