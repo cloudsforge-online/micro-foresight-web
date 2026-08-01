@@ -5,23 +5,8 @@
   because a page that paints before the attributes land flashes the default and then changes
   colour.
 
-  ── WHY THE PRODUCT KEY IS WRITTEN TWICE ─────────────────────────────────────────────────────
-
-  `data-cf-product` is the documented attribute — tokens.css:140 says so, and all twelve other
-  product selectors in that file are `[data-cf-product='…']`. Foresight's is not: tokens.css:332
-  reads `[data-product='foresight']`, without the `cf-`. So the selector carrying this product's
-  accent (#1e89c7) matches nothing, and the page silently falls back to the company ember.
-
-  micro-ui is single-owner, so this repository REPORTS that rather than editing it, and carries
-  BOTH spellings here — which costs one attribute, introduces no copy of a brand colour into this
-  repo, and renders correctly against the broken stylesheet and the fixed one alike.
-  test/registry.test.ts fails the day tokens.css is corrected, so `data-product` is deleted then
-  rather than left behind.
-
-  (tokens.css:363 already documents this exact failure happening once before, with
-  data-cf-product="admin" against a selector that did not exist.)
 -->
-<html lang="en-GB" data-cf-product="foresight" data-product="foresight" data-cf-substrate="warm">
+<html lang="en-GB" data-cf-product="foresight" data-cf-substrate="warm">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -32,6 +17,10 @@
       rather than a configuration: it names the artefact, it does not tell it where it is running.
     -->
     <meta name="cf-release" content="dev" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/favicon-192x192.png" />
+
 
     <title>Forge Foresight</title>
     <meta
@@ -45,6 +34,17 @@
       content="Prediction markets on Hearth. Parimutuel, settled by the contract, with every market's sources and resolution criteria published before you stake."
     />
     <meta name="twitter:card" content="summary" />
+  
+    <!--
+      A relative path, deliberately: the same bundle is served from localhost, a preview host and
+      the apex, and this file may name no hostname. Crawlers that want an absolute URL resolve it
+      against the page they fetched.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Forge Foresight" />
+    <meta property="og:description" content="Markets on what happens next, staked and settled on the Hearth chain." />
+    <meta property="og:image" content="/og-1200x630.png" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="root"></div>

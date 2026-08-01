@@ -19,10 +19,11 @@ afterEach(() => {
 })
 
 describe('foresightBase', () => {
-  it('overrides the registry’s port on localhost, because the registry’s is Beacon’s', () => {
-    // surfaces.ts gives foresight devPort 4011, which is also beacon's, while the service listens
-    // on 4021 (`foresight/.env.example:13`). See test/registry.test.ts, which fails when fixed.
-    assert.equal(foresightBase(at('http://localhost:4011')), 'http://localhost:4021')
+  it('takes the local port from the registry, untouched', () => {
+    // This once overrode the port: the registry gave foresight 4011, which is Beacon's, while the
+    // service binds 4021. The registry now says 4021, so there is nothing left to correct — and
+    // that is the property worth asserting, since a second override would be invisible otherwise.
+    assert.equal(foresightBase(at('http://localhost:4021')), 'http://localhost:4021')
   })
 
   it('takes the production host from the registry, untouched', () => {
@@ -38,9 +39,9 @@ describe('foresightBase', () => {
     assert.equal(foresightBase(at('https://foresight.pr-42.example.dev')), 'https://foresight.pr-42.example.dev')
   })
 
-  it('treats 127.0.0.1 and a .local host as local too', () => {
-    assert.equal(foresightBase(at('http://127.0.0.1:4011')), 'http://127.0.0.1:4021')
-    assert.equal(foresightBase(at('http://machine.local:4011')), 'http://machine.local:4021')
+  it('treats every local hostname the same as any other — no special cases remain', () => {
+    assert.equal(foresightBase(at('http://127.0.0.1:4021')), 'http://127.0.0.1:4021')
+    assert.equal(foresightBase(at('http://machine.local:4021')), 'http://machine.local:4021')
   })
 
   it('keeps a non-standard remote port rather than dropping it', () => {
@@ -63,7 +64,7 @@ describe('resolveApiBase', () => {
 
   it('is absolute when they do not', () => {
     // `pnpm dev`: the page is on Vite's 5182 and the service on 4021.
-    assert.equal(resolveApiBase('http://localhost:5182', at('http://localhost:4011')), 'http://localhost:4021')
+    assert.equal(resolveApiBase('http://localhost:5182', at('http://localhost:4021')), 'http://localhost:4021')
   })
 
   it('is absolute when there is no page origin to resolve against', () => {

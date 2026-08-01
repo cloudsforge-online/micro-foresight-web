@@ -18,11 +18,6 @@
  * Beacon. Every request this app makes under `pnpm dev` would go to the wrong service and fail in
  * a way that looks like this app being wrong.
  *
- * `micro-ui` is single-owner, so this repository REPORTS that and overrides only the port, only on
- * a local host. The SUBDOMAIN comes from the registry and is correct, so production and every
- * preview deployment resolve through `cloudsforgeHosts()` untouched. `test/registry.test.ts` fails
- * the day the registry's port is corrected, at which point `LOCAL_SERVICE_PORT` and the branch
- * that uses it are deleted and this file becomes the same six lines every other app has.
  */
 import { cloudsforgeHosts, type CloudsForgeHosts, type SurfaceKey } from '@cloudsforge/ui'
 
@@ -38,33 +33,22 @@ export const APP_NAME = 'foresight'
  */
 export const PRODUCT: SurfaceKey = 'foresight'
 
-/**
- * The port `micro-foresight` actually listens on locally — `micro-foresight/.env.example:13`.
- *
- * Delete with the branch that uses it when the registry's `devPort` is corrected; see the header.
- */
-const LOCAL_SERVICE_PORT = 4021
-
 /** Every CloudsForge base URL, for the current environment. */
 export function hosts(): CloudsForgeHosts {
   return cloudsforgeHosts()
 }
 
-/** True for the hostnames `cloudsforgeHosts()` itself treats as a local stack. */
-function isLocal(hostname: string): boolean {
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.local')
-}
-
 /**
  * The absolute base URL of `micro-foresight`.
  *
- * The registry decides the host in every environment. The only thing this function changes is the
- * PORT, and only on a local host, and only because the registry's is wrong — see the header.
+ * The registry decides the host in every environment, untouched. This briefly overrode the port on
+ * a local host, because the registry gave foresight `devPort: 4011` — Beacon's — so a local stack
+ * sent every request to the monitoring service. That is corrected upstream to 4021, the port the
+ * service binds, so the override and the `isLocal` helper it needed are gone and this is the same
+ * shape every other app has.
  */
 export function foresightBase(hosts: CloudsForgeHosts): string {
-  const own = new URL(hosts.foresight)
-  if (!isLocal(own.hostname)) return own.origin
-  return `${own.protocol}//${own.hostname}:${LOCAL_SERVICE_PORT}`
+  return new URL(hosts.foresight).origin
 }
 
 /**
