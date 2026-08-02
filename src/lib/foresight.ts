@@ -125,10 +125,56 @@ export interface Provenance {
   readonly proposedAt: string
 }
 
+/**
+ * The house seed disclosure — `houseSeedView`, `foresight/src/houseseed.ts:230-243`, served on
+ * the market page at `foresight/src/server.ts:477`.
+ *
+ * ── This is the field docs/ecosystem/21 §7.6 is about ──────────────────────────────────────────
+ *
+ * §7.6: "The foresight market page **renders** the house seed disclosure whenever a house stake
+ * exists — asserted the way admin-web asserts its missing og card: presence with force." The
+ * service already proves it SERVES it (`foresight/src/houseseed.test.ts:429`). Everything below
+ * exists so this app proves it SHOWS it, which is a different claim and the one a bettor cares
+ * about: an undisclosed house position makes the other four properties (symmetric, at-open-only,
+ * trigger-enforced, capped) pointless, because they are all things the reader is being asked to
+ * take on trust *because* the position is disclosed.
+ *
+ * `disclosure` is composed by the service, once, deliberately — houseseed.ts:213-218: "so
+ * `foresight-web` renders a disclosure the platform wrote rather than one each client
+ * improvises." It is rendered verbatim. The amounts beside it are here so the sentence can be
+ * CHECKED rather than merely repeated; see `houseseed.ts` in this app.
+ *
+ * Every field is typed as it arrives on the wire — wei as decimal strings, never a JSON number —
+ * and every one of them is parsed defensively, because a disclosure that fails to render because
+ * one field was the wrong shape is precisely the failure §7.6 exists to prevent.
+ */
+export interface HouseSeedView {
+  /** `planned` — approved with a seed, not yet in the pool. `staked` — the money is in. */
+  readonly state: 'planned' | 'staked'
+  readonly houseAddress: string
+  /** Wei on EACH outcome. Symmetric by CHECK constraint on the service's side. */
+  readonly amountPerOutcomeWei: string
+  /** Both sides together — twice `amountPerOutcomeWei`, and this app verifies that. */
+  readonly totalWei: string
+  readonly asset: 'EMBER'
+  readonly stakedAt: string | null
+  readonly txHashYes: string | null
+  readonly txHashNo: string | null
+  /** The platform's own sentence. Rendered as sent — 21 §5 words it. */
+  readonly disclosure: string
+}
+
 /** The body of `GET /markets/:id` — `foresight/src/server.ts:426-450`. */
 export interface MarketDetail {
   readonly market: MarketView
   readonly pool: PoolView
+  /**
+   * `null` when no house seed exists for this market, and the service sends the explicit null
+   * rather than omitting the key (`foresight/src/houseseed.test.ts:447-450`) — so "no seed" is
+   * distinguishable from "field missing because the deploy is old". Both render as no
+   * disclosure; only one of them would be a bug worth finding.
+   */
+  readonly houseSeed: HouseSeedView | null
   readonly document: { readonly canonical: string; readonly hash: string }
   readonly provenance: Provenance | null
 }
@@ -233,8 +279,9 @@ export async function listMarkets(
 /**
  * `GET /markets/:id` — **`foresight/src/server.ts:417`**.
  *
- * Returns the market, the pool, the canonical document with its hash, and the provenance. This is
- * the only route that carries the cited sources, and it is unauthenticated.
+ * Returns the market, the pool, the canonical document with its hash, the house seed disclosure
+ * and the provenance. This is the only route that carries the cited sources or the house seed,
+ * and it is unauthenticated.
  */
 export function getMarket(id: string, signal?: AbortSignal): Promise<MarketDetail> {
   return api<MarketDetail>(`/markets/${encodeURIComponent(id)}`, { auth: false, ...signalOf(signal) })

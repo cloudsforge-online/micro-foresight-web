@@ -477,6 +477,72 @@ a {
   color: var(--cf-fg-mute);
 }
 
+/* ---- the house seed disclosure — docs/ecosystem/21 §5, §7.6 ----------- */
+
+/*
+ * Prominent, and prominent in a way a redesign cannot quietly shrink: a bordered block at BODY
+ * size with a heading, sitting above the ratio bar it explains. It is not a chip and not a
+ * tooltip — see the header of `components/houseseed.tsx` for why a badge would satisfy the letter
+ * of "labelled as the platform's" and none of it.
+ *
+ * The accent is `--cf-viz-1`, slot 1 of the categorical ramp, and deliberately NOT the yes/no
+ * slots (2 and 3) that the bar below uses: the house is not a third outcome, and colouring it
+ * with either side's hue would read as the platform backing that side — the exact opposite of
+ * what a symmetric seed means. It is also not a status colour: a disclosed seed is neither a
+ * warning nor a success, it is a fact.
+ */
+.fs-house {
+  margin: 0 0 var(--cf-space-xl);
+  padding: var(--cf-space-lg);
+  border: 1px solid var(--cf-line);
+  border-left: 4px solid var(--cf-viz-1);
+  border-radius: var(--cf-radius);
+  background: var(--cf-bg-sunken);
+}
+.fs-house--bad {
+  border-left-color: var(--cf-viz-crit);
+}
+.fs-house__title {
+  margin: 0 0 var(--cf-space-sm);
+  font-size: var(--cf-text-lg);
+}
+.fs-house__sentence {
+  margin: 0 0 var(--cf-space-md);
+  font-weight: 600;
+  max-width: 70ch;
+}
+.fs-house__why {
+  margin: 0 0 var(--cf-space-lg);
+  color: var(--cf-fg-dim);
+  font-size: var(--cf-text-md);
+  max-width: 70ch;
+}
+.fs-house__facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--cf-space-md) var(--cf-space-lg);
+}
+.fs-house__facts dt {
+  margin: 0 0 var(--cf-space-xs);
+  font-size: var(--cf-text-sm);
+  color: var(--cf-fg-mute);
+}
+.fs-house__facts dd {
+  margin: 0;
+}
+.fs-house__evidence {
+  margin: var(--cf-space-lg) 0 0;
+  font-size: var(--cf-text-md);
+  color: var(--cf-fg-dim);
+  max-width: 70ch;
+}
+.fs-house__alarm {
+  margin: var(--cf-space-lg) 0 0;
+  color: var(--cf-viz-crit);
+  max-width: 70ch;
+}
+
 /* ---- market detail --------------------------------------------------- */
 
 .fs-market__crumb {
@@ -1062,5 +1128,16 @@ a {
   }
   .fs-bar__label {
     color: CanvasText;
+  }
+  /*
+   * The seed panel's accent border is a colour, and in forced-colors every colour becomes the
+   * user's. A disclosure that depended on its accent to be noticed would vanish here — so the
+   * block keeps a visible edge of its own, and the heading and the sentence carry the meaning
+   * exactly as they do everywhere else.
+   */
+  .fs-house {
+    border: 2px solid CanvasText;
+    forced-color-adjust: none;
+    background: Canvas;
   }
 }

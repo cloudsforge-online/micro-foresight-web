@@ -20,11 +20,13 @@
 import { useCallback, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ClaimPanel } from '../components/claimpanel.tsx'
+import { HouseSeedNotice } from '../components/houseseed.tsx'
 import { PoolRatioBar } from '../components/pool.tsx'
 import { StakePanel } from '../components/stakepanel.tsx'
 import { Empty, Failed, Forbidden, Loading } from '../components/states.tsx'
 import { getMarket, type MarketDetail, type Provenance } from '../lib/foresight.ts'
 import { durationLabel, utcDateTime } from '../lib/format.ts'
+import { houseDisclosureOf } from '../lib/houseseed.ts'
 import { checkDocument, observation, outcomeLabel, phaseLabel, phaseOf, takesStakes } from '../lib/market.ts'
 import { poolsFrom, totalOf } from '../lib/pool.ts'
 import { useResource } from '../lib/resource.ts'
@@ -78,10 +80,22 @@ function MarketBody({ id }: { id: string }) {
   }
   if (!detail.data) return <Loading label="Loading the market" />
 
-  return <MarketView detail={detail.data} reload={detail.reload} />
+  return <MarketArticle detail={detail.data} reload={detail.reload} />
 }
 
-function MarketView({ detail, reload }: { detail: MarketDetail; reload: () => void }) {
+/**
+ * The page itself, given a market that has loaded.
+ *
+ * Exported so `test/houseseed.test.ts` can render THIS — the whole article, from a real
+ * `MarketDetail` — rather than the disclosure panel in isolation. 21 §7.6 asks for the market
+ * page to render the disclosure, and a test that mounted only `HouseSeedNotice` would keep
+ * passing on the day somebody deleted the one line below that mounts it.
+ *
+ * Named `MarketArticle` and not `MarketView` because `MarketView` is the wire type for one market
+ * (`lib/foresight.ts`), and a component and a payload sharing a name is how an import picks the
+ * wrong one.
+ */
+export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload: () => void }) {
   const { market, pool, provenance } = detail
   const now = useMemo(() => new Date(), [])
   const phase = phaseOf(market, now)
@@ -89,6 +103,9 @@ function MarketView({ detail, reload }: { detail: MarketDetail; reload: () => vo
   const poolIsKnown = totalOf(pools) !== null && pool.asOf !== null
   const obs = observation(pool, now)
   const document = checkDocument(detail)
+  // The house seed, if there is one — 21 §7.6. Computed against the SAME `pools` the ratio bar
+  // draws, so the share it reports and the split it explains are the same two numbers.
+  const houseSeed = houseDisclosureOf(detail, pools)
   // Whichever address the wallet has already granted. Nothing prompts on load; see `usewallet`.
   const wallet = useWalletAddress()
 
@@ -218,6 +235,12 @@ function MarketView({ detail, reload }: { detail: MarketDetail; reload: () => vo
         <h2 className="fs-panel__title" id="pool-heading">
           The pool
         </h2>
+        {/*
+          BEFORE the ratio bar, deliberately. Part of the two numbers below may be the platform's
+          own money, and a reader who is told that after reading the odds has already formed a
+          view from a figure whose composition they were not given. See `components/houseseed.tsx`.
+        */}
+        <HouseSeedNotice disclosure={houseSeed} />
         <PoolRatioBar pools={pools} note={obs.text} tone={obs.tone} />
         <p className="fs-stakers">
           {pool.stakerCount > 0
