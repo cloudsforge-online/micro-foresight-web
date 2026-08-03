@@ -59,7 +59,22 @@ function MarketBody({ id }: { id: string }) {
   // nothing", which the service expresses as a 404 rather than an empty body.
   const detail = useResource(load, () => 1, 'This market could not be loaded.')
 
-  if (detail.state === 'loading') return <Loading label="Loading the market" />
+  // `detail.data === null` is doing real work here, and it is not defensive noise.
+  //
+  // A successful stake calls `onStaked` — `reload()` — because the pool has moved and the page
+  // must not keep showing the old split. `useResource` sets `loading` on a reload, so the naive
+  // `state === 'loading'` test replaced the WHOLE page with a spinner, unmounting `StakePanel`
+  // and with it the `submitted` phase holding the transaction hash. The staker's only record of
+  // what was just sent to their wallet was destroyed by the refresh their own stake triggered —
+  // and what came back was a fresh, EMPTY, RE-ARMED stake form on a market they had just staked
+  // on. On a surface where the commit is an irreversible on-chain transaction with no server-side
+  // gate behind it, re-arming the form is the worst available outcome.
+  //
+  // Found by BJ-ADV-11-H2 of docs/ecosystem/22-browser-journeys.md. A refresh over data we already
+  // have is not a load: the previous answer stays on screen until the new one arrives.
+  if (detail.state === 'loading' && detail.data === null) {
+    return <Loading label="Loading the market" />
+  }
   if (detail.state === 'forbidden') return <Forbidden notice={detail.error ?? undefined} />
   if (detail.state === 'failed' && detail.error) {
     // 404 is its own sentence: an id that does not exist is not an outage.

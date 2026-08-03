@@ -224,7 +224,15 @@ export function StakePanel({
       <button
         type="button"
         className="cf-btn cf-btn--ember fs-stake__go"
-        disabled={!gate.ready || flow.phase === 'requesting' || flow.phase === 'awaiting_wallet'}
+        // `!isEditable(flow.phase)` rather than the two in-flight phases spelled out, because
+        // `submitted` belongs in the same set and was missing from it. The fields are frozen once
+        // a transaction has gone to the wallet — `isEditable` excludes `submitted` — but the
+        // COMMIT stayed live, so the panel sat in a state where the amount could not be changed
+        // and the button would happily send that same amount again. On this surface a second
+        // press is a second on-chain transaction with no server-side gate behind it and nothing
+        // to undo it with. One list, one rule; found by BJ-ADV-11-H2 of
+        // docs/ecosystem/22-browser-journeys.md.
+        disabled={!gate.ready || !isEditable(flow.phase)}
         onClick={() => void submit()}
       >
         {flow.phase === 'requesting'
