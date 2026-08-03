@@ -1,5 +1,11 @@
 # micro-foresight-web
 
+[![ci](https://github.com/cloudsforge-online/micro-foresight-web/actions/workflows/ci.yml/badge.svg)](https://github.com/cloudsforge-online/micro-foresight-web/actions/workflows/ci.yml)
+![node](https://img.shields.io/badge/node-%3E%3D22-5FA04E?logo=node.js&logoColor=white)
+![typescript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![module](https://img.shields.io/badge/module-ESM-F7DF1E?logo=javascript&logoColor=black)
+![tests](https://img.shields.io/badge/tests-in--process%20DOM-6E56CF)
+
 The public frontend for **Forge Foresight** — the prediction market native to Hearth. Browse
 markets, read why each one exists and what will settle it, stake from your own wallet, watch a
 portfolio of positions, and claim from the contract.
@@ -229,3 +235,10 @@ other.
 | `format.test.ts` | UTC stamps, ages, durations |
 | `wallet.test.ts` | exactly what would have been signed |
 | `no-build-time-config.test.ts` | that no `VITE_`, `import.meta.env` or `.env` exists |
+
+---
+
+## Provenance
+
+The code in this repository was written by **Claude Opus 5** and **Claude Fable 5**, assets
+generated with **FLUX 2 Pro**, under human direction and review.
