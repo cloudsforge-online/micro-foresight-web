@@ -663,12 +663,21 @@ describe('BJ-ADV — the adversarial matrix', () => {
         await s.type(amountField(s), '1.5')
         const button = s.byRole('button', /stake on yes/i)
 
-        // A real double-click is two events with a render between them, because React flushes a
-        // discrete event before the next one arrives. So the first press is delivered, the tree
-        // is allowed to settle, and the second press is delivered while the intent request is
-        // still in flight — which is the hazard, and the only defence is the control disabling
-        // itself. There is no idempotency key on this route and no server-side dedupe behind it:
-        // two intents would be two policy decisions and two transactions, both mined.
+        // This is the LATER press: the first is delivered, the tree is allowed to settle, and the
+        // second arrives while the intent request is still in flight. The defence for this one is
+        // the control disabling itself, which is what is asserted below.
+        //
+        // The comment that used to be here claimed the settle was faithful to a real double-click,
+        // "because React flushes a discrete event before the next one arrives". That is not true,
+        // and it was load-bearing: the settle IS the render the state guard needs, so this
+        // scenario passed while two same-tick presses produced two policy evaluations and two
+        // on-chain transactions. `test/doublesubmit.test.ts` is the case with nothing between the
+        // two presses, and the ref latch in `components/stakepanel.tsx` is what closes it. Both
+        // are needed — this one proves the affordance, that one proves the guard.
+        //
+        // There is no idempotency key on this route and no server-side dedupe behind it
+        // (`foresight/src/server.ts:533`): two intents would be two policy decisions and two
+        // transactions, both mined.
         s.clickNoFlush(button)
         await s.settle(0)
         assert.ok(
