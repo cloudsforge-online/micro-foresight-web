@@ -109,6 +109,35 @@ const SETTLED: MirrorFacts = {
   stakedNo: null,
 }
 
+/* ── the harness option the proofs below rest on ────────────────────────────────────────────── */
+
+describe('mount({ strict }) really renders under StrictMode', () => {
+  // Without this, `strict: true` could quietly become a no-op and every "and again under
+  // StrictMode" test below would keep passing while proving nothing — which is exactly the shape
+  // hub-web reported as "a StrictMode ref never exercised". StrictMode double-invokes the render
+  // function of every component beneath it, so a render counter tells the two modes apart.
+  const probe = (counter: { n: number }) =>
+    h(function Probe() {
+      counter.n += 1
+      return h('p', null, 'A paragraph long enough that assertMounted is satisfied by it alone.')
+    })
+
+  it('does not double-invoke render by default, and does when asked', async () => {
+    const plain = { n: 0 }
+    await withScreen(probe(plain), { routes: {} }, async () => undefined)
+    const wrapped = { n: 0 }
+    await withScreen(probe(wrapped), { routes: {}, strict: true }, async () => undefined)
+
+    assert.equal(plain.n, 1, 'the default mount rendered more than once — the probe is unreliable')
+    assert.ok(
+      wrapped.n > plain.n,
+      `strict: true did not put the tree under StrictMode: the component rendered ${wrapped.n} ` +
+        `time(s), the same as an ordinary mount. Every StrictMode proof below is then a duplicate ` +
+        'of the plain one.',
+    )
+  })
+})
+
 for (const strict of [false, true] as const) {
   const mode = strict ? 'under StrictMode, as src/main.tsx renders it' : 'without StrictMode'
 
