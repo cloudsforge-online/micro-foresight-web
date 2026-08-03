@@ -166,6 +166,18 @@ export interface MountOptions {
    * what the browser hands the wallet cannot be written without one.
    */
   windowExtras?: Record<string, unknown>
+  /**
+   * Render inside `<StrictMode>`, the way `src/main.tsx` actually renders the application.
+   *
+   * This harness mounts without it by default, which is a gap and not a preference: StrictMode
+   * double-invokes render, double-runs effects on mount, and — the part that matters here — a
+   * `useRef` initialiser runs twice while the ref object itself is kept, so a latch written into a
+   * ref behaves differently under it than under a plain mount. `micro-hub-web`'s mutation run
+   * found exactly that shape: "a StrictMode ref never exercised". A guard the product depends on
+   * has to be proven in the mode the product runs in, so every double-submit proof below is run
+   * BOTH ways.
+   */
+  strict?: boolean
 }
 
 export interface Screen {
@@ -474,8 +486,12 @@ export async function mount(element: ReactElement, options: MountOptions = {}): 
     })
   }
 
+  /** `src/main.tsx` renders under `<StrictMode>`; `options.strict` reproduces that here. */
+  const asRendered = (el: ReactElement): ReactElement =>
+    options.strict === true ? React.createElement(React.StrictMode, null, el) : el
+
   await act(async () => {
-    root.render(element)
+    root.render(asRendered(element))
   })
   await flush()
 
@@ -619,7 +635,7 @@ export async function mount(element: ReactElement, options: MountOptions = {}): 
     settle: flush,
     async rerender(next) {
       await act(async () => {
-        root.render(next)
+        root.render(asRendered(next))
       })
       await flush()
     },

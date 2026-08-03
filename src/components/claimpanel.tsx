@@ -7,7 +7,7 @@
  * panel says exactly that and the button stays live: hiding it would make a service this function
  * does not read into a dependency of it.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   claimSentence,
   claimVerdict,
@@ -35,6 +35,18 @@ export function ClaimPanel({ mirror, address }: { mirror: MirrorFacts; address: 
   const [sending, setSending] = useState<Sending>('idle')
   const [txHash, setTxHash] = useState<string | null>(null)
   const [failure, setFailure] = useState<string | null>(null)
+
+  /**
+   * The latch, for the same reason as `components/stakepanel.tsx` — see the note there.
+   *
+   * `sending` is state. `setSending('sending')` schedules a render; it does not change the
+   * `sending` the click listener is holding, and `disabled={... sending === 'sending' ...}` is not
+   * on the DOM node until that render commits. Two clicks in one tick therefore both pass, and
+   * both reach `sendTransaction`. The contract pays each address once (`ForesightMarket.sol:448`),
+   * so the second transaction is gas spent to buy a revert — and the user is shown a failure for a
+   * claim that in fact succeeded.
+   */
+  const inFlight = useRef(false)
 
   const contract = mirror.contractAddress
 
@@ -65,7 +77,9 @@ export function ClaimPanel({ mirror, address }: { mirror: MirrorFacts; address: 
   })
 
   async function claim(): Promise<void> {
+    if (inFlight.current) return
     if (!provider || !contract) return
+    inFlight.current = true
     setFailure(null)
     setSending('sending')
     try {
@@ -88,6 +102,10 @@ export function ClaimPanel({ mirror, address }: { mirror: MirrorFacts; address: 
       }
       setSending('failed')
       setFailure(err instanceof Error ? err.message : 'The claim could not be sent.')
+    } finally {
+      // Released on every path, including the early return above: a user whose wallet returned no
+      // account must be able to press again once they have picked one.
+      inFlight.current = false
     }
   }
 

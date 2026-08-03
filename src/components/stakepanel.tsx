@@ -15,7 +15,7 @@
  * it is still only true if nobody stakes after you. The sentence saying so is not optional
  * decoration; it is the difference between a projection and a quote.
  */
-import { useMemo, useReducer, useState } from 'react'
+import { useMemo, useReducer, useRef, useState } from 'react'
 import { ApiError } from '../lib/api.ts'
 import { OUTCOME_NO, OUTCOME_YES } from '../lib/abi.ts'
 import { createStakeIntent, type MarketView } from '../lib/foresight.ts'
@@ -58,6 +58,29 @@ export function StakePanel({
   const [input, setInput] = useState('')
   const [flow, dispatch] = useReducer(stakeReducer, IDLE_STAKE)
 
+  /**
+   * The latch. A ref, not state, and that distinction is the whole of this guard.
+   *
+   * `flow.phase` and the button's `disabled` are both read out of a render that has not happened
+   * yet at the moment a second click arrives. `dispatch({ type: 'request' })` SCHEDULES a render;
+   * it does not change `flow` in the closure the listener is holding, and the `disabled` attribute
+   * is not on the DOM node until the render commits. So two clicks delivered in ONE tick — a
+   * double-click on a trackpad — both read `phase === 'idle'` off a live-looking button and both
+   * run the body below to completion. That is two `createStakeIntent` calls against a route that
+   * reads no Idempotency-Key (`foresight/src/server.ts:533`; `idempotencyKeyOf` at `server.ts:981`
+   * has one call site, the admin deploy route at `server.ts:809`), and then TWO
+   * `eth_sendTransaction` calls: two real stakes, of the same money, with no server-side gate
+   * behind them and nothing to undo them with.
+   *
+   * A ref is mutated synchronously, so it is already true when the second event arrives. It is
+   * taken before the first `await` and released in a `finally` — an early `return` inside the try
+   * must release it too, or a refused intent would leave the panel permanently unable to retry.
+   *
+   * The state and the `disabled` attribute stay exactly as they were: they are the visible
+   * affordance, and this is the correctness guarantee. Neither substitutes for the other.
+   */
+  const inFlight = useRef(false)
+
   const provider = useMemo(() => getProvider(), [])
   const now = useMemo(() => new Date(), [])
   const gate = stakeGate({
@@ -80,7 +103,9 @@ export function StakePanel({
   const multiple = projectedMultipleBps(projection, gate.amountWei ?? 0n)
 
   async function submit(): Promise<void> {
+    if (inFlight.current) return
     if (!gate.ready || gate.amountWei === null || provider === null) return
+    inFlight.current = true
     dispatch({ type: 'request' })
     try {
       // The service is asked for the intent EVERY time, never cached: the policy verdict inside it
@@ -119,6 +144,10 @@ export function StakePanel({
         message: err instanceof Error ? err.message : 'The stake could not be sent.',
         requestId: null,
       })
+    } finally {
+      // `finally`, not the end of the try: every branch above returns early, and a latch released
+      // on only the happy path is a panel that refuses the retry it just told the user to make.
+      inFlight.current = false
     }
   }
 
