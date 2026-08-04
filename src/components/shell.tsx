@@ -7,7 +7,7 @@
  * `current={PRODUCT}` marks Foresight as the current entry in the switcher, which it now is:
  * `ui/packages/ui/src/surfaces.ts:169` registers it as a product with `inSwitcher: true`.
  */
-import { CloudsForgeBar } from '@cloudsforge/ui'
+import { CloudsForgeBar, CloudsForgeFooter } from '@cloudsforge/ui'
 import { NavLink, Outlet } from 'react-router-dom'
 import { PRODUCT } from '../lib/hosts.ts'
 import { NAV } from '../lib/routes.ts'
@@ -54,12 +54,28 @@ export function AppShell() {
       <main className="fs-main" id="main">
         <Outlet />
       </main>
-      <footer className="fs-footer">
-        <p>
-          Stakes go from your wallet to the market's contract on Hearth. This site never holds
-          them, and a winner can claim from the contract whether or not this site is running.
-        </p>
-      </footer>
+      {/*
+        The company footer, from @cloudsforge/ui, REPLACING the `fs-footer` this file used to
+        write itself.
+
+        The bespoke version was one paragraph and no links. That paragraph was the good half — it
+        is the sentence this product turns on, and it is preserved verbatim as `note`. What it was
+        missing is everything a footer is for: there was no way from any page of Forge Foresight
+        to the developer console, to the status page, to Terms, or to any other product, and the
+        surface registry has been claiming since it was written that the developer console is
+        "reached from the footer". Three other frontends had grown their own paragraph-only
+        footer in the same shape; this is the extraction of the four.
+      */}
+      <CloudsForgeFooter
+        current={PRODUCT}
+        account={account}
+        note={
+          <>
+            Stakes go from your wallet to the market's contract on Hearth. This site never holds
+            them, and a winner can claim from the contract whether or not this site is running.
+          </>
+        }
+      />
     </>
   )
 }

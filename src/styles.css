@@ -112,14 +112,10 @@ a {
   padding: var(--cf-space-3xl) var(--cf-space-xl) var(--cf-space-3xl);
 }
 
-.fs-footer {
-  max-width: var(--cf-max-w);
-  margin: 0 auto;
-  padding: var(--cf-space-2xl) var(--cf-space-xl) var(--cf-space-3xl);
-  border-top: 1px solid var(--cf-line);
-  color: var(--cf-fg-mute);
-  font-size: var(--cf-text-md);
-}
+/* `.fs-footer` was here. It is gone with the markup it styled: the footer is now
+   `CloudsForgeFooter` from @cloudsforge/ui, which brings its own `.cf-foot` rules. A local rule
+   left behind after its element is deleted is dead weight that the next reader has to prove is
+   dead — and there were four of these across the estate. */
 
 /* ---- page furniture -------------------------------------------------- */
 
