@@ -12,6 +12,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Empty, Failed, Forbidden, Loading } from '../components/states.tsx'
+import { MarketImage } from '../components/marketimage.tsx'
 import { OUTCOME_NO, OUTCOME_YES } from '../lib/abi.ts'
 import { listMarkets, type MarketStatus, type MarketView } from '../lib/foresight.ts'
 import { untilLabel, utcDateTime } from '../lib/format.ts'
@@ -128,7 +129,14 @@ function MarketCard({ market }: { market: MarketView }) {
 
   return (
     <li className="fs-card">
+      {/*
+        `GET /markets` DOES carry the image — `publicView` composes it per response — so unlike the
+        pool, this is not a figure the list route omits. The card renders nothing when there is no
+        image and nothing when `bytesUrl` is null; a placeholder frame would be a picture the
+        market does not have.
+      */}
       <Link className="fs-card__link" to={marketPath(market.id)}>
+        <MarketImage image={market.image} question={market.question} className="fs-card__image" />
         <h2 className="fs-card__question">{market.question}</h2>
       </Link>
       <p className="fs-card__meta">

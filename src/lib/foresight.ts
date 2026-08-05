@@ -22,6 +22,7 @@
  * ══════════════════════════════════════════════════════════════════════════════════════════════
  */
 import { api, type RequestOptions } from './api.ts'
+import type { ImageRef } from './studio.ts'
 
 /* ------------------------------------------------------------------ what the service sends */
 
@@ -43,6 +44,21 @@ export const MARKET_STATUSES: readonly MarketStatus[] = [
   'settled',
   'void',
 ]
+
+/**
+ * `imageView` — `foresight/src/images.ts`.
+ *
+ * `bytesUrl` is ABSOLUTE, or `null` when the deployment has no `STUDIO_PUBLIC_URL`. It is never a
+ * relative path, deliberately: a relative path in an `<img src>` would resolve against this app's
+ * own origin and 404. A null means "this deployment cannot tell you where the bytes are", and the
+ * only correct response to it is to render no image rather than a broken one.
+ */
+export interface MarketImageRef {
+  readonly assetId: string
+  /** `sha256:<64 lowercase hex>`. Recorded by the service, not verified by it — see below. */
+  readonly checksum: string
+  readonly bytesUrl: string | null
+}
 
 /**
  * One market, exactly as `publicView` emits it — `foresight/src/markets.ts:614-639`.
@@ -72,6 +88,26 @@ export interface MarketView {
   readonly contractAddress: string | null
   readonly outcome: number | null
   readonly voidReason: string | null
+  /**
+   * The header image, or `null` — `foresight/src/markets.ts`, `publicView`.
+   *
+   * ══════════════════════════════════════════════════════════════════════════════════════════
+   * **PRESENTATIONAL. THE CHAIN KNOWS NOTHING ABOUT IT, AND NO UI MAY IMPLY OTHERWISE.**
+   *
+   * It arrives in the same object as `questionHash` and `contractAddress`, and its `checksum`
+   * looks exactly like `questionHash` two fields away. It is not the same kind of thing.
+   * `questionHash` is written into the deployed contract and this app RECOMPUTES it from the
+   * canonical document (`lib/market.ts`, `checkDocument`). An image checksum is a value studio
+   * measured and foresight recorded; foresight never re-measures it and neither does this app.
+   *
+   * So the image must never be rendered as evidence, never carry a tick, and never sit inside the
+   * hash panel or beside the contract address. The words "verified", "attested", "on-chain" and
+   * "anchored" are forbidden next to it. The false version of that claim would be undetectable —
+   * Hearth has no Registry of Authorship contract at all — and a check that always passes teaches
+   * a reader that the checks which CAN fail are decoration too.
+   * ══════════════════════════════════════════════════════════════════════════════════════════
+   */
+  readonly image: MarketImageRef | null
   readonly openedAt: string | null
   readonly closedAt: string | null
   readonly resolvedAt: string | null
@@ -422,6 +458,49 @@ export function createCustodialStake(
  */
 export function getCategories(signal?: AbortSignal): Promise<CategoryCatalogue> {
   return api<CategoryCatalogue>('/categories', { auth: false, ...signalOf(signal) })
+}
+
+/**
+ * `PUT /markets/:id/image` — **`foresight/src/server.ts`, the header-image section of
+ * `buildRoutes()`.**
+ *
+ * ── Both halves, always ────────────────────────────────────────────────────────────────────────
+ *
+ * The body is the whole reference studio answered with. Sending only `assetId` is the mistake the
+ * service refuses with `bad_checksum` and the schema refuses with `markets_image_is_whole`
+ * (`foresight/src/migrations.ts`, version 11) — half a reference is a claim nothing backs.
+ * `ImageRef` has no shape for half of one, which is why the reference is passed as one value
+ * rather than as two arguments.
+ *
+ * ── Operator-only, because a market here has no other owner ────────────────────────────────────
+ *
+ * Every mutating market route in that service is `requireAdmin`: markets are created by operators
+ * and approved by an `operator:<id>` subject. A signed-in reader who is not an operator gets 403,
+ * which is what "you cannot change somebody else's image" means in a service with no per-market
+ * owner column. Nothing in this app should offer the control to anybody else.
+ */
+export function setMarketImage(id: string, image: ImageRef, signal?: AbortSignal): Promise<{ market: MarketView }> {
+  return api<{ market: MarketView }>(`/markets/${encodeURIComponent(id)}/image`, {
+    method: 'PUT',
+    auth: true,
+    body: { assetId: image.assetId, checksum: image.checksum },
+    ...signalOf(signal),
+  })
+}
+
+/**
+ * `DELETE /markets/:id/image` — remove the header image.
+ *
+ * Available in every status, `settled` included, and that is the service's decision rather than an
+ * oversight: a settled market's page is permanent and public, so an image on it that turns out to
+ * be unlawful must be removable. Nothing about the payout can move — the image is in no hash.
+ */
+export function clearMarketImage(id: string, signal?: AbortSignal): Promise<{ market: MarketView }> {
+  return api<{ market: MarketView }>(`/markets/${encodeURIComponent(id)}/image`, {
+    method: 'DELETE',
+    auth: true,
+    ...signalOf(signal),
+  })
 }
 
 /**

@@ -21,6 +21,7 @@ import { useCallback, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ClaimPanel } from '../components/claimpanel.tsx'
 import { HouseSeedNotice } from '../components/houseseed.tsx'
+import { MarketImage, MarketImagePanel } from '../components/marketimage.tsx'
 import { PoolRatioBar } from '../components/pool.tsx'
 import { StakePanel } from '../components/stakepanel.tsx'
 import { CustodialStakePanel } from '../components/custodialstake.tsx'
@@ -131,6 +132,17 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
         <p className="fs-market__crumb">
           <Link to="/">Markets</Link>
         </p>
+        {/*
+          ABOVE the question and OUTSIDE the terms panel, deliberately.
+
+          The page's ordering is an argument (see the file header): the terms before the button.
+          The image is a masthead, so it goes where a masthead goes — and it is kept out of the
+          panel that carries the criteria and the recomputed document hash, because a picture
+          rendered inside the panel that PROVES something would borrow that panel's authority
+          without having earned any of it. See `components/marketimage.tsx`: foresight records
+          studio's checksum and never re-measures it, so the image is evidence of nothing.
+        */}
+        <MarketImage image={market.image} question={market.question} />
         <h1 className="fs-market__question">{market.question}</h1>
         <p className="fs-market__meta">
           <span className={`fs-phase fs-phase--${phase}`}>
@@ -276,6 +288,15 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
           <CustodialStakePanel market={market} onStaked={reload} />
         </>
       )}
+
+      {/*
+        LAST on the page, and only for an operator — `MarketImagePanel` returns null otherwise.
+
+        Below the stake form on purpose: this is authoring, and nothing about it should come
+        between a reader and the terms or the pool. The role check decides what is offered; what is
+        ENFORCED is `requireAdmin` on the route.
+      */}
+      <MarketImagePanel market={market} onChanged={reload} />
 
       {(market.status === 'resolved' || market.status === 'settled' || market.status === 'void') && (
         <ClaimPanel

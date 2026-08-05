@@ -202,6 +202,36 @@ a {
 .fs-card__link {
   text-decoration: none;
 }
+
+/*
+ * The header image, on a card and on the market page.
+ *
+ * `aspect-ratio` with `object-fit: cover` rather than a free height, because the picture arrives
+ * at whatever size somebody uploaded and a grid of cards that each reflow to their own image's
+ * proportions is a grid that jumps as the images load. The ratio is reserved before the bytes
+ * arrive, so nothing below the image moves when it does.
+ *
+ * `background` is the placeholder WHILE loading, not a placeholder for a missing image: the
+ * component renders no `<img>` at all when there is nothing to show, so this box only ever exists
+ * around a real picture.
+ */
+.fs-card__image,
+.fs-market__image {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  background: var(--cf-bg-sunken, var(--cf-bg-raised));
+  border-radius: var(--cf-radius-md);
+}
+.fs-card__image {
+  aspect-ratio: 16 / 9;
+  margin-bottom: var(--cf-space-md);
+}
+.fs-market__image {
+  aspect-ratio: 21 / 9;
+  margin: 0 0 var(--cf-space-lg);
+  border: 1px solid var(--cf-line);
+}
 .fs-card__question {
   font-size: var(--cf-text-xl);
   line-height: 1.35;
@@ -1136,4 +1166,49 @@ a {
     forced-color-adjust: none;
     background: Canvas;
   }
+}
+
+/* ---- the operator's header-image panel ------------------------------- */
+/*
+ * Deliberately plain. This panel is authoring, not evidence: it carries no tick, no badge and no
+ * accent colour, because every visual affordance this stylesheet gives to certainty is spent on
+ * `.fs-hash` and `.fs-house`, which render claims a reader can actually check. See
+ * `components/marketimage.tsx`.
+ */
+.fs-imagepanel__lede {
+  margin: 0 0 var(--cf-space-lg);
+  max-width: 72ch;
+  color: var(--cf-fg-mute);
+}
+.fs-imagepanel__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--cf-space-md);
+  margin-bottom: var(--cf-space-md);
+}
+.fs-imagepanel__pick {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--cf-space-xs);
+  font-size: var(--cf-text-sm);
+  color: var(--cf-fg-mute);
+}
+.fs-imagepanel__facts {
+  margin: var(--cf-space-lg) 0 0;
+  display: grid;
+  gap: var(--cf-space-sm);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.fs-imagepanel__facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cf-space-xs);
+}
+.fs-imagepanel__facts dt {
+  font-size: var(--cf-text-sm);
+  color: var(--cf-fg-mute);
+}
+.fs-imagepanel__facts dd {
+  margin: 0;
 }

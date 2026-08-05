@@ -42,6 +42,9 @@ function market(id: string): MarketView {
     resolvedAt: null,
     settledAt: null,
     voidedAt: null,
+    // No image by default. `image.test.ts` overrides it; every other suite proves the page is
+    // unchanged without one, which is the state most markets are in.
+    image: null,
   }
 }
 
