@@ -23,6 +23,7 @@ import { ClaimPanel } from '../components/claimpanel.tsx'
 import { HouseSeedNotice } from '../components/houseseed.tsx'
 import { PoolRatioBar } from '../components/pool.tsx'
 import { StakePanel } from '../components/stakepanel.tsx'
+import { CustodialStakePanel } from '../components/custodialstake.tsx'
 import { Empty, Failed, Forbidden, Loading } from '../components/states.tsx'
 import { getMarket, type MarketDetail, type Provenance } from '../lib/foresight.ts'
 import { durationLabel, utcDateTime } from '../lib/format.ts'
@@ -267,7 +268,13 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
       {/* ───────────────────────── act ───────────────────────── */}
 
       {takesStakes(market.status) && (
-        <StakePanel market={market} pools={pools} poolIsKnown={poolIsKnown} onStaked={reload} />
+        <>
+          <StakePanel market={market} pools={pools} poolIsKnown={poolIsKnown} onStaked={reload} />
+          {/* Separate section, separate heading, separate disclosure — never a second tab on the
+              wallet panel. Two stake paths that look alike and fail oppositely is the confusion
+              25-wallet-clients.md §1 names as the most dangerous thing this estate can build. */}
+          <CustodialStakePanel market={market} onStaked={reload} />
+        </>
       )}
 
       {(market.status === 'resolved' || market.status === 'settled' || market.status === 'void') && (

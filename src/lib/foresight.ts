@@ -347,6 +347,73 @@ export function createStakeIntent(
 }
 
 /**
+ * `GET /stake-assets` — what a bettor may bring.
+ *
+ * **Unauthenticated, and it lists the DISABLED assets too, with the reason.** A user who arrived
+ * holding Litecoin is owed "not yet, and here is what is missing" rather than a list that silently
+ * omits their coin — the same argument `getCategories` makes about a refusal list behind a token.
+ */
+export function getStakeAssets(signal?: AbortSignal): Promise<unknown> {
+  return api<unknown>('/stake-assets', { auth: false, ...signalOf(signal) })
+}
+
+/**
+ * `POST /markets/:id/stake-quote` — price a stake without taking it.
+ *
+ * The amount is SMALLEST UNITS as a decimal string, never a JSON number and never a display
+ * decimal: the asset's decimals are the service's to apply and a client that sent "0.01" would be
+ * asking the service to guess whether it meant satoshis or wei. `stakeassets.ts`'s
+ * `toSmallestUnits` is what turns what the reader typed into this.
+ *
+ * The answer is not durable. A held quote would be a free option written by the platform — the
+ * reader waits for the rate to move their way and then spends it — so the rate that binds is the
+ * one read when the stake is taken, and it is the one written on the row.
+ */
+export function requestStakeQuote(
+  marketId: string,
+  body: { readonly asset: string; readonly amount: string },
+  signal?: AbortSignal,
+): Promise<unknown> {
+  return api<unknown>(`/markets/${encodeURIComponent(marketId)}/stake-quote`, {
+    method: 'POST',
+    auth: true,
+    body: { asset: body.asset, amount: body.amount },
+    ...signalOf(signal),
+  })
+}
+
+/**
+ * `POST /markets/:id/stakes` — take a custodial stake.
+ *
+ * ══════════════════════════════════════════════════════════════════════════════════════════════
+ * THE ONE CALL IN THIS APP THAT MOVES MONEY, AND IT MOVES IT IN THE LEDGER RATHER THAN ON CHAIN.
+ *
+ * Every other stake path here hands a transaction to a wallet and steps out. This one cannot: a
+ * bettor holding BTC has no EMBER key, and custody does not sign for a user
+ * (`custody/src/gates.ts:65`). So their stake is a ledger entry and their share of the platform's
+ * on-chain position is recorded rather than held by them.
+ *
+ * **The `Idempotency-Key` is required and must be STABLE across retries.** The failure it exists
+ * for is a retry after a lost response, which is the one that takes a stranger's money twice, and
+ * a key regenerated per attempt provides none of the protection.
+ * ══════════════════════════════════════════════════════════════════════════════════════════════
+ */
+export function createCustodialStake(
+  marketId: string,
+  body: { readonly asset: string; readonly amount: string; readonly outcome: 0 | 1 },
+  idempotencyKey: string,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  return api<unknown>(`/markets/${encodeURIComponent(marketId)}/stakes`, {
+    method: 'POST',
+    auth: true,
+    idempotencyKey,
+    body: { asset: body.asset, amount: body.amount, outcome: body.outcome },
+    ...signalOf(signal),
+  })
+}
+
+/**
  * `GET /categories` — **`foresight/src/server.ts:391`**.
  *
  * What the platform will run a market on and what it refuses, with the version of the list.

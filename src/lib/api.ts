@@ -246,11 +246,20 @@ export interface RequestOptions {
   /** Default true: attach the bearer token and refresh once on 401. */
   auth?: boolean
   query?: Record<string, string | number | boolean | undefined | null>
+  /**
+   * The client's `Idempotency-Key`, for the one route that moves money.
+   *
+   * Passed through unchanged, because the value of the header is entirely that the CALLER keeps it
+   * stable across retries. Generating one here per request would look identical and protect
+   * nothing — the failure it exists for is a retry after a lost response, and a fresh key makes
+   * that retry a second stake.
+   */
+  idempotencyKey?: string
   signal?: AbortSignal
 }
 
 async function request<T>(base: string, path: string, opts: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, auth = true, query, signal } = opts
+  const { method = 'GET', body, auth = true, query, idempotencyKey, signal } = opts
 
   // `base` may be '' (relative, same origin), so resolve against the page origin.
   const url = new URL(base + path, pageOrigin())
@@ -265,6 +274,7 @@ async function request<T>(base: string, path: string, opts: RequestOptions = {})
     if (body !== undefined) headers['content-type'] = 'application/json'
     const token = getAccessToken()
     if (auth && token) headers['authorization'] = `Bearer ${token}`
+    if (idempotencyKey !== undefined) headers['idempotency-key'] = idempotencyKey
     return fetch(url, {
       method,
       headers,
