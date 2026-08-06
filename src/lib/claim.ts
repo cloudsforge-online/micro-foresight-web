@@ -307,18 +307,18 @@ export async function readChainFacts(
 export function claimSentence(verdict: ClaimVerdict): string {
   switch (verdict.state) {
     case 'no_contract':
-      return 'This market never reached the chain, so there is nothing to claim from.'
+      return 'No contract was ever deployed for this market, so there is nothing here to collect from.'
     case 'not_settled':
-      return 'This market has not settled yet. Nothing is claimable until the outcome is posted.'
+      return 'This market has not settled. Nothing can be collected until the answer is posted.'
     case 'dispute_window':
-      return 'The outcome is posted and the dispute window is still open. Claims open when it ends.'
+      return 'The answer is posted and the window for challenging it is still running. Money moves once that shuts.'
     case 'claimable':
-      return 'This is claimable now. The contract pays it directly to your address.'
+      return 'This is yours to take. The contract sends it straight to your address.'
     case 'nothing_owed':
-      return 'This address is owed nothing from this market.'
+      return 'This market owes this address nothing.'
     case 'claimed':
-      return 'Already claimed. The contract pays each address once.'
+      return 'You have already taken this. The contract settles with each address once.'
     case 'unconfirmed':
-      return 'This market has settled. What you are owed could not be confirmed from here — you can still claim, and the contract decides the amount.'
+      return 'This market settled, but we could not confirm from here what you are owed. You can still claim: the contract decides the amount, not this page.'
   }
 }

@@ -56,11 +56,12 @@ export function PortfolioPage() {
   return (
     <div className="fs-page">
       <header className="fs-page__head">
-        <h1 className="fs-page__title">Positions</h1>
+        <h1 className="fs-page__title">Where your money is riding</h1>
         <p className="fs-page__lede">
-          Everything one address has staked. These figures are a copy of the chain kept by this
-          platform, not the record — the stakes themselves are in the markets' contracts, and each
-          row below says when it was last read.
+          Every open bet held by one address, in one table. We keep a copy of the chain to draw
+          this, which means the numbers here trail the real thing by a little; each row tells you
+          when it was last read. The bets themselves live in the markets&apos; contracts, and that
+          is what pays out.
         </p>
       </header>
 
@@ -90,8 +91,9 @@ export function PortfolioPage() {
             </button>
           </span>
           <span className="fs-field__help" id="lookup-help">
-            Any address. Positions are public chain state, so no account is needed to read one. A
-            mixed-case address is checked against its EIP-55 checksum before it is used.
+            Any address at all — what somebody has riding on a market is public, so this needs no
+            account. Type it with capitals in it and we verify the checksum before looking it up,
+            which catches a mistyped character.
           </span>
         </label>
         {wallet.available && wallet.address === null && (
@@ -106,8 +108,8 @@ export function PortfolioPage() {
           title="No address yet"
           hint={
             wallet.available
-              ? 'Connect a wallet, or paste an address above.'
-              : 'Paste an address above. A wallet is only needed to stake or claim.'
+              ? 'Connect your wallet, or paste in any address.'
+              : 'Paste in any address. You only need a wallet to place a bet or collect one.'
           }
         />
       ) : (
@@ -139,7 +141,7 @@ function Positions({ address }: { address: string }) {
     return <Failed notice={rows.error} onRetry={rows.reload} title="Positions did not load" />
   }
   if (rows.state === 'empty' || !rows.data) {
-    return <Empty title="There are no markets to check yet" hint="Once a market opens, any stake this address makes appears here." />
+    return <Empty title="No markets to look through yet" hint="As soon as one opens, anything this address puts on it turns up here." />
   }
 
   const summary = summarise(rows.data)
@@ -150,12 +152,12 @@ function Positions({ address }: { address: string }) {
     <>
       <p className="fs-portfolio__stamp" role="status">
         {summary.oldestAsOf === null ? (
-          <>Nothing here has been observed on chain yet.</>
+          <>None of this has been read off the chain yet.</>
         ) : (
           <>
-            Oldest observation on this page: {asOfStamp(summary.oldestAsOf)}
-            {ageLabel(summary.oldestAsOf) === null ? '' : ` (${ageLabel(summary.oldestAsOf)})`}. Each
-            row carries its own.
+            The furthest behind anything here is {asOfStamp(summary.oldestAsOf)}
+            {ageLabel(summary.oldestAsOf) === null ? '' : ` (${ageLabel(summary.oldestAsOf)})`}. Every
+            row shows its own reading.
           </>
         )}
       </p>
@@ -171,11 +173,11 @@ function Positions({ address }: { address: string }) {
 
       {staked.length === 0 ? (
         <Empty
-          title="This address has no stake in any market"
-          hint={`${summary.empty} ${summary.empty === 1 ? 'market was' : 'markets were'} checked and answered with nothing.`}
+          title="Nothing riding on anything"
+          hint={`We looked through ${summary.empty} ${summary.empty === 1 ? 'market' : 'markets'} and this address has money in none of them.`}
           action={
             <Link className="cf-btn" to="/">
-              Browse the markets
+              Find something to back
             </Link>
           }
         />

@@ -269,7 +269,7 @@ for (const strict of [false, true] as const) {
           await s.type(amountField(s), '1.5')
           await s.click(s.byRole('button', /stake on yes/i))
           await s.settle(30)
-          assert.match(s.text(), /you declined in your wallet/i, 'the decline was not rendered')
+          assert.match(s.text(), /you turned it down in your wallet/i, 'the decline was not rendered')
 
           await s.click(s.byRole('button', /stake on yes/i))
           await s.settle(30)

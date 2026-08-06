@@ -215,17 +215,17 @@ export function stakeRefusalSentence(
       // The service's own reason names what is missing and which repository it is missing from.
       // Replacing it with a generic sentence would leave a reader unable to tell "never" from
       // "not yet".
-      return message ?? 'This platform does not accept stakes in that asset yet.'
+      return message ?? 'That currency is not one we can take at the moment.'
     case 'rate_unavailable':
-      return 'The rate for that asset could not be read, so nothing was staked and nothing was taken. Staking in an asset the platform cannot price is refused rather than guessed. Try again shortly.'
+      return 'We could not get a price for that currency, so nothing was taken and nothing was placed. Rather than guess a rate and convert your money on it, we stop. Try again shortly.'
     case 'custodial_staking_unconfigured':
-      return 'This deployment takes wallet stakes only. Connect a wallet to stake in EMBER.'
+      return 'This deployment only handles bets sent straight from a wallet. Connect one and pay in EMBER.'
     case 'ledger_unavailable':
-      return 'Your stake was recorded but the balance service did not confirm it. Retry the same stake — it will not be taken twice.'
+      return 'The bet went in, but the service that tracks your balance did not confirm it back. Send the same one again — it will not be taken twice.'
     case 'policy_unavailable':
-      return 'Staking is paused because the policy service could not be reached. Nothing was staked. Try again shortly.'
+      return 'We have stopped taking bets for a moment: the service that approves them is unreachable. Your money is untouched. Come back shortly.'
     case 'policy_denied':
-      return 'Policy refused this stake.'
+      return 'Our checks turned this one down.'
     default:
       return message ?? fallback
   }

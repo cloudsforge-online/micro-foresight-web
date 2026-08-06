@@ -288,7 +288,7 @@ describe('§7.6 — the disclosure, on the page, with force', () => {
         }),
       ),
     )
-    assert.ok(text.includes('The platform will stake in this pool'), 'a planned seed is not a stake')
+    assert.ok(text.includes('Some of the money here will be ours'), 'a planned seed is not a stake')
     assert.ok(
       text.includes('not in the pool yet'),
       `a planned seed has no share of the pool, and 0% would be a lie:\n${text}`,
@@ -310,8 +310,8 @@ describe('§7.6 — the disclosure, on the page, with force', () => {
         }),
       ),
     )
-    assert.ok(text.includes('is not symmetric'), `a lopsided seed must be called out:\n${text}`)
-    assert.ok(text.includes('Do not stake on this market until that is explained'))
+    assert.ok(text.includes('not evenly placed here'), `a lopsided seed must be called out:\n${text}`)
+    assert.ok(text.includes('Keep your money out of this market until somebody explains it'))
   })
 
   it('a malformed field degrades the figures, never the disclosure', () => {

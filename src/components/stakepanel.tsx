@@ -158,9 +158,10 @@ export function StakePanel({
       </h2>
 
       <p className="fs-stake__where">
-        Your wallet sends EMBER straight to this market's contract. <strong>This site never holds
-        it</strong>, cannot move it, and cannot refund it — the contract pays the winners, and it
-        pays them whether or not this site is running.
+        The EMBER leaves your wallet for the contract named below, and nowhere else on the way.{' '}
+        <strong>This site never holds it</strong>, cannot move it, and cannot refund it. Collecting
+        a win reads the contract&apos;s own storage and nothing of ours, so a wallet and a block
+        explorer are enough to be paid even with every CloudsForge machine switched off.
       </p>
 
       <fieldset className="fs-sides" disabled={!isEditable(flow.phase)}>
@@ -197,8 +198,8 @@ export function StakePanel({
           <span className="fs-field__unit">EMBER</span>
         </span>
         <span className="fs-field__help" id="stake-help">
-          A positive amount with at most 18 decimal places — the same rule the service applies
-          (server.ts), checked here so a refusal happens before your wallet opens.
+          More than zero, and no finer than 18 decimal places. We check that here so you find out
+          before your wallet opens rather than after.
         </span>
       </label>
 
@@ -215,8 +216,8 @@ export function StakePanel({
           {projection === null ? (
             <p className="fs-note">
               {poolIsKnown
-                ? 'Nothing is staked on that side yet, so there is no ratio to project from. Your stake would be the first.'
-                : 'The pool could not be read, so there is nothing to project a payout from. You can still stake; the contract decides the payout either way.'}
+                ? 'Nobody has taken that side, so there is no split to work a figure out of. You would be first in.'
+                : 'We could not read the pool, so there is no figure to show you. Going ahead is still fine — the contract works out what you are owed either way.'}
             </p>
           ) : (
             <>
@@ -227,9 +228,10 @@ export function StakePanel({
                 )}
               </p>
               <p className="fs-projection__caveat">
-                What this stake would come back as <em>if the market settled on this pool</em> — your
-                stake included, since it joins the pool it is paid from. It is not a quote. Anybody
-                may stake after you, and the pool at settlement is the one that pays.
+                That is what this money comes back as <em>if the pool stopped moving right now</em>,
+                counting your own contribution, because it joins the pool it would be paid out of.
+                It is not a quote: anybody may stake after you, and whatever the pool holds at
+                settlement is what gets divided.
               </p>
             </>
           )}
@@ -323,8 +325,8 @@ function StakeOutcome({ flow, market }: { flow: StakeFlow; market: MarketView })
   if (flow.phase === 'idle_after_rejection') {
     return (
       <p className="fs-note" role="status">
-        You declined in your wallet. Nothing was sent, and the policy check above still stands if
-        you want to try again.
+        You turned it down in your wallet, so no money moved. The approval above is still good if
+        you change your mind.
       </p>
     )
   }
@@ -365,9 +367,9 @@ function StakeOutcome({ flow, market }: { flow: StakeFlow; market: MarketView })
         <span className="fs-note__icon" aria-hidden="true">
           ◆
         </span>
-        Sent to the contract. Transaction <code className="cf-num">{shortHex(flow.txHash)}</code>.
-        The pool figures on this page come from a mirror of the chain and will not move until it
-        catches up — your stake is in the contract regardless.
+        You are in. Transaction <code className="cf-num">{shortHex(flow.txHash)}</code>. The pool
+        figures on this page are copied from the chain and lag it by a little, so give them a
+        moment to catch up. Your money is already in the contract.
         {market.contractAddress && (
           <>
             {' '}

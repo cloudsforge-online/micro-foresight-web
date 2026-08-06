@@ -88,19 +88,19 @@ export function stakeGate(opts: {
 export function blockerSentence(blocker: StakeBlocker, market: Pick<MarketView, 'status'>): string {
   switch (blocker) {
     case 'not_open':
-      return `This market is ${market.status}. Only an open market takes stakes.`
+      return `Betting is shut on this one: it is ${market.status}. Only a live market takes money.`
     case 'closed':
-      return 'This market has reached its close time. The contract will not accept a stake now.'
+      return 'The clock ran out on this market. The contract turns money away from here on.'
     case 'no_contract':
-      return 'This market has no contract yet, so there is nowhere for a stake to go.'
+      return 'No contract has been deployed for this market, so there is nowhere to send money.'
     case 'signed_out':
-      return 'Sign in to stake. Browsing needs no account; staking is checked against your account by policy.'
+      return 'You will need to sign in first. Reading is open to anyone; putting money down is checked against your account.'
     case 'no_wallet':
-      return 'Connect a wallet. The stake goes from your wallet straight to the contract — this site never holds it.'
+      return 'Connect a wallet to go on. The money travels from you to the contract, and never through us.'
     case 'no_amount':
-      return 'Enter an amount to stake.'
+      return 'Tell us how much you want to put down.'
     case 'bad_amount':
-      return 'An amount is a positive number with at most 18 decimal places.'
+      return 'That has to be a number above zero, with no more than 18 decimal places.'
   }
 }
 
@@ -191,13 +191,13 @@ export function stakeReducer(state: StakeFlow, event: StakeEvent): StakeFlow {
 export function refusalSentence(code: string | undefined, fallback: string): string {
   switch (code) {
     case 'policy_unavailable':
-      return 'Staking is paused because the policy service could not be reached. No intent was issued and nothing was sent. Try again shortly.'
+      return 'We have stopped taking bets for a moment, because the service that approves them could not be reached. Nothing was authorised and nothing was sent. Come back shortly.'
     case 'policy_denied':
-      return 'Policy refused this stake.'
+      return 'Our checks refused this one.'
     case 'not_open':
-      return 'This market is no longer open.'
+      return 'Betting on this market has ended.'
     case 'closed':
-      return 'This market reached its close time while you were staking.'
+      return 'This market hit its close time while you were staking, so it stopped taking money.'
     default:
       return fallback
   }

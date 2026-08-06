@@ -53,13 +53,56 @@ export function MarketsPage() {
   return (
     <div className="fs-page">
       <header className="fs-page__head">
-        <h1 className="fs-page__title">Markets</h1>
+        <h1 className="fs-page__title">Back your read on what happens next</h1>
         <p className="fs-page__lede">
-          Questions about the future, staked and settled in EMBER on Hearth. Every market names the
-          source that will resolve it <em>before</em> it opens, and the pool is divided among the
-          winners by the contract — not by us.
+          Take a side with Bitcoin, Ethereum, Litecoin, Solana, XRP, EMBER or any token launched on
+          CloudsForge. You see the conversion rate before you commit, and what you bring joins one
+          shared pool. When the answer is in, a contract on Hearth splits that pool between the
+          people who called it right.
         </p>
       </header>
+
+      {/*
+        The four sentences a stranger needs before the first card, and the reason they are here
+        rather than a page away: the strongest thing about this product — that you can arrive with
+        almost any coin, and that the payout does not depend on us staying up — was written down
+        nowhere a reader would meet it.
+      */}
+      <ul className="fs-rules">
+        <li className="fs-rule">
+          <h2 className="fs-rule__title">Bring the coin you already hold</h2>
+          <p className="fs-rule__body">
+            Seven currencies and every token minted on the platform are accepted. We quote the
+            conversion, you decide, and only then does the money move. From that point your
+            position, your odds and your payout are all counted in EMBER.
+          </p>
+        </li>
+        <li className="fs-rule">
+          <h2 className="fs-rule__title">One pool, whatever you paid with</h2>
+          <p className="fs-rule__body">
+            Everything converges into a single pool per market instead of one pot per currency.
+            Bitcoin and Litecoin have no contract that could hold a pot, so a per-currency pool
+            would be a figure we held and promised to share out. A shared pool is a figure the
+            chain holds instead.
+          </p>
+        </li>
+        <li className="fs-rule">
+          <h2 className="fs-rule__title">The contract pays, not the company</h2>
+          <p className="fs-rule__body">
+            Claiming reads nothing but the contract&apos;s own storage. Switch off every server we
+            run and a winner with a wallet and a block explorer still gets paid. That is the line
+            between a prediction market and a bookmaker.
+          </p>
+        </li>
+        <li className="fs-rule">
+          <h2 className="fs-rule__title">Your return follows the crowd, not a quote</h2>
+          <p className="fs-rule__body">
+            The winning side shares the losing side&apos;s money in proportion to what each person
+            put in. Nobody quotes you fixed odds, because the pool at close is the pool that pays.
+            Every market names the source that will settle it before it opens.
+          </p>
+        </li>
+      </ul>
 
       <div className="fs-filters" role="group" aria-label="Filter markets by status">
         {FILTERS.map((filter) => (
@@ -83,7 +126,7 @@ export function MarketsPage() {
       {markets.state === 'empty' && (
         <Empty
           title={status === null ? 'There are no markets yet' : `No market is ${labelFor(status)}`}
-          hint="An operator approves every market before it opens, so the list moves in steps rather than continuously."
+          hint="A person reads and approves every question before it goes live, so this list arrives in batches rather than a trickle."
           action={
             status === null ? undefined : (
               <button type="button" className="cf-btn" onClick={() => setStatus(null)}>
@@ -175,7 +218,7 @@ function MarketCard({ market }: { market: MarketView }) {
         )}
       </dl>
       <Link className="fs-card__more" to={marketPath(market.id)}>
-        Read the criteria and sources →
+        See what settles this, and take a side →
       </Link>
     </li>
   )
