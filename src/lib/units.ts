@@ -3,7 +3,7 @@
  *
  * ── Money is a bigint end to end ───────────────────────────────────────────────────────────────
  *
- * The mirror serves wei as decimal STRINGS — `foresight/src/mirror.ts:251-252`: "Wei on YES and on
+ * The mirror serves wei as decimal STRINGS — `foresight/src/mirror.ts`: "Wei on YES and on
  * NO, as strings — a JSON number cannot carry 1e18 exactly." Parsing one with `Number()` loses the
  * bottom of an 18-decimal amount, which is exactly where a reconciliation drift shows up, and is
  * also the part a contract's integer division actually depends on. So a wei quantity is a
@@ -15,7 +15,7 @@
  * A fraction longer than the display precision is CUT. Rounding 0.9999 up to 1.00 shows a user a
  * balance they do not have, and a figure that reads higher than it is, is the one rounding error
  * nobody forgives. Cutting understates by less than the last displayed digit, which is the safe
- * direction — and the contract's own arithmetic floors too (`ForesightMarket.sol:409`), so
+ * direction — and the contract's own arithmetic floors too (`ForesightMarket.sol`), so
  * truncating agrees with it rather than drifting from it.
  *
  * ── A missing value is missing ─────────────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ export const WEI_PER_EMBER = 1_000_000_000_000_000_000n
 /**
  * The amount format `POST /markets/:id/stake-intent` will accept.
  *
- * This is `DECIMAL` from `foresight/src/server.ts:187`, character for character:
+ * This is `DECIMAL` from `foresight/src/server.ts`, character for character:
  *
  *     /^(?!0+(\.0+)?$)\d{1,20}(\.\d{1,18})?$/
  *
@@ -76,7 +76,7 @@ export function toWei(text: string | null | undefined): bigint | null {
  *
  * The mirror's sums are `numeric(78,0)::text`, so a well-formed answer is bare digits. Anything
  * else — `null`, `''`, a float that got through, a JSON number that lost its tail — is `null`, not
- * `0n`. `foresight/src/mirror.ts:284-286` already coalesces an absent SUM to `'0'` on its side,
+ * `0n`. `foresight/src/mirror.ts` already coalesces an absent SUM to `'0'` on its side,
  * so a genuine zero pool arrives as `'0'` and is distinguishable here from a value that never came.
  */
 export function fromWeiString(value: string | null | undefined): bigint | null {
@@ -152,7 +152,7 @@ export function toQuantity(value: bigint): string {
  * Basis points as a percentage string, in integer arithmetic. `6234` → `62.3%`.
  *
  * `null` in, `null` out — `poolOf` answers `yesBps: null` for a pool with nothing in it
- * (`foresight/src/mirror.ts:305`), because a share of nothing is not 0%, it is undefined. A UI
+ * (`foresight/src/mirror.ts`), because a share of nothing is not 0%, it is undefined. A UI
  * that printed `0.0%` there would be asserting that nobody thinks this will happen, when what is
  * true is that nobody has staked at all.
  */

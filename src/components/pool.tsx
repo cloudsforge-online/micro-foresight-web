@@ -29,7 +29,7 @@
  * ── And the sentence that must never be omitted ────────────────────────────────────────────────
  *
  * A parimutuel share is not a price, not a probability the platform asserts, and NOT a return.
- * `ForesightMarket.sol:359-361` and `pool.ts` both say it; this component prints it.
+ * `ForesightMarket.sol` and `pool.ts` both say it; this component prints it.
  */
 import type { ReactNode } from 'react'
 import { OUTCOME_NO, OUTCOME_YES } from '../lib/abi.ts'

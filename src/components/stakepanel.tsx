@@ -5,7 +5,7 @@
  *
  * That the stake is being sent to, held by, or refundable from CloudsForge. It is not. The service
  * answers with an address and some calldata and then has no further part in it
- * (`foresight/src/server.ts:474-482`). So the panel names the contract, shows the amount, and says
+ * (`foresight/src/server.ts`). So the panel names the contract, shows the amount, and says
  * in as many words where the money goes.
  *
  * ── And what it must never present ─────────────────────────────────────────────────────────────
@@ -67,8 +67,8 @@ export function StakePanel({
    * is not on the DOM node until the render commits. So two clicks delivered in ONE tick — a
    * double-click on a trackpad — both read `phase === 'idle'` off a live-looking button and both
    * run the body below to completion. That is two `createStakeIntent` calls against a route that
-   * reads no Idempotency-Key (`foresight/src/server.ts:533`; `idempotencyKeyOf` at `server.ts:981`
-   * has one call site, the admin deploy route at `server.ts:809`), and then TWO
+   * reads no Idempotency-Key (`foresight/src/server.ts`; `idempotencyKeyOf` at `server.ts`
+   * has one call site, the admin deploy route at `server.ts`), and then TWO
    * `eth_sendTransaction` calls: two real stakes, of the same money, with no server-side gate
    * behind them and nothing to undo them with.
    *
@@ -198,7 +198,7 @@ export function StakePanel({
         </span>
         <span className="fs-field__help" id="stake-help">
           A positive amount with at most 18 decimal places — the same rule the service applies
-          (server.ts:187), checked here so a refusal happens before your wallet opens.
+          (server.ts), checked here so a refusal happens before your wallet opens.
         </span>
       </label>
 

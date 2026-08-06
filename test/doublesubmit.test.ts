@@ -17,9 +17,9 @@
  * double-click on a real machine, and it is the case that was open.
  *
  * On this bundle the loss is not a duplicate row somebody can delete. `POST /markets/:id/stake-
- * intent` (`foresight/src/server.ts:533`) neither requires nor reads an `Idempotency-Key` —
- * `idempotencyKeyOf` (`server.ts:981`) has ONE call site in the whole service, the admin deploy
- * route at `server.ts:809` — so two presses are two independent policy evaluations. And behind that
+ * intent` (`foresight/src/server.ts`) neither requires nor reads an `Idempotency-Key` —
+ * `idempotencyKeyOf` (`server.ts`) has ONE call site in the whole service, the admin deploy
+ * route at `server.ts` — so two presses are two independent policy evaluations. And behind that
  * is `eth_sendTransaction`, which has no server-side gate at all and nothing to undo it with: two
  * presses are two real on-chain stakes of the same amount, or two claim transactions of which the
  * second pays gas to revert. The client latch is the only defence that exists.
@@ -184,7 +184,7 @@ for (const strict of [false, true] as const) {
             s.api.matching(`POST /markets/${fx.MARKET_ID}/stake-intent`).length,
             1,
             'one double-click produced two policy evaluations for one intent. The route reads no ' +
-              'Idempotency-Key (foresight/src/server.ts:533), so the service cannot tell them apart.',
+              'Idempotency-Key (foresight/src/server.ts), so the service cannot tell them apart.',
           )
         },
       )

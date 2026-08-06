@@ -6,7 +6,7 @@
  * **Present odds as a return.** In a parimutuel market there is no price and no counterparty: the
  * pool is divided among the winners *at settlement*, so a payout computed now is a payout under
  * the pool as it stands now, and the pool moves every time anybody stakes — including when you
- * do. `ForesightMarket.sol:359-361` says it about `oddsBps`:
+ * do. `ForesightMarket.sol` says it about `oddsBps`:
  *
  *   > Not a price and not a probability the platform is asserting — it is arithmetic on two
  *   > numbers anybody can read off the chain, which is exactly what parimutuel odds are.
@@ -16,26 +16,26 @@
  *
  * ── Why it is duplicated from Solidity rather than read from the service ───────────────────────
  *
- * `poolOf` (`foresight/src/mirror.ts:276`) already returns `yesBps`/`noBps`, and this app shows
+ * `poolOf` (`foresight/src/mirror.ts`) already returns `yesBps`/`noBps`, and this app shows
  * them. But the *payout* projection has no route at all, and computing it in floating point — the
  * obvious client-side shortcut — would disagree with the contract in the last few wei of every
  * figure, which is precisely the region where "did I get paid what the page said" gets asked. So
  * the three operations that decide money are reproduced here in the same order, with the same
  * integer division, against the same lines:
  *
- *   fee          = losingPool * feeBps / 10_000            ForesightMarket.sol:384-388
- *   distributable = total - fee                            ForesightMarket.sol:391
- *   payout       = backed * distributable / winningPool    ForesightMarket.sol:409
+ *   fee          = losingPool * feeBps / 10_000            ForesightMarket.sol
+ *   distributable = total - fee                            ForesightMarket.sol
+ *   payout       = backed * distributable / winningPool    ForesightMarket.sol
  *
  * ORDER IS LOAD-BEARING. `backed * distributable / winningPool` is not
  * `backed * (distributable / winningPool)`: the second floors twice and loses up to one wei per
  * staker per operation. `test/pool.test.ts` proves the sum of every payout plus the fee plus the
  * residue equals the pool exactly, which is the property the service proves against the executed
- * bytecode (docs/ecosystem/18-build-status.md:94).
+ * bytecode (docs/ecosystem/18-build-status.md).
  *
  * ── The fee comes off the LOSING pool ──────────────────────────────────────────────────────────
  *
- * Not off the top. `ForesightMarket.sol:370-380` explains why, and the consequence is a promise
+ * Not off the top. `ForesightMarket.sol` explains why, and the consequence is a promise
  * this UI is allowed to make: **a winner always gets back at least what they staked**, because
  * the fee is charged against other people's losses and never against their principal. Getting
  * this wrong in the client would show a favourite's backer a projected payout below their stake,
@@ -44,7 +44,7 @@
 import { OUTCOME_NO, OUTCOME_YES } from './abi.ts'
 import { fromWeiString } from './units.ts'
 
-/** `uint16 internal constant BPS = 10_000` — `ForesightMarket.sol:63`. */
+/** `uint16 internal constant BPS = 10_000` — `ForesightMarket.sol`. */
 export const BPS = 10_000n
 
 export type Outcome = 0 | 1
@@ -85,7 +85,7 @@ export function sideOf(pools: Pools, outcome: Outcome): bigint | null {
  *
  * `Number((side * 10_000n) / total)` is exact for any pool: the division happens in bigint and
  * the result is at most 10,000, so the narrowing to a JS number cannot lose a digit. This is the
- * same expression as `foresight/src/mirror.ts:302-303` and `ForesightMarket.sol:366`.
+ * same expression as `foresight/src/mirror.ts` and `ForesightMarket.sol`.
  *
  * `null` when nothing is staked, matching the mirror rather than the contract. The contract
  * returns 0 because Solidity has no null; a UI that rendered "0.0% chance" for a market nobody
@@ -99,7 +99,7 @@ export function oddsBps(pools: Pools, outcome: Outcome): number | null {
 }
 
 /**
- * The settlement fee, off the losing pool only — `ForesightMarket.sol:384-388`.
+ * The settlement fee, off the losing pool only — `ForesightMarket.sol`.
  *
  * Zero on a void, always: "refunds are whole", 19-new-products.md §2.5. Callers pass
  * `winner: null` for a void.
@@ -112,7 +112,7 @@ export function feeAmount(pools: Pools, winner: Outcome | null, feeBps: number):
   return (losing * BigInt(feeBps)) / BPS
 }
 
-/** The pot the winners divide: everything staked, less the fee — `ForesightMarket.sol:391`. */
+/** The pot the winners divide: everything staked, less the fee — `ForesightMarket.sol`. */
 export function distributable(pools: Pools, winner: Outcome | null, feeBps: number): bigint | null {
   const total = totalOf(pools)
   const fee = feeAmount(pools, winner, feeBps)
@@ -124,7 +124,7 @@ export function distributable(pools: Pools, winner: Outcome | null, feeBps: numb
  * What a staker is owed if the market settles on `winner` with exactly these pools.
  *
  * On a void (`winner === null`) it is everything they put in, on both sides, exactly —
- * `ForesightMarket.sol:402-404`.
+ * `ForesightMarket.sol`.
  *
  * `null` — not `0n` — whenever an input is unknown. A zero here is a sentence ("you are owed
  * nothing") and it must only be said when it is true.
@@ -149,7 +149,7 @@ export function projectedPayout(opts: {
   if (backed === null || winningPool === null || pot === null) return null
   if (backed === 0n) return 0n
   // `oracleAct` voids rather than resolves a market with an empty winning pool
-  // (`ForesightMarket.sol:245-249`), so on chain this division is never by zero. Here it can be,
+  // (`ForesightMarket.sol`), so on chain this division is never by zero. Here it can be,
   // because the caller may be projecting an outcome nobody has backed — and the honest answer to
   // "what would I get if I had staked on a side nobody staked on" is not a number.
   if (winningPool === 0n) return null
@@ -210,7 +210,7 @@ export function projectedMultipleBps(payout: bigint | null, stake: bigint): numb
 /**
  * The residue: what the contract would still hold once every winner had claimed.
  *
- * Floor division leaves at most one wei per winner behind (`ForesightMarket.sol:490-495`), and
+ * Floor division leaves at most one wei per winner behind (`ForesightMarket.sol`), and
  * `sweepDust` is the only thing that may ever move it. It exists here so `test/pool.test.ts` can
  * assert the conservation property — fee + every payout + residue == the pool, exactly, and the
  * residue strictly below the number of winners — which is the arithmetic claim the whole product

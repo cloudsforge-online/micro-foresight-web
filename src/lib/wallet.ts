@@ -5,7 +5,7 @@
  *
  * `micro-foresight` has no key and holds no stake. `POST /markets/:id/stake-intent` answers with a
  * contract address, `stake(uint8)` calldata and a policy verdict, and then stops — "not one wei
- * passes through here" (`foresight/src/server.ts:474`). The user's wallet builds, signs and sends.
+ * passes through here" (`foresight/src/server.ts`). The user's wallet builds, signs and sends.
  * So the UI's job at this seam is to be *transparent*: show the address the money is going to,
  * show the amount, and hand both to the wallet unchanged. There is no step in which this app is
  * holding anything, and no copy anywhere in it may imply otherwise.
@@ -74,7 +74,7 @@ export interface TransactionRequest {
  *
  * ── The service deliberately does not compute `value`, and this is why ─────────────────────────
  *
- * `server.ts:530-533`: "The wallet sets `value` to the amount in wei; the service deliberately
+ * `server.ts`: "The wallet sets `value` to the amount in wei; the service deliberately
  * does not compute that, because the wallet is what knows the user's balance and what will
  * actually be sent." So the conversion from the decimal string the user typed to wei happens
  * here, in `units.toWei`, and this function refuses rather than guesses if the two disagree.
@@ -100,7 +100,7 @@ export function buildStakeTransaction(opts: {
  *
  * Built from `abi.claimCalldata()` rather than from anything the service said, because there is
  * nothing the service says — and because a claim that depended on a service response would undo
- * `ForesightMarket.sol:436-441`.
+ * `ForesightMarket.sol`.
  */
 export function buildClaimTransaction(opts: {
   readonly contractAddress: string

@@ -22,12 +22,12 @@ calls.
 **This site never holds a stake, and nothing in it may imply otherwise.**
 
 `micro-foresight` has no key and holds no money. `POST /markets/:id/stake-intent` answers with a
-contract address, `stake(uint8)` calldata and a policy verdict, and then stops — `server.ts:474`:
+contract address, `stake(uint8)` calldata and a policy verdict, and then stops — `server.ts`:
 *"not one wei passes through here… This service could be switched off between this response and the
 send, and the stake would still work."* The user's wallet builds, signs and sends the transaction
 straight to the market's contract.
 
-The same is true in the other direction. `ForesightMarket.sol:436-441`:
+The same is true in the other direction. `ForesightMarket.sol`:
 
 > **THIS FUNCTION IS WHY THE MIRROR IS ALLOWED TO DIE.** It reads nothing but this contract's own
 > storage. If every server this platform owns is switched off, a winner with a wallet and a block
@@ -47,16 +47,16 @@ place a route is declared. **There is no `/v1` prefix on anything in this servic
 
 | Call | Route | Verified at | Auth |
 | --- | --- | --- | --- |
-| `listMarkets` | `GET /markets?status=&limit=` | `server.ts:402` | none |
-| `getMarket` | `GET /markets/:id` | `server.ts:417` | none |
-| `getPosition` | `GET /markets/:id/positions/:address` | `server.ts:448` | none |
-| `createStakeIntent` | `POST /markets/:id/stake-intent` | `server.ts:483` | bearer |
-| `getCategories` | `GET /categories` | `server.ts:391` | none |
+| `listMarkets` | `GET /markets?status=&limit=` | `server.ts` | none |
+| `getMarket` | `GET /markets/:id` | `server.ts` | none |
+| `getPosition` | `GET /markets/:id/positions/:address` | `server.ts` | none |
+| `createStakeIntent` | `POST /markets/:id/stake-intent` | `server.ts` | bearer |
+| `getCategories` | `GET /categories` | `server.ts` | none |
 
-Supporting citations used by the client: `parseStatus` `server.ts:846-850`, `parseLimit`
-`server.ts:852-859`, `requireDecimal` `server.ts:892-897`, the refusal codes `server.ts:498-528`,
-`publicView` `markets.ts:614-639`, `PoolView` `mirror.ts:249-268`, `Idea` `ideas.ts:34-61`,
-`CategorySpec` `categories.ts:36-49`.
+Supporting citations used by the client: `parseStatus` `server.ts`, `parseLimit`
+`server.ts`, `requireDecimal` `server.ts`, the refusal codes `server.ts`,
+`publicView` `markets.ts`, `PoolView` `mirror.ts`, `Idea` `ideas.ts`,
+`CategorySpec` `categories.ts`.
 
 `test/foresight.test.ts` asserts the **request** — path, method, query and body — for every one of
 them. That is deliberate, and it is the gap that let two defects ship in this estate: `micro-wallet`
@@ -86,7 +86,7 @@ market exists** → the pool → the stake form. Putting the stake button above 
 signature line above a contract.
 
 The **question hash is recomputed in your browser** from the canonical bytes the page was served
-(`src/lib/market.ts`). `server.ts:420-423` puts the document on the wire precisely so a reader need
+(`src/lib/market.ts`). `server.ts` puts the document on the wire precisely so a reader need
 not take the platform's word that the criteria have not been edited since the market opened — and a
 page that merely prints the hash the server sent, beside the document the server sent, has verified
 nothing.
@@ -96,15 +96,15 @@ nothing.
 ## 4. Odds
 
 **Odds are the pool ratio.** Not a price, not a probability the platform asserts, and **never a
-return.** `ForesightMarket.sol:359-361` says so and this UI repeats it beside every figure.
+return.** `ForesightMarket.sol` says so and this UI repeats it beside every figure.
 
 The arithmetic in `src/lib/pool.ts` reproduces the contract's three money operations in the same
 order and the same integer division:
 
 ```
-fee           = losingPool * feeBps / 10_000      ForesightMarket.sol:384-388
-distributable = total - fee                       ForesightMarket.sol:391
-payout        = backed * distributable / winPool  ForesightMarket.sol:409
+fee           = losingPool * feeBps / 10_000      ForesightMarket.sol
+distributable = total - fee                       ForesightMarket.sol
+payout        = backed * distributable / winPool  ForesightMarket.sol
 ```
 
 Order is load-bearing: `backed * (distributable / winPool)` floors twice and loses a wei per staker
@@ -160,15 +160,15 @@ that survives `forced-colors` and a monochrome print.
 is corrected**, so this repository's workarounds delete themselves rather than outliving their
 reason.
 
-1. **`tokens.css:332` reads `[data-product='foresight']`** — missing the `cf-` prefix that all
-   twelve other product selectors in that file carry, and that `tokens.css:140` documents as *the*
+1. **`tokens.css` reads `[data-product='foresight']`** — missing the `cf-` prefix that all
+   twelve other product selectors in that file carry, and that `tokens.css` documents as *the*
    attribute. The rule carrying Foresight's accent (`#1e89c7`) therefore matches nothing and the
-   page falls back to the company ember. (`tokens.css:363` already documents this exact failure
+   page falls back to the company ember. (`tokens.css` already documents this exact failure
    happening once before, with `data-cf-product="admin"`.)
    *Workaround here:* `index.html` carries both spellings. No brand value is copied into this repo.
 
 2. **`surfaces.ts` gives `foresight` `devPort: 4011`** — which is also `beacon`'s, and which is not
-   the port the service listens on (`micro-foresight/.env.example:13` — `PORT=4021`). So
+   the port the service listens on (`micro-foresight/.env.example` — `PORT=4021`). So
    `cloudsforgeHosts().foresight` resolves a local stack to Beacon, and every request under
    `pnpm dev` would go to the wrong service.
    *Workaround here:* `src/lib/hosts.ts` overrides the **port only**, on a **local host only**. The

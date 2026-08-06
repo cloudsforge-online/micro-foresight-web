@@ -28,7 +28,7 @@ import {
 const CONTRACT = '0x00112233445566778899aabbccddeeff00112233'
 const FROM = '0xaabbccddeeff00112233445566778899aabbccdd'
 
-/** What `POST /markets/:id/stake-intent` answers with — `foresight/src/server.ts:524-543`. */
+/** What `POST /markets/:id/stake-intent` answers with — `foresight/src/server.ts`. */
 const INTENT: StakeIntent = {
   marketId: 'm-1',
   chain: 'hearth',
@@ -75,7 +75,7 @@ describe('buildStakeTransaction', () => {
   })
 
   it('sets `value` in wei, which the service deliberately does not compute', () => {
-    // `server.ts:530-533` — "the wallet is what knows the user's balance and what will actually be
+    // `server.ts` — "the wallet is what knows the user's balance and what will actually be
     // sent". 1.5 EMBER is 0x14d1120d7b160000 wei.
     const tx = buildStakeTransaction({ intent: INTENT, amountWei: 1_500_000_000_000_000_000n, from: FROM })
     assert.equal(tx.value, '0x14d1120d7b160000')
@@ -110,7 +110,7 @@ describe('buildStakeTransaction', () => {
 
 describe('buildClaimTransaction', () => {
   it('is claim() with no value, built from the ABI rather than from a service response', () => {
-    // There is no claim intent to ask for. `ForesightMarket.sol:436-441` is why that must stay true.
+    // There is no claim intent to ask for. `ForesightMarket.sol` is why that must stay true.
     const tx = buildClaimTransaction({ contractAddress: CONTRACT, from: FROM })
     assert.equal(tx.to, CONTRACT)
     assert.equal(tx.data, claimCalldata())

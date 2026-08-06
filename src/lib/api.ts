@@ -110,8 +110,8 @@ export class ApiError extends Error {
  *
  *     { "error": { "code": "forbidden", "message": "…", "requestId": "cf-1a2b" } }
  *
- * — `hub-api/src/server.ts:589-591`, `identity/src/server.ts:1431-1433` and
- * `service-template/src/server.ts:342` are the same three lines, and every other service is
+ * — `hub-api/src/server.ts`, `identity/src/server.ts` and
+ * `service-template/src/server.ts` are the same three lines, and every other service is
  * generated from that template. The version of this function carried over from the web template
  * read `data.error` as a STRING. Against a real service `data.error` is an object, so
  * `message = data.error` assigned an object to a string field and every server-side failure in

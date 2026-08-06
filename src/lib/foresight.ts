@@ -13,10 +13,12 @@
  *     routes at all, takes the action in the body, and registers `market.listing.create`. That
  *     one returned 403 on *every* listing.
  *
- * Both were found by a human reading the other side's routes. So: `foresight/src/server.ts` line
- * 353 to line 800 is the complete route table, `buildRoutes()` is the only place a route is
- * declared, and every path below carries the line it appears on. **There is no `/v1` prefix on
- * anything in this service.** `test/foresight.test.ts` asserts the REQUEST — path, method, query
+ * Both were found by a human reading the other side's routes. So: `buildRoutes()` in
+ * `foresight/src/server.ts` is the only place a route is declared, and every path below names that
+ * file. It names the FILE and not a line in it — a line names a position in a file micro-foresight
+ * owns and is free to edit, and nothing runs this suite when that service changes, so a line goes
+ * stale silently and surfaces during a release. **There is no `/v1` prefix on anything in this
+ * service.** `test/foresight.test.ts` asserts the REQUEST — path, method, query
  * and body — for every call in this file, because a test that stubs fetch and asserts the
  * response is a test that passes against a path that does not exist.
  * ══════════════════════════════════════════════════════════════════════════════════════════════
@@ -27,14 +29,14 @@ import type { ImageRef } from './studio.ts'
 /* ------------------------------------------------------------------ what the service sends */
 
 /**
- * `MarketStatus` — `foresight/src/markets.ts:39`.
+ * `MarketStatus` — `foresight/src/markets.ts`.
  *
  * All seven, including the three a public reader will rarely see: a market is `draft` until an
  * operator approves it and `approved` until it is deployed, and both are listable.
  */
 export type MarketStatus = 'draft' | 'approved' | 'open' | 'closed' | 'resolved' | 'settled' | 'void'
 
-/** Every status `?status=` accepts — `foresight/src/server.ts:846-850`. */
+/** Every status `?status=` accepts — `foresight/src/server.ts`. */
 export const MARKET_STATUSES: readonly MarketStatus[] = [
   'draft',
   'approved',
@@ -61,7 +63,7 @@ export interface MarketImageRef {
 }
 
 /**
- * One market, exactly as `publicView` emits it — `foresight/src/markets.ts:614-639`.
+ * One market, exactly as `publicView` emits it — `foresight/src/markets.ts`.
  *
  * Deliberately narrow on the service's side, and mirrored narrowly here. There is no lease owner,
  * no raw transaction, no custody audit id and no operator subject in it, and adding a field to
@@ -115,7 +117,7 @@ export interface MarketView {
   readonly voidedAt: string | null
 }
 
-/** `PoolView` — `foresight/src/mirror.ts:249-268`. Wei are strings; a JSON number cannot hold 1e18. */
+/** `PoolView` — `foresight/src/mirror.ts`. Wei are strings; a JSON number cannot hold 1e18. */
 export interface PoolView {
   readonly yes: string
   readonly no: string
@@ -126,18 +128,18 @@ export interface PoolView {
   /**
    * When the mirror last read the chain. `null` means it never has.
    *
-   * `mirror.ts:259-262`: "Shown, always. A pool with no `asOf` is a pool a reader will assume is
+   * `mirror.ts`: "Shown, always. A pool with no `asOf` is a pool a reader will assume is
    * live." Every figure derived from this object is rendered beside it.
    */
   readonly asOf: string | null
   readonly lastBlock: number | null
   readonly tipBlock: number | null
   readonly behindBlocks: number | null
-  /** True once the mirror is a confirmation depth behind, OR has never run — `mirror.ts:311-313`. */
+  /** True once the mirror is a confirmation depth behind, OR has never run — `mirror.ts`. */
   readonly stale: boolean
 }
 
-/** One source the idea pipeline found — `foresight/src/ideas.ts:34-39`. */
+/** One source the idea pipeline found — `foresight/src/ideas.ts`. */
 export interface IdeaSource {
   readonly url: string
   readonly title: string
@@ -146,7 +148,7 @@ export interface IdeaSource {
 }
 
 /**
- * Why this market exists — `foresight/src/server.ts:437-448`.
+ * Why this market exists — `foresight/src/server.ts`.
  *
  * §2.3.3 of 19-new-products.md is the reason it is on the wire at all: "sources are carried
  * through to the public market page, so a bettor can see *why* the market exists". `null` for a
@@ -162,20 +164,20 @@ export interface Provenance {
 }
 
 /**
- * The house seed disclosure — `houseSeedView`, `foresight/src/houseseed.ts:230-243`, served on
- * the market page at `foresight/src/server.ts:477`.
+ * The house seed disclosure — `houseSeedView`, `foresight/src/houseseed.ts`, served on
+ * the market page at `foresight/src/server.ts`.
  *
  * ── This is the field docs/ecosystem/21 §7.6 is about ──────────────────────────────────────────
  *
  * §7.6: "The foresight market page **renders** the house seed disclosure whenever a house stake
  * exists — asserted the way admin-web asserts its missing og card: presence with force." The
- * service already proves it SERVES it (`foresight/src/houseseed.test.ts:429`). Everything below
+ * service already proves it SERVES it (`foresight/src/houseseed.test.ts`). Everything below
  * exists so this app proves it SHOWS it, which is a different claim and the one a bettor cares
  * about: an undisclosed house position makes the other four properties (symmetric, at-open-only,
  * trigger-enforced, capped) pointless, because they are all things the reader is being asked to
  * take on trust *because* the position is disclosed.
  *
- * `disclosure` is composed by the service, once, deliberately — houseseed.ts:213-218: "so
+ * `disclosure` is composed by the service, once, deliberately — houseseed.ts: "so
  * `foresight-web` renders a disclosure the platform wrote rather than one each client
  * improvises." It is rendered verbatim. The amounts beside it are here so the sentence can be
  * CHECKED rather than merely repeated; see `houseseed.ts` in this app.
@@ -200,13 +202,13 @@ export interface HouseSeedView {
   readonly disclosure: string
 }
 
-/** The body of `GET /markets/:id` — `foresight/src/server.ts:426-450`. */
+/** The body of `GET /markets/:id` — `foresight/src/server.ts`. */
 export interface MarketDetail {
   readonly market: MarketView
   readonly pool: PoolView
   /**
    * `null` when no house seed exists for this market, and the service sends the explicit null
-   * rather than omitting the key (`foresight/src/houseseed.test.ts:447-450`) — so "no seed" is
+   * rather than omitting the key (`foresight/src/houseseed.test.ts`) — so "no seed" is
    * distinguishable from "field missing because the deploy is old". Both render as no
    * disclosure; only one of them would be a bug worth finding.
    */
@@ -215,26 +217,26 @@ export interface MarketDetail {
   readonly provenance: Provenance | null
 }
 
-/** The body of `GET /markets/:id/positions/:address` — `foresight/src/server.ts:459-472`. */
+/** The body of `GET /markets/:id/positions/:address` — `foresight/src/server.ts`. */
 export interface PositionResponse {
   readonly marketId: string
   readonly address: string
-  /** Wei staked on each side, as strings — `foresight/src/mirror.ts:320-334`. */
+  /** Wei staked on each side, as strings — `foresight/src/mirror.ts`. */
   readonly position: { readonly yes: string; readonly no: string }
-  /** Repeated out of `pool` deliberately; see the comment at `server.ts:466-467`. */
+  /** Repeated out of `pool` deliberately; see the comment at `server.ts`. */
   readonly asOf: string | null
   readonly stale: boolean
   readonly contractAddress: string | null
 }
 
-/** The body of `POST /markets/:id/stake-intent` — `foresight/src/server.ts:524-543`. */
+/** The body of `POST /markets/:id/stake-intent` — `foresight/src/server.ts`. */
 export interface StakeIntent {
   readonly marketId: string
   readonly chain: string
   readonly network: string
   /** The contract. The wallet sends here; not one wei passes through the service. */
   readonly to: string
-  /** `stake(uint8)` calldata, built by the service — `server.ts:533`. */
+  /** `stake(uint8)` calldata, built by the service — `server.ts`. */
   readonly data: string
   readonly outcome: number
   readonly amount: string
@@ -247,7 +249,7 @@ export interface StakeIntent {
   readonly closeTime: string
 }
 
-/** `CategorySpec` — `foresight/src/categories.ts:36-49`. */
+/** `CategorySpec` — `foresight/src/categories.ts`. */
 export interface CategorySpec {
   readonly id: string
   readonly title: string
@@ -256,16 +258,16 @@ export interface CategorySpec {
    * The kinds of source that can settle a question here, in order of preference.
    *
    * Not decoration: a market's `resolutionSourceKind` must be one of these and it is checked.
-   * `categories.ts:41-47` — "A category whose questions cannot be settled from a source the
+   * `categories.ts` — "A category whose questions cannot be settled from a source the
    * operator would cite in public is a category this platform does not run."
    */
   readonly sourceKinds: readonly string[]
 }
 
 /**
- * The body of `GET /categories` — `foresight/src/server.ts:391-399`.
+ * The body of `GET /categories` — `foresight/src/server.ts`.
  *
- * `refusals` carries an `id` and a `reason` and no title — `categories.ts:114`.
+ * `refusals` carries an `id` and a `reason` and no title — `categories.ts`.
  */
 export interface CategoryCatalogue {
   readonly version: number
@@ -276,10 +278,10 @@ export interface CategoryCatalogue {
 /* ------------------------------------------------------------------ the calls */
 
 /**
- * `GET /markets` — **`foresight/src/server.ts:402`**.
+ * `GET /markets` — **`foresight/src/server.ts`**.
  *
- * `status` is optional and validated against the seven names at `server.ts:846-850`; `limit`
- * defaults to 50 server-side and must be a whole number in 1..200 (`server.ts:852-859`). Both are
+ * `status` is optional and validated against the seven names at `server.ts`; `limit`
+ * defaults to 50 server-side and must be a whole number in 1..200 (`server.ts`). Both are
  * checked here as well, so a bad value is a bug caught in a test rather than a 400 rendered at a
  * reader who cannot act on it.
  *
@@ -313,7 +315,7 @@ export async function listMarkets(
 }
 
 /**
- * `GET /markets/:id` — **`foresight/src/server.ts:417`**.
+ * `GET /markets/:id` — **`foresight/src/server.ts`**.
  *
  * Returns the market, the pool, the canonical document with its hash, the house seed disclosure
  * and the provenance. This is the only route that carries the cited sources or the house seed,
@@ -324,11 +326,11 @@ export function getMarket(id: string, signal?: AbortSignal): Promise<MarketDetai
 }
 
 /**
- * `GET /markets/:id/positions/:address` — **`foresight/src/server.ts:448`**.
+ * `GET /markets/:id/positions/:address` — **`foresight/src/server.ts`**.
  *
  * Public, and keyed by ADDRESS rather than by session: a position belongs to whoever holds the
  * key, and the mirror is a copy of public chain state. The service checks the address against
- * `EVM_ADDRESS` (`server.ts:451-452`) and answers 400 otherwise.
+ * `EVM_ADDRESS` (`server.ts`) and answers 400 otherwise.
  *
  * ── This is an N+1, and it is the service's shape, not a choice ────────────────────────────────
  *
@@ -349,23 +351,23 @@ export function getPosition(
 }
 
 /**
- * `POST /markets/:id/stake-intent` — **`foresight/src/server.ts:483`**.
+ * `POST /markets/:id/stake-intent` — **`foresight/src/server.ts`**.
  *
  * ── The one authenticated call in this bundle, and it moves no money ───────────────────────────
  *
  * It answers with the contract address, the `stake(uint8)` calldata and the policy verdict. The
- * WALLET builds, signs and sends. `server.ts:474-482`: "This service could be switched off between
+ * WALLET builds, signs and sends. `server.ts`: "This service could be switched off between
  * this response and the send, and the stake would still work."
  *
  * `amount` is a decimal STRING and the service refuses a JSON number outright
- * (`server.ts:892-897`); the shape it must match is mirrored in `units.ts` as `STAKE_AMOUNT`.
- * `outcome` is an integer 0 or 1 (`server.ts:489`).
+ * (`server.ts`); the shape it must match is mirrored in `units.ts` as `STAKE_AMOUNT`.
+ * `outcome` is an integer 0 or 1 (`server.ts`).
  *
  * Three refusals this call can produce, all of which the UI renders as themselves:
- *   409 `not_open` / `closed` — the market is not taking stakes (`server.ts:498-508`).
+ *   409 `not_open` / `closed` — the market is not taking stakes (`server.ts`).
  *   503 `policy_unavailable` — policy could not be reached, and the gate is FAIL CLOSED
- *       (`server.ts:517-525`). Not a retry-in-a-loop; a "try shortly".
- *   403 `policy_denied` — refused, with reasons (`server.ts:526-528`).
+ *       (`server.ts`). Not a retry-in-a-loop; a "try shortly".
+ *   403 `policy_denied` — refused, with reasons (`server.ts`).
  */
 export function createStakeIntent(
   marketId: string,
@@ -375,7 +377,7 @@ export function createStakeIntent(
   return api<StakeIntent>(`/markets/${encodeURIComponent(marketId)}/stake-intent`, {
     method: 'POST',
     // The only call that sends a bearer token. The service authenticates before it does anything
-    // else (`server.ts:484`), and policy is evaluated against the subject on that token.
+    // else (`server.ts`), and policy is evaluated against the subject on that token.
     auth: true,
     body: { amount: body.amount, outcome: body.outcome },
     ...signalOf(signal),
@@ -426,7 +428,7 @@ export function requestStakeQuote(
  *
  * Every other stake path here hands a transaction to a wallet and steps out. This one cannot: a
  * bettor holding BTC has no EMBER key, and custody does not sign for a user
- * (`custody/src/gates.ts:65`). So their stake is a ledger entry and their share of the platform's
+ * (`custody/src/gates.ts`). So their stake is a ledger entry and their share of the platform's
  * on-chain position is recorded rather than held by them.
  *
  * **The `Idempotency-Key` is required and must be STABLE across retries.** The failure it exists
@@ -450,10 +452,10 @@ export function createCustodialStake(
 }
 
 /**
- * `GET /categories` — **`foresight/src/server.ts:391`**.
+ * `GET /categories` — **`foresight/src/server.ts`**.
  *
  * What the platform will run a market on and what it refuses, with the version of the list.
- * `server.ts:386-390` says why it is unauthenticated: "A refusal list behind a token is a refusal
+ * `server.ts` says why it is unauthenticated: "A refusal list behind a token is a refusal
  * list nobody can hold the platform to." So it is published, on a page anybody can open.
  */
 export function getCategories(signal?: AbortSignal): Promise<CategoryCatalogue> {

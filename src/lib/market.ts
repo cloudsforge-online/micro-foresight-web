@@ -22,20 +22,20 @@ export interface DocumentCheck {
  *
  * ── Why this is not decoration ─────────────────────────────────────────────────────────────────
  *
- * `foresight/src/server.ts:420-423` gives the reason the canonical document is on the wire at all:
+ * `foresight/src/server.ts` gives the reason the canonical document is on the wire at all:
  *
  *   > so a reader can recompute `questionHash` themselves and check it against the contract,
  *   > rather than taking the platform's word that the criteria have not been edited since it
  *   > opened.
  *
- * The hash is in the market's constructor and is immutable (`ForesightMarket.sol:85-92`). An
+ * The hash is in the market's constructor and is immutable (`ForesightMarket.sol`). An
  * operator who edited the criteria after opening would produce a page whose document no longer
  * hashes to the number the contract holds. A page that PRINTS the hash the server sent, beside the
  * document the server sent, has checked nothing at all — it would agree with a forged pair as
  * readily as with a real one. So this recomputes it, in the browser, from the bytes shown.
  *
  * Both comparisons matter: the `document.hash` field and the market's own `questionHash` are two
- * different fields of one response (`server.ts:434-435`, `markets.ts:623`), and a mismatch between
+ * different fields of one response (`server.ts`, `markets.ts`), and a mismatch between
  * *them* is as interesting as a mismatch with the recomputed value.
  *
  * This still does not read the contract — that needs an archive node or an explorer, and the
@@ -67,7 +67,7 @@ export interface Observation {
  * Three cases, and they are three because collapsing them loses the thing a reader needs:
  *
  *   never   — the mirror has never run for this market. The pool reads as empty and it means
- *             "unknown". `mirror.ts:311-313`: "A mirror that has never run is stale, not empty.
+ *             "unknown". `mirror.ts`: "A mirror that has never run is stale, not empty.
  *             The two look identical in the numbers above and they mean opposite things to
  *             somebody about to stake."
  *   stale   — it ran, and it is at least a confirmation depth behind. The numbers were true once.
@@ -111,7 +111,7 @@ export type MarketPhase =
 /**
  * Where this market is, for a reader rather than for the state machine.
  *
- * `closing_soon` is not one of the service's seven statuses (`markets.ts:39`) — it is `open` with
+ * `closing_soon` is not one of the service's seven statuses (`markets.ts`) — it is `open` with
  * less than an hour left, surfaced because the one thing a reader can no longer do after the close
  * time is the thing this page is for.
  */
@@ -161,7 +161,7 @@ export function phaseLabel(phase: MarketPhase): string {
 /**
  * The outcome, as a word.
  *
- * `outcome` is `0` for YES and `1` for NO (`ForesightMarket.sol:59-60`), and `null` until it is
+ * `outcome` is `0` for YES and `1` for NO (`ForesightMarket.sol`), and `null` until it is
  * posted. `0` being falsy is exactly the trap here: `market.outcome ? 'No' : 'Yes'` would call an
  * unresolved market a YES, which is a wrong answer that renders confidently.
  */
@@ -171,7 +171,7 @@ export function outcomeLabel(outcome: number | null): string | null {
   return null
 }
 
-/** Whether a status can still take stakes. `server.ts:498-501` is the authority. */
+/** Whether a status can still take stakes. `server.ts` is the authority. */
 export function takesStakes(status: MarketStatus): boolean {
   return status === 'open'
 }

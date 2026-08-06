@@ -2,7 +2,7 @@
  * The responses the scenarios are run against.
  *
  * Every shape is one `src/lib/foresight.ts` declares, which was read out of `foresight/src/`. The
- * canonical document and its hash are built the way `foresight/src/questiondoc.ts:66-80` builds
+ * canonical document and its hash are built the way `foresight/src/questiondoc.ts` builds
  * them, so `checkDocument` sees a market whose hash really does match — a fixture with an
  * arbitrary hash would put the mismatch alert on every page and the scenarios would be asserting
  * the fixture rather than the product.
@@ -25,7 +25,7 @@ export const MARKET_ID = 'm-1'
 const QUESTION = 'Will block 21,000,000 be reached by 2026-12-31?'
 const CRITERIA = 'YES if the chain reports a block at height 21,000,000 or above.'
 
-/** `canonicalDocument` — `foresight/src/questiondoc.ts:66-80`. */
+/** `canonicalDocument` — `foresight/src/questiondoc.ts`. */
 function canonical(fields: readonly string[]): string {
   const field = (value: string): string => `${new TextEncoder().encode(value).length}:${value}`
   return ['cloudsforge.foresight.market/1', ...fields].map(field).join('')
@@ -91,7 +91,7 @@ export function pool(over: Partial<PoolView> = {}): PoolView {
   }
 }
 
-/** `houseSeedView` — `foresight/src/houseseed.ts:230-243`, field for field. */
+/** `houseSeedView` — `foresight/src/houseseed.ts`, field for field. */
 export function seed(over: Partial<HouseSeedView> = {}): HouseSeedView {
   return {
     state: 'staked',
@@ -147,7 +147,7 @@ export const SIGNED_IN = {
   'cf.refreshToken': 'refresh-token-stub',
 }
 
-/** `GET /auth/me` as `identity/src/server.ts:895-902` returns it: the profile is nested. */
+/** `GET /auth/me` as `identity/src/server.ts` returns it: the profile is nested. */
 export const ME = {
   user: { id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', handle: 'staker', roles: ['customer'] },
   session: { id: 'session-1' },

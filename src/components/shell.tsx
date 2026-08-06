@@ -5,7 +5,7 @@
  * that makes moving between surfaces feel like one application.
  *
  * `current={PRODUCT}` marks Foresight as the current entry in the switcher, which it now is:
- * `ui/packages/ui/src/surfaces.ts:169` registers it as a product with `inSwitcher: true`.
+ * `ui/packages/ui/src/surfaces.ts` registers it as a product with `inSwitcher: true`.
  */
 import { useEffect } from 'react'
 import {

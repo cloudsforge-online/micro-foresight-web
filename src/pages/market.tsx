@@ -12,7 +12,7 @@
  * ── The sources are the point, not a footnote ─────────────────────────────────────────────────
  *
  * `GET /markets/:id` carries the idea's provenance — query, sources, model id, prompt hash,
- * timestamp — and `foresight/src/server.ts:437-439` says why: "§2.3.3: sources are carried through
+ * timestamp — and `foresight/src/server.ts` says why: "§2.3.3: sources are carried through
  * to the public market page, so a bettor can see *why* the market exists." The pipeline records it
  * precisely so this page can render it, and a page that dropped it would make the whole
  * provenance apparatus decorative.
@@ -320,7 +320,7 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
  * The provenance panel — the cited sources, and everything else about where the question came from.
  *
  * `null` provenance is a real answer and a different one from "no sources": it means an operator
- * wrote the question themselves (`origin: 'operator'`, `foresight/src/server.ts:562`), which is a
+ * wrote the question themselves (`origin: 'operator'`, `foresight/src/server.ts`), which is a
  * fact worth stating rather than an absence worth hiding.
  */
 function ProvenancePanel({ provenance }: { provenance: Provenance | null }) {

@@ -11,7 +11,7 @@
  *
  * ── Keyed by address, not by session ──────────────────────────────────────────────────────────
  *
- * `GET /markets/:id/positions/:address` (`foresight/src/server.ts:448`) is unauthenticated,
+ * `GET /markets/:id/positions/:address` (`foresight/src/server.ts`) is unauthenticated,
  * because a position belongs to whoever holds the key and the mirror is a copy of public chain
  * state. That is why `/portfolio/<address>` is a link somebody can send, and why a reader with no
  * wallet can still look one up.
