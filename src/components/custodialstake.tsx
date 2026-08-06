@@ -222,13 +222,11 @@ export function CustodialStakePanel({
 
   return (
     <section className="fs-panel fs-panel--custodial" aria-labelledby="custodial-stake-heading">
-      <h2 className="fs-panel__title" id="custodial-stake-heading">
-        Stake with a balance you already hold
-      </h2>
+      <h2 id="custodial-stake-heading">Stake with a balance you already hold</h2>
 
       {/* The platform's own sentence about what a custodial stake is and is not. Composed by the
           service so every client shows the same one — never rewritten here. */}
-      <p className="fs-note fs-note--warn">{registry.disclosure}</p>
+      <p className="fs-note fs-note--warning">{registry.disclosure}</p>
 
       {!signedIn ? (
         <p className="fs-note">Sign in to stake from a balance you hold with CloudsForge.</p>
@@ -268,7 +266,7 @@ export function CustodialStakePanel({
             <span className="fs-field__unit">{asset?.displayName ?? ''}</span>
           </label>
           {input.trim().length > 0 && !amountOk && asset !== null && (
-            <p className="fs-note fs-note--warn">
+            <p className="fs-note fs-note--warning">
               A positive amount with at most {asset.decimals} decimal places — {asset.displayName}{' '}
               has no smaller unit than that.
             </p>
@@ -314,12 +312,7 @@ export function CustodialStakePanel({
               {conversionLine(quote) !== null && (
                 <p className="cf-num fs-quote__line">{conversionLine(quote)}</p>
               )}
-              {/* `cf-num` on this line as well as the one above it: the rate is the figure a
-                  reader checks the conversion against, and two lines of numerals that do not line
-                  up are two lines nobody compares. */}
-              {rateLine(quote) !== null && (
-                <p className="cf-num fs-quote__rate">{rateLine(quote)}</p>
-              )}
+              {rateLine(quote) !== null && <p className="fs-quote__rate">{rateLine(quote)}</p>}
               <p className="fs-note">{quote.disclosure}</p>
               {(phase === 'quoted' || phase === 'staking') && (
                 <button type="button" disabled={phase === 'staking'} onClick={() => void onStake()}>
@@ -338,7 +331,7 @@ export function CustodialStakePanel({
             </p>
           )}
           {phase === 'failed' && message !== null && (
-            <p className="fs-note fs-note--warn" role="alert">
+            <p className="fs-note fs-note--warning" role="alert">
               {message}
             </p>
           )}
