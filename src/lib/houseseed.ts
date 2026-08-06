@@ -27,7 +27,7 @@
  *
  * ── What this checks rather than repeats ───────────────────────────────────────────────────────
  *
- * `disclosure` is the service's own sentence and is rendered verbatim (`houseseed.ts:213-218`
+ * `disclosure` is the service's own sentence and is rendered verbatim (`houseseed.ts`
  * says why: one sentence written once, not improvised per client). But a sentence repeated is a
  * sentence taken on trust, which is exactly what `checkDocument` refuses to do with the question
  * hash. So the two numbers behind it are re-derived here:

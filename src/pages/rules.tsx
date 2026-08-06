@@ -1,7 +1,7 @@
 /**
  * What this platform will run a market on, and what it refuses.
  *
- * `GET /categories` — `foresight/src/server.ts:391`. It is unauthenticated, and `server.ts:386-390`
+ * `GET /categories` — `foresight/src/server.ts`. It is unauthenticated, and `server.ts`
  * gives the reason in one line: **"A refusal list behind a token is a refusal list nobody can hold
  * the platform to."** This page is the other half of that sentence. A refusal list that exists on
  * an endpoint nobody opens is the same thing as one behind a token.

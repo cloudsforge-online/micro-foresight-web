@@ -6,9 +6,9 @@
  * The positions table and the pools are a MIRROR of chain state, fed by `micro-indexer`. A number
  * from a mirror with no `asOf` beside it is a claim about now that is really a claim about
  * whenever the mirror last synced, and the difference is the whole distance between a pool a user
- * can stake against and a pool that was true four minutes ago. `foresight/src/mirror.ts:259-262`
+ * can stake against and a pool that was true four minutes ago. `foresight/src/mirror.ts`
  * carries `asOf`, `lastBlock`, `tipBlock` and `behindBlocks` for exactly this reason, and
- * `server.ts:466-467` repeats `asOf` on the positions route rather than making a client dig it
+ * `server.ts` repeats `asOf` on the positions route rather than making a client dig it
  * out of a sibling object: "A portfolio page that shows a number without saying when it was true
  * is the page that makes somebody think the mirror is the ledger."
  *
@@ -109,7 +109,7 @@ export function untilLabel(iso: string | null | undefined, now: Date = new Date(
 /**
  * A duration in seconds as a phrase — how a dispute window is written.
  *
- * `disputeWindowSeconds` is an integer on the market (`foresight/src/markets.ts:92`) and is shown
+ * `disputeWindowSeconds` is an integer on the market (`foresight/src/markets.ts`) and is shown
  * before anybody stakes, because it is the time between a resolution being posted and the money
  * becoming claimable, which is the window in which a wrong resolution can still be voided.
  */

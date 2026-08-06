@@ -61,7 +61,7 @@ const marketRoutes = (over: Routes = {}): Routes => ({
   ...over,
 })
 
-/** The stake intent, as `foresight/src/server.ts:474-482` answers it. */
+/** The stake intent, as `foresight/src/server.ts` answers it. */
 const intent = (over: Record<string, unknown> = {}) => ({
   to: fx.CONTRACT,
   data: `0x${'11'.repeat(36)}`,
@@ -336,7 +336,7 @@ describe('BJ-FOR — Forge Foresight', () => {
         const posted = s.api.matching(`POST /markets/${fx.MARKET_ID}/stake-intent`)[0]
         assert.ok(posted, 'no stake intent was requested')
         // `OUTCOME_YES = 0` and `OUTCOME_NO = 1` — the contract's own constants
-        // (`src/lib/abi.ts:144-146`, `ForesightMarket.sol:59-60`). A client that read them the
+        // (`src/lib/abi.ts`, `ForesightMarket.sol`). A client that read them the
         // human way round would stake every buyer on the opposite side of their own opinion.
         assert.deepEqual(posted.json, { amount: '1.5', outcome: OUTCOME_YES })
 
@@ -676,7 +676,7 @@ describe('BJ-ADV — the adversarial matrix', () => {
         // are needed — this one proves the affordance, that one proves the guard.
         //
         // There is no idempotency key on this route and no server-side dedupe behind it
-        // (`foresight/src/server.ts:533`): two intents would be two policy decisions and two
+        // (`foresight/src/server.ts`): two intents would be two policy decisions and two
         // transactions, both mined.
         s.clickNoFlush(button)
         await s.settle(0)
@@ -791,7 +791,7 @@ describe('BJ-ADV — the adversarial matrix', () => {
         await s.settle(20)
         // Doc 22's H6 asks for "the control is disabled with the reason, rather than left
         // clickable into a service that will not answer". This surface goes one better and does
-        // not mount the form at all — `takesStakes(market.status)` at `src/pages/market.tsx:254`
+        // not mount the form at all — `takesStakes(market.status)` at `src/pages/market.tsx`
         // — which is the same rule applied harder, and the right one: a disabled Stake button on
         // a closed market reads as "not yet", and there is no yet.
         assert.equal(

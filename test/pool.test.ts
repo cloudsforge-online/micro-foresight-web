@@ -4,7 +4,7 @@
  * The strong test here is CONSERVATION: for any pool and any set of winning stakes, the fee plus
  * every payout plus the residue equals the pool exactly, and the residue is strictly less than the
  * number of winners. That is the property `micro-foresight` proves against the executed committed
- * bytecode (docs/ecosystem/18-build-status.md:94), and it is the one a floating-point client
+ * bytecode (docs/ecosystem/18-build-status.md), and it is the one a floating-point client
  * silently breaks — a `Number` version of these three lines passes a spot check and fails this.
  */
 import assert from 'node:assert/strict'
@@ -43,7 +43,7 @@ describe('poolsFrom', () => {
   })
 
   it('reads a genuine zero as zero', () => {
-    // `mirror.ts:284-286` coalesces an absent SUM to '0' on its own side, so '0' really is empty.
+    // `mirror.ts` coalesces an absent SUM to '0' on its own side, so '0' really is empty.
     assert.equal(poolsFrom({ yes: '0', no: '0' }).yes, 0n)
   })
 })
@@ -73,7 +73,7 @@ describe('oddsBps — the pool ratio, and nothing else', () => {
   })
 
   it('matches the contract’s expression exactly, including its flooring', () => {
-    // `ForesightMarket.sol:366` — (pool[outcome] * BPS) / total, integer division.
+    // `ForesightMarket.sol` — (pool[outcome] * BPS) / total, integer division.
     const pools = { yes: 1n, no: 2n }
     assert.equal(oddsBps(pools, OUTCOME_YES), Number((1n * BPS) / 3n))
     assert.equal(oddsBps(pools, OUTCOME_YES), 3_333)
@@ -104,7 +104,7 @@ describe('feeAmount — off the LOSING pool only', () => {
   })
 
   it('means a winner always gets back at least their stake', () => {
-    // The property `ForesightMarket.sol:370-380` exists to guarantee. A 99% favourite:
+    // The property `ForesightMarket.sol` exists to guarantee. A 99% favourite:
     const pools = { yes: 99n * E, no: 1n * E }
     const payout = projectedPayout({
       pools,

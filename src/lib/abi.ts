@@ -3,7 +3,7 @@
  *
  * ── Why a frontend encodes calldata at all ─────────────────────────────────────────────────────
  *
- * Because of the sentence in `foresight/src/contracts/ForesightMarket.sol:436-441`, which is the
+ * Because of the sentence in `foresight/src/contracts/ForesightMarket.sol`, which is the
  * load-bearing claim of the whole product:
  *
  *   > **THIS FUNCTION IS WHY THE MIRROR IS ALLOWED TO DIE.** It reads nothing but this contract's
@@ -15,9 +15,9 @@
  * app derives the calldata itself, and reads the numbers it shows beside the claim button from
  * the contract as well as from the mirror. When the two disagree, `claim.ts` believes the chain.
  *
- * It is also simply what the route table forces. `foresight/src/server.ts:353-800` is every route
+ * It is also simply what the route table forces. `foresight/src/server.ts` is every route
  * the service has, and the only intent it mints is `POST /markets/:id/stake-intent`
- * (`server.ts:483`). There is no claim intent, and there is no read that proxies an `eth_call`.
+ * (`server.ts`). There is no claim intent, and there is no read that proxies an `eth_call`.
  *
  * ── Scope ─────────────────────────────────────────────────────────────────────────────────────
  *
@@ -138,7 +138,7 @@ export const MARKET_ABI = {
   feeAmount: 'feeAmount()',
 } as const
 
-/** `enum Status { Open, Resolved, Void }` — `ForesightMarket.sol:49-53`. */
+/** `enum Status { Open, Resolved, Void }` — `ForesightMarket.sol`. */
 export const CONTRACT_STATUS = { open: 0n, resolved: 1n, void: 2n } as const
 
 /** `uint8 public constant OUTCOME_YES = 0` / `OUTCOME_NO = 1` — sol:59-60. */
@@ -178,7 +178,7 @@ export function poolCalldata(outcome: number): string {
  *
  * An EVM address has no checksum of its own — the only typo protection that exists is the mixed
  * case. An all-lower or all-upper address carries no checksum to check and is accepted, which is
- * what the service does too (`foresight/src/server.ts:451-452` tests `EVM_ADDRESS` and nothing
+ * what the service does too (`foresight/src/server.ts` tests `EVM_ADDRESS` and nothing
  * more). A MIXED-case address that fails the checksum is rejected here, because at that point the
  * user has pasted something that claims to be checksummed and is not.
  */

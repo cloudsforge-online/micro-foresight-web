@@ -1,12 +1,12 @@
 /**
  * Browse. The list of markets, with the one filter the service actually supports.
  *
- * `GET /markets?status=&limit=` — `foresight/src/server.ts:402`. The status names are the seven at
- * `server.ts:846-850` and nothing else; a filter this page offered that the service did not know
+ * `GET /markets?status=&limit=` — `foresight/src/server.ts`. The status names are the seven at
+ * `server.ts` and nothing else; a filter this page offered that the service did not know
  * would be a 400 rendered at a reader who cannot act on it.
  *
  * The cards carry no pool, and that is deliberate rather than an omission: `GET /markets` returns
- * `publicView(market)` and nothing else (`server.ts:407`), so a bar drawn here would be drawn from
+ * `publicView(market)` and nothing else (`server.ts`), so a bar drawn here would be drawn from
  * a number the response did not contain. The odds are on the page that has them.
  */
 import { useCallback, useMemo, useState } from 'react'
@@ -113,8 +113,8 @@ function labelFor(status: MarketStatus): string {
  *
  * ── There is no pool on this response, and the card says so rather than inventing one ──────────
  *
- * `GET /markets` returns `publicView(market)` and nothing else — `server.ts:407`. The pool lives
- * on `GET /markets/:id` (`server.ts:428`). A card that wanted odds would have to fetch every
+ * `GET /markets` returns `publicView(market)` and nothing else — `server.ts`. The pool lives
+ * on `GET /markets/:id` (`server.ts`). A card that wanted odds would have to fetch every
  * market individually, which is a hundred requests to render a list. So the card shows what the
  * list route actually carries — the question, the phase, the close time, the resolution source —
  * and the odds are on the page that has them.

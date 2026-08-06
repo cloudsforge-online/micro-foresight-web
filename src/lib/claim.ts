@@ -4,7 +4,7 @@
  * ══════════════════════════════════════════════════════════════════════════════════════════════
  * WHAT THIS FILE IS FOR
  *
- * `ForesightMarket.sol:436-441`:
+ * `ForesightMarket.sol`:
  *
  *   > **THIS FUNCTION IS WHY THE MIRROR IS ALLOWED TO DIE.** It reads nothing but this contract's
  *   > own storage. If every server this platform owns is switched off, a winner with a wallet and
@@ -14,7 +14,7 @@
  * that is easy to get wrong:
  *
  *   1. **Never render a confident wrong number.** The mirror's `stale` flag
- *      (`foresight/src/mirror.ts:311-313`) is set when the indexer is a confirmation depth behind
+ *      (`foresight/src/mirror.ts`) is set when the indexer is a confirmation depth behind
  *      or has never run. A payout computed from a stale pool is a number that will not match what
  *      the contract sends, and a user who reads it will believe the difference was taken from
  *      them.
@@ -47,7 +47,7 @@ import { encodeCall, MARKET_ABI } from './abi.ts'
  * that an `eth_call` to a node that is syncing cannot arrive here looking like a settled zero.
  */
 export interface ChainFacts {
-  /** `Status` — Open 0, Resolved 1, Void 2 (`ForesightMarket.sol:49-53`). */
+  /** `Status` — Open 0, Resolved 1, Void 2 (`ForesightMarket.sol`). */
   readonly status: bigint | null
   /** `claimed(address)` — once, per address, for ever (`sol:129`, `sol:448`). */
   readonly claimed: boolean | null
@@ -63,7 +63,7 @@ export interface MirrorFacts {
   readonly marketStatus: MarketStatus
   readonly resolvedAt: string | null
   readonly disputeWindowSeconds: number
-  /** True when the mirror knows it is behind — `foresight/src/mirror.ts:311`. */
+  /** True when the mirror knows it is behind — `foresight/src/mirror.ts`. */
   readonly stale: boolean
   /** The mirror's own idea of what this address staked, in wei. Used only when the chain is silent. */
   readonly stakedYes: bigint | null
@@ -126,7 +126,7 @@ export function claimVerdict(opts: {
   const reason = opts.chainUnavailableReason ?? null
 
   if (!mirror.contractAddress) {
-    // A market voided before deployment (`server.ts:773-798`) or still a draft. There is no
+    // A market voided before deployment (`server.ts`) or still a draft. There is no
     // contract, so there is nothing to claim and nothing to be uncertain about.
     return {
       state: 'no_contract',
@@ -258,7 +258,7 @@ export function claimVerdict(opts: {
 /**
  * When the dispute window ends, from the mirror's fields.
  *
- * `resolvedAt + disputeWindowSeconds`, the same expression as `ForesightMarket.sol:396`. `null` on
+ * `resolvedAt + disputeWindowSeconds`, the same expression as `ForesightMarket.sol`. `null` on
  * a void — a void is claimable immediately (`sol:394`) — and on a market with no resolution time.
  */
 export function disputeWindowEnd(mirror: Pick<MirrorFacts, 'resolvedAt' | 'disputeWindowSeconds' | 'marketStatus'>): Date | null {

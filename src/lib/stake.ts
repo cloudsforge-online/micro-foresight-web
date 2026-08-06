@@ -4,10 +4,10 @@
  * ── The shape of the hand-off ──────────────────────────────────────────────────────────────────
  *
  *   1. The reader picks a side and types an amount.
- *   2. This app asks `POST /markets/:id/stake-intent` (`foresight/src/server.ts:483`) for the
+ *   2. This app asks `POST /markets/:id/stake-intent` (`foresight/src/server.ts`) for the
  *      contract address, the calldata and a POLICY VERDICT.
  *   3. The wallet is shown the transaction and the user signs it. The stake goes wallet →
- *      contract, and `micro-foresight` is not in the path — `server.ts:474-482`: "This service
+ *      contract, and `micro-foresight` is not in the path — `server.ts`: "This service
  *      could be switched off between this response and the send, and the stake would still work."
  *
  * Nothing in this file, and nothing in the copy it produces, may suggest the platform is holding
@@ -58,13 +58,13 @@ export function stakeGate(opts: {
   const { market, now, signedIn, hasWallet, amount } = opts
   const none = { ready: false, amountWei: null } as const
 
-  // `server.ts:498-501` refuses anything that is not `open` with a contract, and 409s it. Saying
+  // `server.ts` refuses anything that is not `open` with a contract, and 409s it. Saying
   // so here saves a round trip and, more to the point, saves showing a stake form on a market
   // that cannot take one.
   if (market.status !== 'open') return { ...none, blocker: 'not_open' }
   if (!market.contractAddress) return { ...none, blocker: 'no_contract' }
 
-  // `server.ts:502-508`: the contract would refuse it anyway, and "saying so here saves the user a
+  // `server.ts`: the contract would refuse it anyway, and "saying so here saves the user a
   // failed transaction and the gas that goes with it".
   const closes = instant(market.closeTime)
   if (closes !== null && closes.getTime() <= now.getTime()) return { ...none, blocker: 'closed' }
@@ -180,7 +180,7 @@ export function stakeReducer(state: StakeFlow, event: StakeEvent): StakeFlow {
 /**
  * How a stake-intent refusal reads.
  *
- * The three codes are `server.ts:517-528` and they are genuinely different situations:
+ * The three codes are `server.ts` and they are genuinely different situations:
  *
  *   `policy_unavailable` (503) — the gate is FAIL CLOSED. Policy could not be reached, so no
  *       intent was issued. This is temporary and the honest instruction is "shortly", not a retry

@@ -2,7 +2,7 @@
  * EMBER amounts, and the regex this app shares with the service.
  *
  * The first suite is the important one. `STAKE_AMOUNT` is a copy of `DECIMAL` from
- * `foresight/src/server.ts:187`, and a copy that has drifted is worse than no copy: too loose and
+ * `foresight/src/server.ts`, and a copy that has drifted is worse than no copy: too loose and
  * the user's wallet opens for an amount the service will 400; too tight and the product quietly
  * refuses money somebody wanted to stake. So it is checked in BOTH directions against the source
  * regex, written out here character for character.
@@ -24,7 +24,7 @@ import {
   toWei,
 } from '../src/lib/units.ts'
 
-/** `DECIMAL` — `foresight/src/server.ts:187`, transcribed. */
+/** `DECIMAL` — `foresight/src/server.ts`, transcribed. */
 const SERVICE_DECIMAL = /^(?!0+(\.0+)?$)\d{1,20}(\.\d{1,18})?$/
 
 describe('STAKE_AMOUNT agrees with the service’s DECIMAL', () => {

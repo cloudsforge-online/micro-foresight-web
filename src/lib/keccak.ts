@@ -7,15 +7,15 @@
  * it could derive.**
  *
  *   1. **Function selectors.** `claim()` is a four-byte selector, and `micro-foresight` does not
- *      serve one — there is no claim-intent route (`foresight/src/server.ts:353-800` is the whole
+ *      serve one — there is no claim-intent route (`foresight/src/server.ts` is the whole
  *      route table, and staking is the only intent it mints). So this app builds the claim
  *      calldata itself. A hard-coded `0x4e71d92d` would be a magic constant nobody could check
  *      without a second tool; derived from the signature, it is checkable by reading the
  *      signature. See `abi.ts`.
  *   2. **The question hash.** `GET /markets/:id` returns the canonical document AND its hash
- *      (`foresight/src/server.ts:433-436`) precisely so a reader can recompute the hash and check
+ *      (`foresight/src/server.ts`) precisely so a reader can recompute the hash and check
  *      it against the one in the contract, "rather than taking the platform's word that the
- *      criteria have not been edited since it opened" (`server.ts:420-423`). A frontend that
+ *      criteria have not been edited since it opened" (`server.ts`). A frontend that
  *      displays the hash the server sent, beside the document the server sent, has verified
  *      nothing. This one recomputes it.
  *
@@ -27,7 +27,7 @@
  * alternative is a dependency in a bundle whose whole security story is that it ships nothing it
  * has not read.
  *
- * The permutation below is carried across from `foresight/src/keccak.ts:46-164` UNCHANGED, which
+ * The permutation below is carried across from `foresight/src/keccak.ts` UNCHANGED, which
  * is itself carried from `wallet/src/keccak.ts`. Two implementations of one primitive in one
  * estate is a difference that presents as a payout refused for a selector the other side computed
  * differently. The one thing not carried is the hex helper: the service's uses `Buffer`, which

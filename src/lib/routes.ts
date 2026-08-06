@@ -35,7 +35,7 @@ export const ROUTES: readonly ForesightRoute[] = [
   // Wildcard: `/portfolio/<address>` is one staker's positions, so a reader can look at their own
   // without connecting a wallet and can link to it.
   { path: 'portfolio', label: 'Positions', wildcard: true },
-  // The allowlist and the refusals, published. `foresight/src/server.ts:386-390`: "A refusal list
+  // The allowlist and the refusals, published. `foresight/src/server.ts`: "A refusal list
   // behind a token is a refusal list nobody can hold the platform to."
   { path: 'rules', label: 'What we run', wildcard: false },
 ]

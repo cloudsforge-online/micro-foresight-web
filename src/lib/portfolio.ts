@@ -3,9 +3,9 @@
  *
  * ── The N+1 is the service's shape ─────────────────────────────────────────────────────────────
  *
- * `foresight/src/server.ts:353-800` is the whole route table and there is no
- * `GET /positions?address=`. The public reads are `/markets` (`server.ts:402`), `/markets/:id`
- * (`server.ts:417`) and `/markets/:id/positions/:address` (`server.ts:448`). So a portfolio is a
+ * `foresight/src/server.ts` is the whole route table and there is no
+ * `GET /positions?address=`. The public reads are `/markets` (`server.ts`), `/markets/:id`
+ * (`server.ts`) and `/markets/:id/positions/:address` (`server.ts`). So a portfolio is a
  * list of markets and one position request per market.
  *
  * That has consequences this file is responsible for, and they are the whole of it:
@@ -31,7 +31,7 @@ export interface PositionRow {
   /** Wei staked on YES, or `null` when this row could not be fetched. Never 0n for "unknown". */
   readonly stakedYes: bigint | null
   readonly stakedNo: bigint | null
-  /** This row's own observation time — `server.ts:466-471`. */
+  /** This row's own observation time — `server.ts`. */
   readonly asOf: string | null
   readonly stale: boolean
   readonly contractAddress: string | null

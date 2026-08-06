@@ -15,10 +15,10 @@ import { checkDocument, observation, outcomeLabel, phaseLabel, phaseOf, takesSta
 const NOW = new Date('2026-08-01T12:00:00.000Z')
 
 /**
- * `canonicalDocument` — `foresight/src/questiondoc.ts:66-80`, length-prefixed and fixed-order.
+ * `canonicalDocument` — `foresight/src/questiondoc.ts`, length-prefixed and fixed-order.
  *
  * Reproduced here rather than imported so this test hashes bytes it built, not bytes the code
- * under test built. `DOCUMENT_VERSION` is `questiondoc.ts:52`.
+ * under test built. `DOCUMENT_VERSION` is `questiondoc.ts`.
  */
 function canonical(fields: readonly string[]): string {
   const field = (value: string): string => `${new TextEncoder().encode(value).length}:${value}`
@@ -217,7 +217,7 @@ describe('outcomeLabel', () => {
 })
 
 describe('takesStakes', () => {
-  it('is true only for open, which is what server.ts:498-501 enforces', () => {
+  it('is true only for open, which is what server.ts enforces', () => {
     assert.equal(takesStakes('open'), true)
     for (const status of ['draft', 'approved', 'closed', 'resolved', 'settled', 'void'] as const) {
       assert.equal(takesStakes(status), false, `${status} was offered a stake form`)

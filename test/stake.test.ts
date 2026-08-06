@@ -76,7 +76,7 @@ describe('stakeGate — each refusal', () => {
 
 describe('stakeGate — the order of the refusals', () => {
   it('says the market has closed before it criticises the amount', () => {
-    // `server.ts:502-508` refuses a closed market before it looks at anything else, and so does
+    // `server.ts` refuses a closed market before it looks at anything else, and so does
     // the contract. Telling somebody to fix their amount first wastes their time.
     const result = gate({ market: { ...OPEN, closeTime: '2026-07-01T00:00:00.000Z' }, amount: 'nonsense' })
     assert.equal(result.blocker, 'closed')
@@ -110,7 +110,7 @@ describe('stakeGate — the amount', () => {
   })
 
   it('refuses a market whose close time is exactly now', () => {
-    // `server.ts:503` — `closeTime.getTime() <= now.getTime()`. The boundary is closed, not open.
+    // `server.ts` — `closeTime.getTime() <= now.getTime()`. The boundary is closed, not open.
     assert.equal(gate({ market: { ...OPEN, closeTime: NOW.toISOString() } }).blocker, 'closed')
   })
 })
@@ -187,7 +187,7 @@ describe('stakeReducer', () => {
 
 describe('refusalSentence', () => {
   it('says policy could not be REACHED, and that nothing was sent', () => {
-    // 503, fail-closed (`server.ts:517-525`). The distinction from a denial is the whole point.
+    // 503, fail-closed (`server.ts`). The distinction from a denial is the whole point.
     const sentence = refusalSentence('policy_unavailable', 'fallback')
     assert.match(sentence, /could not be reached/)
     assert.match(sentence, /nothing was sent/)

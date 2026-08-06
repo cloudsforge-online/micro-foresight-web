@@ -24,7 +24,7 @@
  * The reason to be this careful is specific to this product. Foresight really does talk to a
  * chain, so a reader here is primed to read a hex digest as an on-chain fact. And the false claim
  * would never be caught: Hearth has no Registry of Authorship contract — the Solidity was never
- * written (`tessera/src/kiln.ts:373-392`) — and studio's `anchor.state` is `unanchored` on every
+ * written (`tessera/src/kiln.ts`) — and studio's `anchor.state` is `unanchored` on every
  * asset it has produced. A tick that cannot fail is worse than no tick, on a surface where the
  * ticks that CAN fail are the ones telling somebody whether to stake.
  * ══════════════════════════════════════════════════════════════════════════════════════════════

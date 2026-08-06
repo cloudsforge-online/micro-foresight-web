@@ -33,7 +33,7 @@ const ADDR = '0x00112233445566778899aabbccddeeff00112233'
 
 describe('selector', () => {
   it('derives claim() as 0x4e71d92d', () => {
-    // The published selector of the function this app sends. `ForesightMarket.sol:431`.
+    // The published selector of the function this app sends. `ForesightMarket.sol`.
     assert.equal(selector('claim()'), '0x4e71d92d')
   })
 
@@ -50,7 +50,7 @@ describe('selector', () => {
     // ══════════════════════════════════════════════════════════════════════════════════════════
     // The cross-check that matters. `foresight/src/evm.ts` has a `callData` of its own — it is
     // what `POST /markets/:id/stake-intent` uses to build the calldata it hands a wallet
-    // (`server.ts:533`). These two literals are the output of THAT function, run against the
+    // (`server.ts`). These two literals are the output of THAT function, run against the
     // service's own source:
     //
     //     callData('stake(uint8)', [{ type: 'uint8', value: 1n }])

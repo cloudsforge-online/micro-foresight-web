@@ -42,7 +42,7 @@ export function ClaimPanel({ mirror, address }: { mirror: MirrorFacts; address: 
    * `sending` is state. `setSending('sending')` schedules a render; it does not change the
    * `sending` the click listener is holding, and `disabled={... sending === 'sending' ...}` is not
    * on the DOM node until that render commits. Two clicks in one tick therefore both pass, and
-   * both reach `sendTransaction`. The contract pays each address once (`ForesightMarket.sol:448`),
+   * both reach `sendTransaction`. The contract pays each address once (`ForesightMarket.sol`),
    * so the second transaction is gas spent to buy a revert — and the user is shown a failure for a
    * claim that in fact succeeded.
    */

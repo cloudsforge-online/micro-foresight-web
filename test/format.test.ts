@@ -129,7 +129,7 @@ describe('fromUnixSeconds', () => {
   })
 
   it('is null for zero, which is what the contract returns while a market is open', () => {
-    // `claimableFrom()` is 0 until resolution — `ForesightMarket.sol:393-397`. Rendering that as
+    // `claimableFrom()` is 0 until resolution — `ForesightMarket.sol`. Rendering that as
     // 1970 would be a date somebody might believe.
     assert.equal(fromUnixSeconds(0n), null)
     assert.equal(fromUnixSeconds(null), null)

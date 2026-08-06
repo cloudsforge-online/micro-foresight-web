@@ -4,7 +4,7 @@
  * ══════════════════════════════════════════════════════════════════════════════════════════════
  * **WHY A TEST OF THE API RESPONSE IS NOT THIS TEST.**
  *
- * `foresight/src/houseseed.test.ts:429` already asserts, with force, that `GET /markets/:id`
+ * `foresight/src/houseseed.test.ts` already asserts, with force, that `GET /markets/:id`
  * SERVES the disclosure whenever a house stake exists. That test passed while this application
  * rendered nothing at all, because serving a field and showing it are two different claims and
  * only the second one is the property §7.6 states:
@@ -51,7 +51,7 @@ import { houseDisclosureOf } from '../src/lib/houseseed.ts'
 import type { HouseSeedView, MarketDetail, MarketView, PoolView } from '../src/lib/foresight.ts'
 import { keccak256Utf8 } from '../src/lib/keccak.ts'
 
-/** `canonicalDocument` — `foresight/src/questiondoc.ts:66-80`, as `market.test.ts` reproduces it. */
+/** `canonicalDocument` — `foresight/src/questiondoc.ts`, as `market.test.ts` reproduces it. */
 function canonical(fields: readonly string[]): string {
   const field = (value: string): string => `${new TextEncoder().encode(value).length}:${value}`
   return ['cloudsforge.foresight.market/1', ...fields].map(field).join('')
@@ -122,7 +122,7 @@ function pool(over: Partial<PoolView> = {}): PoolView {
   }
 }
 
-/** `houseSeedView` — `foresight/src/houseseed.ts:230-243`, field for field. */
+/** `houseSeedView` — `foresight/src/houseseed.ts`, field for field. */
 function seed(over: Partial<HouseSeedView> = {}): HouseSeedView {
   return {
     state: 'staked',
@@ -213,7 +213,7 @@ describe('§7.6 — the disclosure, on the page, with force', () => {
   })
 
   it('the sentence is the service’s own, rendered verbatim', () => {
-    // `houseSeedView` composes it once so every client says the same thing (houseseed.ts:213-218).
+    // `houseSeedView` composes it once so every client says the same thing (houseseed.ts).
     // A page that reworded it would be a page whose disclosure the platform did not write.
     const wording = 'CloudsForge seeded this pool with 17.5 EMBER so early odds exist.'
     const text = textOf(

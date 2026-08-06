@@ -12,7 +12,7 @@
  *
  *   1. **It collides with `beacon`, which is also 4011.** Two surfaces cannot share a localhost
  *      port, and whichever process bound it first answers for both.
- *   2. **The service itself listens on 4021** — `micro-foresight/.env.example:13`, `PORT=4021`.
+ *   2. **The service itself listens on 4021** — `micro-foresight/.env.example`, `PORT=4021`.
  *
  * So `cloudsforgeHosts().foresight` resolves to `http://localhost:4011` in a local stack, which is
  * Beacon. Every request this app makes under `pnpm dev` would go to the wrong service and fail in
@@ -27,7 +27,7 @@ export const APP_NAME = 'foresight'
 /**
  * The surface this application IS.
  *
- * `foresight` is a product in the registry (`ui/packages/ui/src/surfaces.ts:169`) and IS a
+ * `foresight` is a product in the registry (`ui/packages/ui/src/surfaces.ts`) and IS a
  * switcher entry, so passing it as `current` marks Foresight as the current product — which is
  * correct, and is what a reader who opens the switcher from here should see.
  */

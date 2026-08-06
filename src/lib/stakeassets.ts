@@ -5,7 +5,7 @@
  * **THE POOL IS EMBER. THE ACCOUNT IS NOT. THE CONVERSION HAPPENS AT THE STAKE AND IS SHOWN.**
  *
  * A market's pool is one `uint256` of wei in the contract's own storage
- * (`foresight/src/contracts/ForesightMarket.sol:123`), so there is nowhere to put an asset code
+ * (`foresight/src/contracts/ForesightMarket.sol`), so there is nowhere to put an asset code
  * and a mixed pool is not a feature that has not been built — it is inexpressible. What the
  * service adds is a door: a bettor holding BTC has their stake converted at a quoted, recorded
  * rate, and everything downstream is EMBER.
