@@ -49,19 +49,10 @@ a {
 
 /* ---- chrome ---------------------------------------------------------- */
 
-.fs-skip {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  z-index: 100;
-  padding: var(--cf-space-sm) var(--cf-space-xl);
-  background: var(--cf-accent);
-  color: var(--cf-accent-ink);
-  border-radius: 0 0 var(--cf-radius) 0;
-}
-.fs-skip:focus {
-  left: 0;
-}
+/* `.fs-skip` was here. It is gone with the markup it styled: the skip link is now `SkipLink` from
+   @cloudsforge/ui, which brings `.cf-skip` and — more to the point — targets a `<main>` that
+   carries `tabIndex={-1}`, which the local one did not. A rule left behind after its element is
+   deleted is dead weight the next reader has to prove is dead. */
 
 .fs-subnav {
   position: sticky;
@@ -87,7 +78,7 @@ a {
   white-space: nowrap;
 }
 .fs-wordmark b {
-  color: var(--cf-accent);
+  color: var(--cf-accent-text);
 }
 .fs-subnav__link {
   display: inline-block;
@@ -238,7 +229,7 @@ a {
   margin: 0;
 }
 .fs-card__link:hover .fs-card__question {
-  color: var(--cf-accent);
+  color: var(--cf-accent-text);
 }
 .fs-card__meta,
 .fs-market__meta {
@@ -276,7 +267,7 @@ a {
 .fs-card__more {
   margin-top: auto;
   font-size: var(--cf-text-md);
-  color: var(--cf-accent);
+  color: var(--cf-accent-text);
   text-decoration: none;
 }
 .fs-card__more:hover {
@@ -686,7 +677,7 @@ a {
 }
 .fs-sources__link {
   font-size: var(--cf-text-lg);
-  color: var(--cf-accent);
+  color: var(--cf-accent-text);
 }
 .fs-sources__url {
   font-size: var(--cf-text-sm);
@@ -870,6 +861,109 @@ a {
 }
 .fs-handoff dd {
   margin: 0;
+}
+
+/* ---- staking with a balance the platform holds ----------------------- */
+/*
+ * THE PANEL THAT SHIPPED WITH NO STYLING AT ALL.
+ *
+ * `components/custodialstake.tsx` was written against five classes this file never declared —
+ * `fs-panel--custodial`, `fs-outcomes`, `fs-quote`, `fs-quote__line`/`fs-quote__rate` and
+ * `fs-blocked` — and against a sixth, `fs-note--warning`, which is the misspelling of the
+ * `fs-note--warn` every other refusal on this surface uses. The result was that the platform's own
+ * money disclosure, the "this amount has too many decimal places" refusal and the "your stake was
+ * not taken" alert all rendered as unmarked grey paragraphs with no warning edge, in the one panel
+ * on this surface where the reader is handing money to a custodian rather than to a contract. The
+ * component's spelling is fixed; the rest is declared here.
+ *
+ * ── WHY IT DOES NOT LOOK LIKE `.fs-stake` ─────────────────────────────────────────────────────
+ *
+ * That file's own header is the argument: a wallet stake is the reader's, in the contract,
+ * claimable with a block explorer if every server CloudsForge owns is switched off; a custodial
+ * stake is a ledger entry that cannot be claimed without the platform. Two stake buttons on one
+ * page is the confusion `25-wallet-clients.md` §1 calls the most dangerous thing this estate can
+ * do, so this panel takes a heavy left edge in the WARNING colour — the same hue `.fs-note--warn`
+ * already carries — rather than the accent, which is spent on the wallet path. The distinction is
+ * never left to the colour: the heading, the disclosure and the button label all say it in words.
+ */
+.fs-panel--custodial {
+  border-left: 4px solid var(--cf-viz-warn);
+}
+
+/* The Yes/No pair. A fieldset, so the legend names the group for a screen reader; the picked side
+   is marked by the radio itself, which is a control the platform does not get to restyle away. */
+.fs-outcomes {
+  margin: 0 0 var(--cf-space-xl);
+  padding: 0;
+  border: 0;
+}
+.fs-outcomes legend {
+  padding: 0;
+  margin-bottom: var(--cf-space-sm);
+  font-size: var(--cf-text-sm);
+  color: var(--cf-fg-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.fs-outcomes label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cf-space-xs);
+  margin-right: var(--cf-space-md);
+  padding: var(--cf-space-sm) var(--cf-space-lg);
+  border: 1px solid var(--cf-line-strong);
+  border-radius: var(--cf-radius);
+  font-size: var(--cf-text-lg);
+  cursor: pointer;
+}
+.fs-outcomes input {
+  accent-color: var(--cf-accent);
+}
+
+/*
+ * The quote, shown BEFORE the stake button exists — which is the panel's whole point, and is the
+ * reason it is a box rather than two loose paragraphs. A conversion a reader learns about
+ * afterwards is a conversion they did not agree to, so the two figures and the platform's sentence
+ * are one block, sunken out of the panel, with the button inside it.
+ */
+.fs-quote {
+  margin: 0 0 var(--cf-space-xl);
+  padding: var(--cf-space-lg);
+  border: 1px solid var(--cf-line);
+  border-radius: var(--cf-radius);
+  background: var(--cf-bg-sunken);
+}
+/* No `font-family` here: `cf-num` is on the element and brings the mono face and tabular figures
+   with it, and a second declaration would be a second opinion about the same thing. */
+.fs-quote__line {
+  margin: 0 0 var(--cf-space-xs);
+  font-size: var(--cf-text-2xl);
+  line-height: 1.2;
+}
+.fs-quote__rate {
+  margin: 0 0 var(--cf-space-md);
+  font-size: var(--cf-text-md);
+  color: var(--cf-fg-dim);
+}
+
+/* The refusals, in full. "Not yet, and here is what is missing" is a different answer from
+   silence, and a reader holding that coin is owed the difference — so this is a real disclosure
+   with a pointer, not a footnote. */
+.fs-blocked {
+  margin: var(--cf-space-lg) 0 0;
+  font-size: var(--cf-text-md);
+  color: var(--cf-fg-dim);
+}
+.fs-blocked summary {
+  cursor: pointer;
+  color: var(--cf-fg);
+}
+.fs-blocked ul {
+  margin: var(--cf-space-md) 0 0;
+  padding-left: var(--cf-space-xl);
+  display: grid;
+  gap: var(--cf-space-sm);
+  max-width: 76ch;
 }
 
 /* ---- notes ----------------------------------------------------------- */

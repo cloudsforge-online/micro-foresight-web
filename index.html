@@ -5,18 +5,62 @@
   because a page that paints before the attributes land flashes the default and then changes
   colour.
 
+  data-cf-scheme is the third of the three, added with @cloudsforge/ui 1.1. `auto` follows the
+  reader's operating system; `light` and `dark` force one. It is set here, statically, for the same
+  reason the other two are — a theme flash is worse than a theme nobody asked for.
+
+  This surface never carried a light mode of its own, so there is nothing here to delete: `auto` is
+  the first time a reader in a light environment is served rather than made to fight the page, and
+  the contrast of every pair is measured in the design system on both schemes rather than on the
+  one this repository happened to check.
+
+  `warm` is the house substrate. The cool one exists for products about measurement; a market a
+  stranger is asked to stake money in is not one.
 -->
-<html lang="en-GB" data-cf-product="foresight" data-cf-substrate="warm">
+<html lang="en-GB" data-cf-product="foresight" data-cf-substrate="warm" data-cf-scheme="auto">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="colour-scheme" content="dark" />
+    <!--
+      `color-scheme`, spelled the way the standard spells it. This was `colour-scheme` — British,
+      correct English, and INERT: no browser has ever read it, so the declaration that was supposed
+      to tell the browser which form controls and scrollbars to draw did nothing at all, and the
+      inputs on the stake panel were drawn light on a dark page in every browser that honours it.
+
+      Both schemes are declared rather than only `dark`, because `data-cf-scheme="auto"` above means
+      the token layer now resolves whichever palette the reader's system asks for. Declaring only
+      `dark` here would leave the chrome the browser draws disagreeing with the page around it.
+    -->
+    <meta name="color-scheme" content="dark light" />
     <!--
       The build that produced this bundle. Stamped by the Dockerfile, read by src/lib/obs.ts, and
       the reason an error report can be pinned to the deploy that introduced it. It is an identity
       rather than a configuration: it names the artefact, it does not tell it where it is running.
     -->
     <meta name="cf-release" content="dev" />
+    <!--
+      THE GOOGLE ANALYTICS MEASUREMENT ID, AND NOT THE GOOGLE ANALYTICS TAG.
+      ────────────────────────────────────────────────────────────────────────────────────────
+      There is deliberately no third-party analytics `<script src=…>` anywhere in this file, and
+      there must never be one — the tag's own domain is not even spelled out here, so that a grep
+      for it over this file returns nothing at all and the absence is checkable rather than
+      asserted. The stock snippet fetches that script and sets
+      `_ga` on load — before any banner has been drawn, let alone answered — and under ePrivacy
+      Art. 5(3) an analytics cookie set before consent is a violation that a banner underneath it
+      does not cure. This estate is separately under GDPR review and this surface custodies
+      stakes, which makes "we will tidy the analytics later" the wrong order to do things in.
+      `@cloudsforge/ui/consent` injects the tag from exactly one place: the Accept button in
+      `CookieBanner`. See the header of that module for the whole argument.
+
+      It is a meta tag rather than a build-time environment variable because
+      test/no-build-time-config.test.ts greps for those and fails the build — an artefact with an
+      environment frozen into it is not the artefact that passed CI. (That test greps this file
+      too, which is why the prefix is not spelled out here.) This is the same mechanism
+      `cf-release` above already uses, and the ID is an identity rather than a configuration: it
+      names the property, it does not tell the bundle where it is running. An absent or empty
+      value means analytics is simply off, which is what a local `pnpm dev` gets.
+    -->
+    <meta name="cf-analytics" content="G-NB8DNLTKZQ" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/favicon-192x192.png" />
