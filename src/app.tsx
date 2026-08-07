@@ -16,6 +16,7 @@
  * a browse page by habit.
  */
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { ScrollToTop } from './components/scroll-to-top.tsx'
 import { AppShell } from './components/shell.tsx'
 import { AuthProvider } from './lib/auth.tsx'
 import { MarketPage } from './pages/market.tsx'
@@ -27,6 +28,7 @@ import { RulesPage } from './pages/rules.tsx'
 export function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <Routes>
           <Route element={<AppShell />}>
