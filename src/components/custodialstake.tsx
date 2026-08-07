@@ -222,18 +222,31 @@ export function CustodialStakePanel({
 
   return (
     <section className="fs-panel fs-panel--custodial" aria-labelledby="custodial-stake-heading">
-      <h2 id="custodial-stake-heading">Stake with a balance you already hold</h2>
+      <h2 className="fs-panel__title" id="custodial-stake-heading">
+        Use bitcoin, ether or any coin we hold for you
+      </h2>
+
+      <p className="fs-note">
+        Pick what you want to pay with and we will show you what it turns into before anything
+        moves. Every currency feeds the same pool, counted in {registry.poolAsset}, because that is
+        the one figure a contract can hold and divide on its own. From the moment you confirm, your
+        position, the odds and any winnings are {registry.poolAsset} and nothing else. The one
+        exception is a market that voids: then you get back exactly what you handed over, the same
+        amount of the same coin, whatever it happens to be worth that day.
+      </p>
 
       {/* The platform's own sentence about what a custodial stake is and is not. Composed by the
           service so every client shows the same one — never rewritten here. */}
       <p className="fs-note fs-note--warning">{registry.disclosure}</p>
 
       {!signedIn ? (
-        <p className="fs-note">Sign in to stake from a balance you hold with CloudsForge.</p>
+        <p className="fs-note">
+          Sign in and whatever you have deposited with CloudsForge becomes available here.
+        </p>
       ) : (
         <>
           <label className="fs-field">
-            <span className="fs-field__label">Asset</span>
+            <span className="fs-field__label">Pay with</span>
             <select
               className="fs-field__input"
               value={assetCode}
@@ -266,9 +279,9 @@ export function CustodialStakePanel({
             <span className="fs-field__unit">{asset?.displayName ?? ''}</span>
           </label>
           {input.trim().length > 0 && !amountOk && asset !== null && (
-            <p className="fs-note fs-note--warning">
-              A positive amount with at most {asset.decimals} decimal places — {asset.displayName}{' '}
-              has no smaller unit than that.
+            <p className="fs-note fs-note--warn">
+              More than zero, and no finer than {asset.decimals} decimal places. {asset.displayName}{' '}
+              does not divide any further than that.
             </p>
           )}
 
@@ -302,7 +315,7 @@ export function CustodialStakePanel({
 
           {phase !== 'quoted' && phase !== 'staking' && phase !== 'staked' && (
             <button type="button" disabled={!amountOk || phase === 'quoting'} onClick={() => void onQuote()}>
-              {phase === 'quoting' ? 'Pricing…' : 'Show me the conversion'}
+              {phase === 'quoting' ? 'Working out the rate…' : 'What does that come to?'}
             </button>
           )}
 
@@ -317,8 +330,8 @@ export function CustodialStakePanel({
               {(phase === 'quoted' || phase === 'staking') && (
                 <button type="button" disabled={phase === 'staking'} onClick={() => void onStake()}>
                   {phase === 'staking'
-                    ? 'Staking…'
-                    : `Stake ${quote.poolAmountFormatted} ${quote.poolAsset}`}
+                    ? 'Placing it…'
+                    : `Put ${quote.poolAmountFormatted} ${quote.poolAsset} on ${outcome === 0 ? 'Yes' : 'No'}`}
                 </button>
               )}
             </div>
@@ -326,8 +339,8 @@ export function CustodialStakePanel({
 
           {phase === 'staked' && (
             <p className="fs-note fs-note--ok">
-              Your stake is recorded. Your position, the odds and anything you win are all in{' '}
-              {registry.poolAsset}.
+              That is placed. From here your position, the odds and anything you collect are
+              counted in {registry.poolAsset}.
             </p>
           )}
           {phase === 'failed' && message !== null && (
@@ -340,7 +353,7 @@ export function CustodialStakePanel({
 
       {blocked.length > 0 && (
         <details className="fs-blocked">
-          <summary>Assets this platform cannot take yet</summary>
+          <summary>Currencies we are not accepting, and why</summary>
           <ul>
             {blocked.map((option) => (
               <li key={option.assetCode}>

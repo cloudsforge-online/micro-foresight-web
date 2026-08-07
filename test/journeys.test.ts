@@ -378,8 +378,8 @@ describe('BJ-FOR — Forge Foresight', () => {
         await s.click(s.byRole('button', /stake on yes/i))
         await s.settle(20)
 
-        assert.match(s.text(), /you declined in your wallet/i)
-        assert.match(s.text(), /nothing was sent/i)
+        assert.match(s.text(), /you turned it down in your wallet/i)
+        assert.match(s.text(), /no money moved/i)
         // Not an alert: the user said no, which is not a fault and not something to escalate.
         const notes = [...s.document.querySelectorAll('.fs-stake [role="alert"]')]
         assert.deepEqual(
@@ -608,7 +608,7 @@ describe('BJ-FOR — Forge Foresight', () => {
   it('BJ-FOR-18 T2: /markets on its own and /markets/a/b are both nothing', async () => {
     for (const path of ['/markets', '/markets/a/b']) {
       await withScreen(marketAt(path), { url: `${ORIGIN}${path}`, routes: {} }, async (s) => {
-        assert.match(s.text(), /not found|no page|does not exist/i, `${path} rendered something`)
+        assert.match(s.text(), /nothing lives at this address/i, `${path} rendered something`)
         // And nothing was fetched for an address that names no market.
         assert.deepEqual(s.api.wire.map((w) => w.path), [], `${path} made a request`)
       })
@@ -1035,7 +1035,7 @@ describe('BJ-FORESIGHT-404 — an unowned address answers 404', () => {
 
   it('BJ-FORESIGHT-404 T2: the not-found screen renders inside the shell', async () => {
     await withScreen(h(App), { url: `${ORIGIN}/nothing-here`, routes: {} }, async (s) => {
-      assert.match(s.text(), /not found|no page|does not exist/i)
+      assert.match(s.text(), /nothing lives at this address/i)
       assert.ok(s.allByRole('link').length > 0, 'the not-found screen strands the reader')
       assert.ok(!ROUTES.map((r) => r.path).includes('nothing-here'))
     })

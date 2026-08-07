@@ -56,8 +56,8 @@ export function PoolRatioBar({
       <figcaption className="fs-pool__caption">
         <span className="fs-pool__title">Pool split</span>
         <span className="fs-pool__sub">
-          Odds here are the pool ratio and nothing else — the share of everything staked that sits
-          on each side.
+          What you see below is how the money is split: the fraction of everything in the pool that
+          sits on each answer. Nobody is publishing an opinion here.
         </span>
       </figcaption>
 
@@ -92,8 +92,8 @@ export function PoolRatioBar({
       ) : (
         <p className="fs-bar fs-bar--empty" role="status">
           {total === null
-            ? 'The pool could not be read, so there is no ratio to show.'
-            : 'Nothing has been staked yet, so there is no ratio to show. That is not a 50/50 — it is no market yet.'}
+            ? 'We could not read the pool, so there is no split to draw.'
+            : 'Not a penny has gone in, so there is no split to draw. Read that as an empty market, not as even odds.'}
         </p>
       )}
 
@@ -121,9 +121,9 @@ export function PoolRatioBar({
       </p>
 
       <p className="fs-caveat">
-        A parimutuel payout is decided by the pool <em>at settlement</em>, not by the pool now.
-        Anybody may stake after you, and every stake changes what every winning stake is worth.
-        These figures are not a quoted return.
+        What gets paid out is worked from the pool <em>as it stands when the market settles</em>,
+        not as it stands now. Everyone who backs a side after you moves what every winning position
+        is worth. Treat the figures above as a picture of the moment, never as a promised return.
       </p>
     </figure>
   )

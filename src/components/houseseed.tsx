@@ -54,8 +54,8 @@ export function HouseSeedNotice({ disclosure }: { disclosure: HouseDisclosure | 
     >
       <h3 className="fs-house__title" id="house-seed-heading">
         {disclosure.state === 'staked'
-          ? 'The platform has staked in this pool'
-          : 'The platform will stake in this pool'}
+          ? 'Some of the money below is ours'
+          : 'Some of the money here will be ours'}
       </h3>
 
       {/* The sentence. 21 §5 words it; the service composes it once; this renders it as sent. */}
@@ -64,16 +64,16 @@ export function HouseSeedNotice({ disclosure }: { disclosure: HouseDisclosure | 
       <p className="fs-house__why">
         {disclosure.state === 'staked' ? (
           <>
-            A parimutuel market with one bettor is a refund machine, so CloudsForge stakes the{' '}
-            <strong>same amount on each outcome</strong> at the moment a market opens — never
-            afterwards — so that early odds exist without the platform taking a side. Its winnings
-            come back the way any staker&rsquo;s do, and its stake is divided among the winners
-            exactly like yours if it loses.
+            A pool with one person in it just hands that person their money back, so CloudsForge
+            puts the <strong>same amount on each answer</strong> as a market opens, and never
+            touches it again. That gives the first arrivals a real split to look at without us
+            leaning either way. If our side wins we collect like anyone else; if it loses, the
+            winners share our money exactly as they share yours.
           </>
         ) : (
           <>
-            This market has been approved with a seed that is not in the pool yet. It cannot open
-            until the same amount is staked on each outcome from the address below.
+            This market is approved with money set aside that has not gone in. It cannot open until
+            an equal amount sits on both answers, sent from the address below.
           </>
         )}
       </p>
@@ -132,18 +132,18 @@ export function HouseSeedNotice({ disclosure }: { disclosure: HouseDisclosure | 
               </code>
             </span>
           ))}
-          . Both transactions are the ordinary <code className="cf-num">stake(uint8)</code> every
-          bettor sends — the platform has no privileged path into this contract.
+          . Both of those are the same <code className="cf-num">stake(uint8)</code> call anybody
+          here makes. There is no back door into this contract, and we do not have one.
         </p>
       )}
 
       {symmetryFailed && (
         <p className="fs-house__alarm">
           <strong>
-            The seed on this page is not symmetric: the total is not twice the per-outcome amount.
+            Our money is not evenly placed here: the total is not twice the per-answer amount.
           </strong>{' '}
-          A symmetric seed is what &ldquo;the platform expresses no opinion&rdquo; means, and this
-          one does not add up. Do not stake on this market until that is explained.
+          Placing it evenly is the whole of what &ldquo;we take no view&rdquo; means, and these
+          figures do not add up. Keep your money out of this market until somebody explains it.
         </p>
       )}
     </section>

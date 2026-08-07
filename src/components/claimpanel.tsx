@@ -137,24 +137,24 @@ export function ClaimPanel({ mirror, address }: { mirror: MirrorFacts; address: 
           </span>
           {verdict.unconfirmedBecause}{' '}
           {verdict.canAttempt
-            ? 'You can still claim — the contract works out the amount itself and pays it to your address.'
+            ? 'Go ahead anyway — the contract does the arithmetic itself and sends the result to your address.'
             : ''}
         </p>
       )}
 
       {verdict.claimableFrom !== null && (
         <p className="fs-claim__when">
-          Claims open <span className="cf-num">{utcDateTime(verdict.claimableFrom)}</span>, when the
-          dispute window closes. Until then a wrong resolution can still be voided and the money has
-          not moved.
+          You can collect from <span className="cf-num">{utcDateTime(verdict.claimableFrom)}</span>,
+          the moment the dispute window shuts. That gap exists so a bad call can be thrown out
+          while everybody&apos;s money is still where they left it.
         </p>
       )}
 
       {contract && (
         <p className="fs-claim__contract">
-          Contract <code className="cf-num" title={contract}>{shortHex(contract)}</code>. It pays
-          each address once, and it will pay you from any client that can send a transaction —
-          this page is a convenience, not the route.
+          Contract <code className="cf-num" title={contract}>{shortHex(contract)}</code>. It settles
+          with each address once, and anything that can send a transaction will do — a block
+          explorer, another wallet, a script. This button is the easy way, not the only way.
         </p>
       )}
 
@@ -176,8 +176,8 @@ export function ClaimPanel({ mirror, address }: { mirror: MirrorFacts; address: 
 
       {provider === null && (
         <p className="fs-note" role="status">
-          Connect a wallet to claim. The contract is public — any wallet or block explorer can call
-          <code className="cf-num"> claim()</code> on it.
+          Connect a wallet to collect. Nothing about this is private to us: any wallet or block
+          explorer can call<code className="cf-num"> claim()</code> on the contract directly.
         </p>
       )}
 

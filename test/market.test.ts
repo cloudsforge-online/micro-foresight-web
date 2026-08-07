@@ -153,7 +153,7 @@ describe('observation', () => {
     const obs = observation(pool({ stale: true, behindBlocks: 12 }), NOW)
     assert.equal(obs.tone, 'stale')
     assert.match(obs.text, /12 blocks behind the tip/)
-    assert.match(obs.text, /may have moved/)
+    assert.match(obs.text, /treat these numbers as having moved/)
   })
 
   it('STILL prints the time when everything is current', () => {

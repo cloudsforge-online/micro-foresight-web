@@ -75,7 +75,7 @@ export function Failed({
       <p className="wt-state__hint">{notice.message}</p>
       {notice.requestId && (
         <p className="wt-state__meta">
-          Quote this to support:{' '}
+          Give support this reference:{' '}
           <code className="cf-num wt-reqid">{notice.requestId}</code>
         </p>
       )}
@@ -99,7 +99,7 @@ export function Failed({
  */
 export function Forbidden({
   notice,
-  title = 'You do not have access to this',
+  title = 'This one is closed to you',
 }: {
   notice?: ErrorNotice | undefined
   title?: string | undefined
@@ -111,8 +111,8 @@ export function Forbidden({
       </span>
       <p className="wt-state__title">{title}</p>
       <p className="wt-state__hint">
-        {notice?.message ?? 'Your account is missing the role this page needs.'} Ask an
-        administrator to grant it.
+        {notice?.message ?? 'Your account does not carry the permission this page asks for.'} An
+        administrator can add it.
       </p>
       {notice?.requestId && (
         <p className="wt-state__meta">

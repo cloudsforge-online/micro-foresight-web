@@ -82,7 +82,7 @@ describe('a pool that could not be read shows no figure at all', () => {
         assert.match(shown, /not known/i, 'the absence is not named')
 
         // And the bar says which of the two it is, in those words.
-        assert.match(s.text(), /pool could not be read/i)
+        assert.match(s.text(), /could not read the pool/i)
         assert.match(s.text(), /not known — not zero/i)
       },
     )

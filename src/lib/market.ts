@@ -78,7 +78,7 @@ export function observation(pool: Pick<PoolView, 'asOf' | 'stale' | 'behindBlock
   if (pool.asOf === null) {
     return {
       tone: 'never',
-      text: 'The chain has not been read for this market yet, so the pool below is not known — not zero.',
+      text: 'Nobody has read the chain for this market yet, which makes the figures below not known — not zero.',
     }
   }
   const stamp = asOfStamp(pool.asOf) ?? 'as of an unreadable time'
@@ -88,7 +88,7 @@ export function observation(pool: Pick<PoolView, 'asOf' | 'stale' | 'behindBlock
   if (pool.stale) {
     return {
       tone: 'stale',
-      text: `Pool ${stamp}${age === null ? '' : ` (${age})`}${behind}. The mirror is behind the chain, so these figures may have moved.`,
+      text: `Pool ${stamp}${age === null ? '' : ` (${age})`}${behind}. Our copy has fallen behind the chain, so treat these numbers as having moved.`,
     }
   }
   return {

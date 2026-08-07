@@ -167,7 +167,7 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
             <span className="fs-note__icon" aria-hidden="true">
               ⊘
             </span>
-            Void: {market.voidReason}. Refunds are whole — no fee is taken on a void.
+            Void: {market.voidReason}. Everyone is paid back in full, and we take nothing.
           </p>
         )}
       </header>
@@ -218,10 +218,11 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
         </dl>
 
         <p className="fs-terms__why">
-          The source is named <em>before</em> the market opens and the whole document is hashed into
-          the contract, so it cannot be swapped for a friendlier one at resolution time. If the
-          named source is gone when the market resolves, the market is <strong>void</strong> and
-          everybody is refunded — not resolved on an operator's judgement.
+          We pick the source that settles this question on the day it opens, then hash the whole
+          document above into the contract. Nobody can quietly trade it for a kinder one once money
+          is on the table. Should that source vanish before the answer is in, the market is{' '}
+          <strong>void</strong> and every stake goes back whole. No one here gets to call it
+          instead.
         </p>
 
         {/* The hash, recomputed here rather than displayed on trust. */}
@@ -263,6 +264,13 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
         <h2 className="fs-panel__title" id="pool-heading">
           The pool
         </h2>
+        <p className="fs-note">
+          Everyone backing this question pays into the same pool, whichever currency they arrived
+          with — bitcoin, ether, litecoin, solana, XRP, EMBER or a token minted here. The losing
+          side&apos;s money is shared out among the winning side in proportion to what each person
+          put in. So your return moves with the split below until the market closes, and nobody can
+          hand you fixed odds.
+        </p>
         {/*
           BEFORE the ratio bar, deliberately. Part of the two numbers below may be the platform's
           own money, and a reader who is told that after reading the odds has already formed a
@@ -331,9 +339,8 @@ function ProvenancePanel({ provenance }: { provenance: Provenance | null }) {
           Why this market exists
         </h2>
         <p className="fs-note" role="status">
-          This question was written by an operator rather than proposed by the idea pipeline, so
-          there is no search record behind it. The resolution criteria above are still the whole of
-          what settles it.
+          Somebody on our team wrote this question by hand, so there is no search behind it to show
+          you. The criteria above remain the entire basis on which it will be decided.
         </p>
       </section>
     )
@@ -346,8 +353,8 @@ function ProvenancePanel({ provenance }: { provenance: Provenance | null }) {
       </h2>
       <p className="fs-provenance__lede">
         {provenance.origin === 'model'
-          ? 'A model proposed this question from the sources below. A person read it, edited it if it needed editing, and approved it — nothing a model produces can open a market.'
-          : 'An operator proposed this question, with the sources below.'}
+          ? 'A model drafted this question from the reading below. Somebody on our team then went through the sources, made whatever edits it needed, and put it live. A model cannot open a market on its own.'
+          : 'Somebody on our team wrote this question, working from the reading below.'}
       </p>
 
       {provenance.sources.length > 0 ? (
@@ -404,8 +411,9 @@ function ProvenancePanel({ provenance }: { provenance: Provenance | null }) {
         </div>
       </dl>
       <p className="fs-provenance__note">
-        The prompt itself is not stored — only its hash, so a proposal can be tied to the exact
-        instructions that produced it without the record ever holding the text.
+        We keep a fingerprint of the instructions given to the model, never the instructions
+        themselves. That ties a draft to exactly what produced it while the text stays out of the
+        record.
       </p>
     </section>
   )

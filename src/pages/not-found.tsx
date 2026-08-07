@@ -24,14 +24,14 @@ export function NotFoundPage() {
       <span className="wt-state__icon" aria-hidden="true">
         ◇
       </span>
-      <p className="wt-state__title">There is no page at this address</p>
+      <p className="wt-state__title">Nothing lives at this address</p>
       <p className="wt-state__hint">
-        The link may be out of date, or the page may have moved. This response carries a 404
-        status, so whatever sent you here can be fixed.
+        Either the link has gone stale or the page moved. We answer this with a real 404, so
+        whatever sent you here can spot the mistake and correct it.
       </p>
       <div className="wt-state__action">
         <Link className="cf-btn" to="/">
-          Back to the markets
+          Go and find a market
         </Link>
       </div>
     </div>
