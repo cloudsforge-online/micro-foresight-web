@@ -71,10 +71,25 @@ export function MarketsPage() {
       <ul className="fs-rules">
         <li className="fs-rule">
           <h2 className="fs-rule__title">Bring the coin you already hold</h2>
+          {/*
+            NO COUNT HERE. This sentence said "Seven currencies", and the lede one card above
+            names six by name — the seventh was only reachable by counting SHARD, which
+            `parseStakeAssetCode` refuses outright through `isRetiredAsset`
+            (`contracts/packages/chain/src/index.ts`, `foresight/src/stakeassets.ts`). So the
+            number was wrong on the day it was written, and it would have gone on being wrong
+            silently, because nothing on this page fetches the registry that would contradict it.
+
+            This page loads `GET /markets` and nothing else, so it holds no list to enumerate.
+            The market page does: `CustodialStakePanel` fetches `GET /stake-assets` and renders
+            what came back — the accepted currencies in its "Pay with" select, and the refused
+            ones, with each reason, under "Currencies we are not accepting, and why". Pointing at
+            that list rather than restating its length is the whole fix: the registry can gain or
+            lose a row and no sentence here goes stale.
+          */}
           <p className="fs-rule__body">
-            Seven currencies and every token minted on the platform are accepted. We quote the
-            conversion, you decide, and only then does the money move. From that point your
-            position, your odds and your payout are all counted in EMBER.
+            The currencies listed on any market page are accepted, and so is every token minted on
+            the platform. We quote the conversion, you decide, and only then does the money move.
+            From that point your position, your odds and your payout are all counted in EMBER.
           </p>
         </li>
         <li className="fs-rule">
