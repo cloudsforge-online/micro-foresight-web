@@ -35,11 +35,18 @@ const directives = nginx
   .filter((line) => !line.trimStart().startsWith('#'))
   .join('\n')
 
-/** The alternation inside nginx's enumerated `location ~ ^/(…)` block. */
+/**
+ * Every path enumerated by a `location ~ ^/…` block, from all of them.
+ *
+ * There is more than one such block now, and reading only the first would be a check that silently
+ * shrinks: `/markets` was split into a block of its own so that `Vary: Accept` could go on the one
+ * client route the gateway negotiates and nowhere else (see nginx.conf). A reader of only the first
+ * block would then have concluded that this app no longer serves /portfolio.
+ */
 function nginxPaths(): string[] {
-  const match = /location\s+~\s+\^\/\(([^)]+)\)/.exec(directives)
-  assert.ok(match, 'nginx.conf has no enumerated route block')
-  return (match[1] ?? '').split('|').map((p) => p.trim())
+  const blocks = [...directives.matchAll(/location\s+~\s+\^\/\(?([^)$]+?)\)?\((?:\/\|\$)\)/g)]
+  assert.ok(blocks.length > 0, 'nginx.conf has no enumerated route block')
+  return blocks.flatMap((match) => (match[1] ?? '').split('|').map((p) => p.trim()))
 }
 
 describe('the route declaration', () => {
