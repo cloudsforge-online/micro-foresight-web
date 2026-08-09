@@ -264,12 +264,25 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
         <h2 className="fs-panel__title" id="pool-heading">
           The pool
         </h2>
+        {/*
+          THE ROLL-CALL IS GONE, AND THIS PAGE IS WHERE IT WAS WORST: the real list is fetched
+          and rendered a few hundred pixels further down. This sentence named "bitcoin, ether,
+          litecoin, solana, XRP, EMBER"; `CustodialStakePanel` asks `GET /stake-assets` and
+          renders what came back, and the registry has never held a row for SOL or for XRP. So
+          one page carried a typed list and a measured list, disagreeing, with the typed one read
+          first.
+
+          Nothing replaces it and nothing needs to. "Whichever currency they arrived with" is the
+          whole claim this paragraph is making — the sentence is about the POOL, not about the
+          door — and the panel below is the only honest place a set the service owns can be
+          stated. A pointer here would have to be conditional too: the panel mounts only while
+          `takesStakes(market.status)`, so on a closed market it would point at nothing.
+        */}
         <p className="fs-note">
           Everyone backing this question pays into the same pool, whichever currency they arrived
-          with — bitcoin, ether, litecoin, solana, XRP, EMBER or a token minted here. The losing
-          side&apos;s money is shared out among the winning side in proportion to what each person
-          put in. So your return moves with the split below until the market closes, and nobody can
-          hand you fixed odds.
+          with. The losing side&apos;s money is shared out among the winning side in proportion to
+          what each person put in. So your return moves with the split below until the market
+          closes, and nobody can hand you fixed odds.
         </p>
         {/*
           BEFORE the ratio bar, deliberately. Part of the two numbers below may be the platform's

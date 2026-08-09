@@ -54,11 +54,33 @@ export function MarketsPage() {
     <div className="fs-page">
       <header className="fs-page__head">
         <h1 className="fs-page__title">Back your read on what happens next</h1>
+        {/*
+          THE ROLL-CALL IS GONE, AND IT WAS NOT MERELY FRAGILE — IT WAS OVER-CLAIMING BY TWO.
+
+          This read "Bitcoin, Ethereum, Litecoin, Solana, XRP, EMBER or any token launched on
+          CloudsForge", and `foresight`'s `stake_assets` registry has never held a row for SOL or
+          for XRP. A reader who arrived with either got a 404 `unknown_asset` — "SOL is not a
+          stake asset" — from a page that had just invited them by name. Same defect as the
+          "Seven currencies" count one card below, which `test/content.test.ts` was written for:
+          a set the SERVICE owns, restated by hand in a bundle nothing notifies when it changes.
+          Deleting the numeral fixed the arithmetic and left the roll-call it was counting.
+
+          The pressure to re-type it is real and is why this note is long. micro-contracts
+          `c0e7c77` added DOGE and ETC to the asset union, and the natural next move is to append
+          two more coins here. It would be wrong twice over: the registry has no row for either,
+          and the estate follows neither chain — no DOGE or ETC deposit has ever been credited at
+          any depth (`contracts/packages/chain/src/index.ts`). Being NAMEABLE by the platform and
+          being ACCEPTED at the door are different facts, and only the second one belongs in a
+          lede.
+
+          The card below points at the live list instead, `CustodialStakePanel` renders it from
+          `GET /stake-assets`, and `test/content.test.ts` now guards the shape as well as the
+          count.
+        */}
         <p className="fs-page__lede">
-          Take a side with Bitcoin, Ethereum, Litecoin, Solana, XRP, EMBER or any token launched on
-          CloudsForge. You see the conversion rate before you commit, and what you bring joins one
-          shared pool. When the answer is in, a contract on Hearth splits that pool between the
-          people who called it right.
+          Take a side with the coin you already hold. You see the conversion rate before you
+          commit, and what you bring joins one shared pool. When the answer is in, a contract on
+          Hearth splits that pool between the people who called it right.
         </p>
       </header>
 
