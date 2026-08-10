@@ -54,22 +54,27 @@ a {
    carries `tabIndex={-1}`, which the local one did not. A rule left behind after its element is
    deleted is dead weight the next reader has to prove is dead. */
 
-.fs-subnav {
-  position: sticky;
-  top: var(--cf-bar-h);
-  z-index: 20;
-  background: var(--cf-bg);
-  border-bottom: 1px solid var(--cf-line);
-}
-.fs-subnav__inner {
-  max-width: var(--cf-max-w);
-  margin: 0 auto;
-  padding: 0 var(--cf-space-xl);
-  display: flex;
-  align-items: center;
-  gap: var(--cf-space-lg);
-  overflow-x: auto;
-}
+/* `.fs-subnav`, `.fs-subnav__inner`, `.fs-subnav__link`, its `:hover` and `.is-active` WERE HERE,
+   and they are gone with the markup they styled: the section strip is `SubNav` from
+   @cloudsforge/ui now, which brings `.cf-subnav`, `.cf-subnav__inner`, `.cf-subnav__link` and
+   `.cf-subnav__link--current`.
+
+   Measured 2026-08-10: ten frontends declared this strip privately, under six class prefixes, from
+   one original. This copy already scrolled (`overflow-x: auto` on the inner, `white-space: nowrap`
+   on the link) and already took its measure from `--cf-max-w` rather than the 76rem five of the ten
+   wrote. What it had drifted into is what a private copy always eventually reaches: `.is-active`
+   marked the current section in ink and underline only, where the estate's rule is three channels
+   — the reason is the 4.6 ΔE measurement `ui/packages/ui/src/tokens.css` records beside the
+   reserved status hues. The shared rule also narrows the gutter to `--cf-space-md` under 560px in
+   step with `.cf-bar__inner`, which this copy did not, so the two rows of the header now line up on
+   a phone as well as on a desktop.
+
+   A rule left behind after its element is deleted is dead weight the next reader has to prove is
+   dead — the same reason `.fs-skip` above is a comment rather than a rule. */
+
+/* The product wordmark, a LOCAL EXTRA inside the shared strip and deliberately not one of its
+   links. It has never been a `.fs-subnav*` class and so it is not part of the deletion above; it
+   lays itself out against `.cf-subnav__inner`'s flex row instead. */
 .fs-wordmark {
   font-family: var(--cf-font-display);
   font-size: var(--cf-text-xl);
@@ -80,23 +85,6 @@ a {
 .fs-wordmark b {
   color: var(--cf-accent-text);
 }
-.fs-subnav__link {
-  display: inline-block;
-  padding: var(--cf-space-lg) 0;
-  border-bottom: 2px solid transparent;
-  color: var(--cf-fg-dim);
-  text-decoration: none;
-  font-size: var(--cf-text-md);
-  white-space: nowrap;
-}
-.fs-subnav__link:hover {
-  color: var(--cf-fg);
-}
-.fs-subnav__link.is-active {
-  color: var(--cf-fg);
-  border-bottom-color: var(--cf-accent);
-}
-
 .fs-main {
   max-width: var(--cf-max-w);
   margin: 0 auto;
@@ -452,6 +440,25 @@ a {
   color: var(--cf-fg-dim);
 }
 
+/*
+ * THE ONE LITERAL FONT SIZE IN THIS FILE, AND IT IS DELIBERATELY NOT A STEP OF THE SCALE.
+ *
+ * The estate-wide sweep of 2026-08-10 replaced literal font sizes with the nearest `--cf-text-*`
+ * step, because a literal written against the old `--cf-text-md` (0.82rem) never followed it to
+ * 1rem. This declaration is a false positive of that sweep and is left alone on purpose.
+ *
+ * `em` is RELATIVE, so it has always tracked the scale: it is 90% of whatever number it is the unit
+ * for, and it is the unit for numbers set at three different steps. Measured 2026-08-10, at the
+ * three call sites (`src/components/`):
+ *
+ *   claimpanel.tsx, inside `.fs-claim__figure`      --cf-text-4xl  44px → 39.6px
+ *   stakepanel.tsx, inside `.fs-projection__figure` --cf-text-3xl  32px → 28.8px
+ *   pool.tsx, inside `.fs-key__value` / `.fs-key__wei`, body        16px → 14.4px
+ *
+ * So there is no "nearest step": there are three answers, 22px apart at the extremes. Pinning it to
+ * any one of them would set "EMBER" at 14px beside a 44px payout, or at 40px beside a 16px table
+ * cell. What is wanted here is a RATIO, and a ratio is not a step — the scale is not missing one.
+ */
 .fs-unit {
   color: var(--cf-fg-mute);
   font-size: 0.9em;
@@ -1213,8 +1220,13 @@ a {
 
 /* ---- motion ---------------------------------------------------------- */
 
+/* `.fs-subnav__link` was in the list below and has been taken out rather than respelled as
+   `.cf-subnav__link`. A local transition on a shared class is the drift this change exists to
+   remove — the app would be restyling something the design system owns, and the next reader would
+   have to diff two repositories to find out why the strip animates here and nowhere else.
+   `ui/packages/ui/src/ui.css` declares no transition on `.cf-subnav__link`, so the shared answer is
+   "no fade", and if that is wrong it is wrong for all ten surfaces and belongs upstream. */
 @media (prefers-reduced-motion: no-preference) {
-  .fs-subnav__link,
   .fs-filter,
   .fs-card__question {
     transition: color var(--cf-speed) var(--cf-ease), border-color var(--cf-speed) var(--cf-ease);
