@@ -15,10 +15,11 @@ import {
   MainRegion,
   SkipLink,
   SubNav,
+  miningOnHub,
 } from '@cloudsforge/ui'
 import { applyHead, surfaceMeta } from '@cloudsforge/ui/seo'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { PRODUCT } from '../lib/hosts.ts'
+import { PRODUCT, hosts } from '../lib/hosts.ts'
 import { NAV, ROUTES } from '../lib/routes.ts'
 import { useSession } from '../lib/auth.tsx'
 
@@ -35,11 +36,32 @@ export function AppShell() {
         to the second item in the company bar. `MainRegion` below is the half that was missing.
       */}
       <SkipLink>Skip to the markets</SkipLink>
+      {/*
+        `mining` is the design system's own control, and the bar seats it immediately before the
+        account menu, on every page of this surface.
+
+        The owner's report was that starting a browser miner is "hidden deep in mining page"; the
+        remedy is a place in the one strip of chrome every surface renders. What this app passes is
+        `miningOnHub()` — the `elsewhere` state — and that is a statement of fact rather than a
+        weaker choice: the miner is a WebSocket and two Web Workers on ONE origin, `hub.<apex>` is
+        not this origin, and no code in this bundle can start, observe or stop a session there. A
+        Start button here would promise something this bundle cannot deliver, which on a surface
+        that takes stakes is the last habit worth acquiring.
+
+        So it is an ANCHOR. It can be middle-clicked, opened in a new tab, copied, and read by
+        everything that reads links — none of which is true of a destination expressed as an
+        onClick, and an onClick destination is how micro-hub-web's account entry spent four months
+        pointing at the wrong page.
+
+        `hosts().hub`, never a literal: the same bundle is served from localhost, from a preview
+        host and from the apex, and a written-out URL would be correct on exactly one of them.
+      */}
       <CloudsForgeBar
         current={PRODUCT}
         account={account}
         onSignIn={() => signIn()}
         onSignOut={signOut}
+        mining={miningOnHub(hosts().hub)}
       />
       {/*
         THE SECTION STRIP IS THE SHARED ONE NOW, AND THE LOCAL `.fs-subnav*` RULES ARE GONE WITH IT.
