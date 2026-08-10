@@ -14,6 +14,7 @@ import {
   CookieBanner,
   MainRegion,
   SkipLink,
+  SubNav,
 } from '@cloudsforge/ui'
 import { applyHead, surfaceMeta } from '@cloudsforge/ui/seo'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
@@ -41,29 +42,48 @@ export function AppShell() {
         onSignOut={signOut}
       />
       {/*
-        Sticky at exactly `var(--cf-bar-h)` — the bar's own height token, not a number copied out
-        of it. When the bar's height changes this moves with it; a hard-coded 46px would leave a
-        seam that only appears on the surfaces nobody rechecked.
+        THE SECTION STRIP IS THE SHARED ONE NOW, AND THE LOCAL `.fs-subnav*` RULES ARE GONE WITH IT.
+
+        The strip itself — sticky at the bar's own `--cf-bar-h`, the bar's measure, the horizontal
+        scroll, the narrow-viewport gutter, the three-channel current marker — is `SubNav` from
+        @cloudsforge/ui. Measured 2026-08-10 across the estate: ten frontends declared this row in
+        their own stylesheet under six class prefixes, from what was plainly one original that had
+        then been edited in ten places.
+
+        This copy had drifted in two ways a reader can see. `.fs-subnav__link.is-active` marked the
+        current section in TWO channels, ink and underline, where the estate's rule is three. And
+        the gutter was `--cf-space-xl` at every width while the bar above it narrows to
+        `--cf-space-md` under 560px, so on a phone the second row of the header sat 12px proud of
+        the first on each side — the same defect as the estate-wide 76rem one, arrived at from the
+        other direction.
+
+        `aria-label` stays "Sections" — this repo's own wording, passed through as `label`. Only the
+        strip is homogenised, not the sentence a screen reader reads.
+
+        The wordmark stays. It is a local extra INSIDE the shared strip, not one of its links: it is
+        not a destination, and this is the only surface in the estate that puts its product name in
+        this row rather than relying on the company bar. `SubNav` takes the caller's own children,
+        so it costs the design system nothing.
       */}
-      <nav className="fs-subnav" aria-label="Sections">
-        <div className="fs-subnav__inner">
-          <span className="fs-wordmark">
-            Forge <b>Foresight</b>
-          </span>
-          {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              // `end` only on the index: without it, `/` matches every path and the Markets tab
-              // stays highlighted on every page.
-              end={item.to === '/'}
-              className={({ isActive }) => `fs-subnav__link${isActive ? ' is-active' : ''}`}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
-      </nav>
+      <SubNav label="Sections">
+        <span className="fs-wordmark">
+          Forge <b>Foresight</b>
+        </span>
+        {NAV.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            // `end` only on the index: without it, `/` matches every path and the Markets tab
+            // stays highlighted on every page.
+            end={item.to === '/'}
+            className={({ isActive }) =>
+              `cf-subnav__link${isActive ? ' cf-subnav__link--current' : ''}`
+            }
+          >
+            {item.label}
+          </NavLink>
+        ))}
+      </SubNav>
       <DocumentMeta />
       {/*
         `MainRegion` rather than a hand-written `<main>`: it sets `id={MAIN_ID}` and `tabIndex={-1}`
