@@ -89,8 +89,19 @@ export function MarketsPage() {
         rather than a page away: the strongest thing about this product — that you can arrive with
         almost any coin, and that the payout does not depend on us staying up — was written down
         nowhere a reader would meet it.
+
+        `fs-rules--primer` IS LOAD-BEARING, AND THE COUNT BELOW IS WHY. Plain `.fs-rules` is the
+        `auto-fill` grid the rules page uses, and four items in it laid out three-then-one at
+        every width from 1024px upwards — a row of one immediately above the markets, which reads
+        as a tile that failed to load rather than as a design. The modifier names the column count
+        instead of deriving it, so it goes 1 → 2 → 4 and never 3. `styles.css` carries the
+        arithmetic for why no `minmax()` floor could have done it.
+
+        A FIFTH TILE ADDED HERE WOULD ORPHAN AGAIN — 5 does not divide by 4 or 2. Either write it
+        as a pair (six tiles lay out 4+2 and 2+2+2 and 1×6, all balanced) or move the column steps
+        with it.
       */}
-      <ul className="fs-rules">
+      <ul className="fs-rules fs-rules--primer">
         <li className="fs-rule">
           <h2 className="fs-rule__title">Bring the coin you already hold</h2>
           {/*
