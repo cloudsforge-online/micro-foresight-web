@@ -98,6 +98,25 @@ a {
 
 /* ---- page furniture -------------------------------------------------- */
 
+/*
+ * THE PAGE IS A QUERY CONTAINER, AND THE GRIDS BELOW ASK IT RATHER THAN THE VIEWPORT.
+ *
+ * `.fs-main` is `min(100vw, --cf-max-w) - 2 * --cf-space-xl`, so the width a grid inside this
+ * page actually gets stops growing at 1168px however wide the window is. A `@media` rule would
+ * be asking about the wrong number — the same 1440px viewport gives this element 1168px, and a
+ * 1440px viewport with a future sidebar would give it less while the media query said otherwise.
+ * `container-type: inline-size` lets `.fs-rules--primer` ask the one question that decides its
+ * own layout: how much room do I have.
+ *
+ * It is `inline-size` rather than `size`, so only the width is contained; the height still comes
+ * from the content, which is what every child here depends on. Nothing inside `.fs-page` is
+ * `position: fixed`, so the containing-block change that comes with layout containment moves
+ * nothing.
+ */
+.fs-page {
+  container-type: inline-size;
+  container-name: fs-page;
+}
 .fs-page__head {
   margin-bottom: var(--cf-space-2xl);
 }
@@ -137,6 +156,11 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: var(--cf-space-sm);
+  /* Symmetric now. This row had a bottom margin and no top one, and the missing half was invisible
+     only because the primer above it ended in a half-empty row — the whitespace beside the orphan
+     tile was doing the separating. With the primer laid out as a full row the filters butted
+     straight onto its bottom edge, so the space is stated rather than borrowed. */
+  margin-top: var(--cf-space-2xl);
   margin-bottom: var(--cf-space-2xl);
 }
 .fs-filter {
@@ -167,7 +191,9 @@ a {
   padding: 0;
   display: grid;
   gap: var(--cf-space-xl);
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  /* `min(100%, 320px)` for the reason given on `.fs-rules`: a bare 320px floor overflowed a
+     288px page at a 320px viewport, and this list is the one a phone arrives on. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
 }
 .fs-card {
   border: 1px solid var(--cf-line);
@@ -1128,8 +1154,57 @@ a {
   padding: 0;
   display: grid;
   gap: var(--cf-space-xl);
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /*
+   * `min(100%, 300px)`, not `300px`. A bare 300px floor is a floor the track cannot go below even
+   * when the container is narrower than it, so at a 320px viewport this grid laid out 300px tiles
+   * in a 288px page and the whole document scrolled sideways. Measured, before and after, at
+   * 320px: tile 300px in a 288px page, now 288px in 288px. `min(100%, …)` keeps the floor as an
+   * intent — do not go below 300px if there is room — rather than a promise the box cannot keep.
+   */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
 }
+
+/*
+ * ── THE FOUR-TILE PRIMER ON THE BROWSE PAGE, AND WHY IT IS NOT `auto-fit` ─────────────────────
+ *
+ * `markets.tsx` states four things a stranger needs before the first market. Four tiles in the
+ * `auto-fill` grid above laid out as THREE AND THEN ONE, at every width from 1024px up to and
+ * including the widest window there is — the page's measure caps at 1168px, so three columns of
+ * 379px was the answer forever rather than at one unlucky size. A row of one reads as a tile that
+ * failed to load.
+ *
+ * An intrinsic track listing cannot fix it, and the reason is arithmetic rather than taste. With
+ * four items the only orphan-free column counts are 1, 2 and 4; `auto-fit`/`auto-fill` produce a
+ * MONOTONE sequence — as the container grows the count goes 1, 2, 3, 4 — and three columns fit
+ * strictly more easily than four, so there is no floor value that admits four and skips three.
+ * Any `repeat(auto-fit, minmax(<n>rem, 1fr))` here therefore has a band of widths that orphans;
+ * the only choice it offers is WHICH widths, and with the measure capped at 1168px the band that
+ * matters is every desktop.
+ *
+ * So the count is named, and the container says when: 1 → 2 → 4, never 3. The two thresholds are
+ * derived from the smallest tile each count may produce rather than from any device —
+ *   34rem: two tiles of at least (544 − 16) / 2 = 264px
+ *   64rem: four tiles of at least (1024 − 48) / 4 = 244px
+ * — which is why they are `rem` against the container and not `px` against a phone.
+ *
+ * Verified with the real stylesheet in headless Chrome at container widths from 288px to 1168px:
+ * rows are [1,1,1,1] below 544px, [2,2] to 1024px and [4] above it, and no width in that sweep
+ * produces a row of one.
+ */
+.fs-rules--primer {
+  grid-template-columns: 1fr;
+}
+@container fs-page (min-width: 34rem) {
+  .fs-rules--primer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@container fs-page (min-width: 64rem) {
+  .fs-rules--primer {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .fs-rule {
   border: 1px solid var(--cf-line);
   border-radius: var(--cf-radius-lg);
