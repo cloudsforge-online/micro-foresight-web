@@ -923,6 +923,145 @@ a {
   border-left: 4px solid var(--cf-viz-warn);
 }
 
+/*
+ * ── AND WHY IT IS NOW THE FIRST THING UNDER THE POOL ──────────────────────────────────────────
+ *
+ * The colour argument above is unchanged and the edge stays warn: this is a custodian holding the
+ * money, and that fact does not become less true because more people use it. What changed is the
+ * ORDER. A reader who has deposited coins here needs no wallet, no extension and no EMBER, and for
+ * the whole life of this page they met a demand for a browser wallet first. So primacy is carried
+ * by POSITION AND SCALE — this panel is above, and the wallet path is inside a `.fs-alt`
+ * disclosure — and not by borrowing the accent, which would have made the two paths look alike
+ * again in exactly the way the header forbids.
+ */
+.fs-panel__eyebrow {
+  margin: 0 0 var(--cf-space-2xs);
+  font-size: var(--cf-text-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cf-fg-mute);
+}
+.fs-panel__lede {
+  margin: 0 0 var(--cf-space-lg);
+  max-width: 60ch;
+  color: var(--cf-fg-dim);
+  font-size: var(--cf-text-lg);
+  line-height: 1.5;
+}
+
+/*
+ * THE HOLDINGS ROW — the reader's own coins, as the control they choose from.
+ *
+ * This replaced a `<select>` of asset names, which asked somebody to remember what they had
+ * deposited before they could bet with it. Each row carries the balance, so "what can I pay with"
+ * and "have I got any" are one glance. A balance we could not read prints as an em dash and the
+ * row still selects: an unreadable figure is not a reason to refuse a stake somebody typed.
+ *
+ * `aria-pressed` and not a radio group, because these are not a form field — they set which asset
+ * the amount below is denominated in, and the picked one is stated on the unit beside the input.
+ */
+.fs-holdings {
+  list-style: none;
+  margin: 0 0 var(--cf-space-lg);
+  padding: 0;
+  display: grid;
+  gap: var(--cf-space-sm);
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+}
+.fs-holding {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--cf-space-2xs);
+  font: inherit;
+  text-align: left;
+  padding: var(--cf-space-md) var(--cf-space-lg);
+  border: 1px solid var(--cf-line-strong);
+  border-radius: var(--cf-radius);
+  background: var(--cf-bg-sunken);
+  color: var(--cf-fg);
+  cursor: pointer;
+}
+.fs-holding:hover {
+  border-color: var(--cf-fg-mute);
+}
+.fs-holding:focus-visible {
+  outline: 2px solid var(--cf-accent);
+  outline-offset: 1px;
+}
+/* The picked row is marked twice — a filled edge AND the unit printed beside the amount field —
+   because a single colour is not a state on a surface where the next click moves money. */
+.fs-holding--on {
+  border-color: var(--cf-viz-warn);
+  box-shadow: inset 3px 0 0 var(--cf-viz-warn);
+  background: var(--cf-bg-raised);
+}
+.fs-holding__code {
+  font-size: var(--cf-text-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cf-fg-mute);
+}
+.fs-holding__amount {
+  font-size: var(--cf-text-xl);
+  line-height: 1.1;
+  /* Long balances shrink rather than push the row wide: eight places of satoshi are common and a
+     grid that reflowed on one of them would move every other coin under the reader's cursor. */
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+/* "Stake all …" — a link in weight, a button in function. Deliberately quiet: it fills a field,
+   it does not commit anything, and a second prominent button beside the real one is a misclick. */
+.fs-holding__all {
+  display: inline-block;
+  margin: calc(-1 * var(--cf-space-md)) 0 var(--cf-space-xl);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--cf-text-sm);
+  color: var(--cf-fg-dim);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.fs-holding__all:hover {
+  color: var(--cf-fg);
+}
+
+/*
+ * ── THE SELF-CUSTODY PATH, DEMOTED AND NOT HIDDEN ─────────────────────────────────────────────
+ *
+ * `<details>` rather than a removal or a second page: every word of the wallet panel stays in the
+ * document, so the explanation of what a wallet is, that nobody here can switch one on for a
+ * reader, and where EMBER's chain details are published are all still reachable — and still
+ * findable by a text search, which is how somebody with a wallet looks for this.
+ *
+ * The nested `.fs-panel` keeps its own border, so opening this does not produce a panel inside a
+ * panel with two competing edges: the wrapper is a rule and a summary, nothing more.
+ */
+.fs-alt {
+  margin: calc(-1 * var(--cf-space-md)) 0 var(--cf-space-2xl);
+  border-top: 1px solid var(--cf-line);
+  padding-top: var(--cf-space-lg);
+}
+.fs-alt__summary {
+  cursor: pointer;
+  font-family: var(--cf-font-display);
+  font-size: var(--cf-text-lg);
+  color: var(--cf-fg-dim);
+}
+.fs-alt__summary:hover {
+  color: var(--cf-fg);
+}
+.fs-alt__note {
+  margin: var(--cf-space-md) 0 var(--cf-space-lg);
+  max-width: 66ch;
+  font-size: var(--cf-text-md);
+  color: var(--cf-fg-mute);
+}
+
 /* The Yes/No pair. A fieldset, so the legend names the group for a screen reader; the picked side
    is marked by the radio itself, which is a control the platform does not get to restyle away. */
 .fs-outcomes {
