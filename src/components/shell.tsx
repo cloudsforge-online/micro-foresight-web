@@ -7,7 +7,7 @@
  * `current={PRODUCT}` marks Foresight as the current entry in the switcher, which it now is:
  * `ui/packages/ui/src/surfaces.ts` registers it as a product with `inSwitcher: true`.
  */
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   CloudsForgeBar,
   CloudsForgeFooter,
@@ -22,8 +22,13 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { PRODUCT, hosts } from '../lib/hosts.ts'
 import { NAV, ROUTES } from '../lib/routes.ts'
 import { useSession } from '../lib/auth.tsx'
+import { setViewedNetwork, viewedNetwork, type ViewedNetwork } from '../lib/viewed.ts'
 
 export function AppShell() {
+  // The viewed network: in-tab memory, defaulting to the hostname's own (micro-org#459).
+  // `setViewedNetwork` runs first in the handler below so the remounted tree reads the new value
+  // on its very first render.
+  const [viewed, setViewed] = useState<ViewedNetwork>(viewedNetwork())
   const { account, signIn, signOut } = useSession()
 
   return (
@@ -56,12 +61,28 @@ export function AppShell() {
         `hosts().hub`, never a literal: the same bundle is served from localhost, from a preview
         host and from the apex, and a written-out URL would be correct on exactly one of them.
       */}
+      {/*
+        In-app network context (micro-org#459, the combined view). The reader's choice lives in
+        `lib/viewed.ts` — module memory, never storage — and the `key` on the Outlet below is the
+        refetch mechanism: switching remounts the page tree, and `apiBase()` reads `viewedHosts()`,
+        so the same page re-reads itself from the other estate WITHOUT going anywhere. The band and
+        the switcher both follow the selection, so testnet data under a mainnet address bar is
+        never unmarked. The bar also stamps `?net=` onto its product links, which is what carries
+        the choice across a product switch — every surface is its own origin, so nothing else can.
+      */}
       <CloudsForgeBar
         current={PRODUCT}
         account={account}
         onSignIn={() => signIn()}
         onSignOut={signOut}
         mining={miningOnHub(hosts().hub)}
+        networkSwitch={{
+          selected: viewed,
+          onSelect: (n) => {
+            setViewedNetwork(n)
+            setViewed(n)
+          },
+        }}
       />
       {/*
         THE SECTION STRIP IS THE SHARED ONE NOW, AND THE LOCAL `.fs-subnav*` RULES ARE GONE WITH IT.
@@ -115,7 +136,7 @@ export function AppShell() {
         disagree.
       */}
       <MainRegion className="fs-main">
-        <Outlet />
+        <Outlet key={viewed} />
       </MainRegion>
       {/*
         The company footer, from @cloudsforge/ui, REPLACING the `fs-footer` this file used to
