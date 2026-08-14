@@ -220,22 +220,14 @@ a {
  * component renders no `<img>` at all when there is nothing to show, so this box only ever exists
  * around a real picture.
  */
-.fs-card__image,
-.fs-market__image {
+.fs-card__image {
   display: block;
   width: 100%;
   object-fit: cover;
   background: var(--cf-bg-sunken, var(--cf-bg-raised));
   border-radius: var(--cf-radius-md);
-}
-.fs-card__image {
   aspect-ratio: 16 / 9;
   margin-bottom: var(--cf-space-md);
-}
-.fs-market__image {
-  aspect-ratio: 21 / 9;
-  margin: 0 0 var(--cf-space-lg);
-  border: 1px solid var(--cf-line);
 }
 .fs-card__question {
   font-size: var(--cf-text-xl);
@@ -245,8 +237,7 @@ a {
 .fs-card__link:hover .fs-card__question {
   color: var(--cf-accent-text);
 }
-.fs-card__meta,
-.fs-market__meta {
+.fs-card__meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -593,47 +584,320 @@ a {
   max-width: 70ch;
 }
 
-/* ---- market detail --------------------------------------------------- */
+/* ═══════════════════════════ market detail ════════════════════════════════════════════════════
+ *
+ * ── THE READING AND THE DESK ──────────────────────────────────────────────────────────────────
+ *
+ * This page was nine bordered boxes of identical weight in one 1168px column: masthead, terms,
+ * provenance, pool, receipt, custodial form, wallet form, authoring, claim. Every one of them
+ * opened with a 24px display heading and two or three sentences of prose, so nothing on the page
+ * said which box a reader had come for — and the box they HAD come for, the stake form, was two
+ * and a half thousand pixels down, under everything else.
+ *
+ * The split is by TEMPERATURE, not by importance. The reading column is cold: the resolution
+ * document, the docket of terms, where the question came from — long, static, and the only reason
+ * anybody can judge this market. The desk is warm: the two pools, this reader's own position, and
+ * the forms — short, live, moving while you look at it, and therefore `position: sticky`.
+ *
+ * The measure does the rest of the work. The reading gets `minmax(0, 1.35fr)` and holds a 62ch
+ * paragraph; the desk gets a fixed 24rem, which is narrow enough that nothing in it can grow into
+ * an essay. A rail that cannot hold prose is a rail nobody puts prose in.
+ *
+ * ── AND WHY IT IS A CONTAINER QUERY ───────────────────────────────────────────────────────────
+ *
+ * `.fs-page` is `container-type: inline-size` (see the header of that rule): `.fs-main` is
+ * `min(100vw, --cf-max-w) - 2 * --cf-space-xl`, so the width this grid actually gets stops growing
+ * at 1168px however wide the window is. A `@media` rule would be asking about the viewport, which
+ * is not the number that decides whether two columns fit.
+ *
+ * Under 60rem it collapses to one column and the source order is the reading first — which is the
+ * ORIGINAL order of this page, terms before the stake button, the ordering argument in
+ * `pages/market.tsx`'s header held exactly. Above 60rem the terms are not below the button, they
+ * are beside it and cannot be scrolled away from.
+ */
 
-.fs-market__crumb {
-  margin: 0 0 var(--cf-space-sm);
+.fs-layout {
+  display: grid;
+  gap: var(--cf-space-2xl);
+  align-items: start;
+}
+@container fs-page (min-width: 60rem) {
+  .fs-layout {
+    grid-template-columns: minmax(0, 1.35fr) 24rem;
+    gap: var(--cf-space-3xl);
+  }
+  .fs-layout__desk {
+    position: sticky;
+    /* Clears the shared `.cf-bar` header, which is sticky itself. */
+    top: var(--cf-space-2xl);
+    /* The desk can be taller than the viewport on a resolved market with a claim panel; it
+       scrolls itself rather than pinning a panel the reader cannot reach the bottom of. */
+    max-height: calc(100vh - var(--cf-space-3xl));
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}
+/* A sticky element that scrolls needs its own scroll padding, or a focused control at its foot
+   lands under the edge. */
+.fs-layout__desk {
+  scroll-padding-block: var(--cf-space-xl);
+}
+/* The desk's panels are narrower than the page's, so they carry less air. `--cf-space-2xl` of
+   padding inside a 24rem rail leaves a 20rem measure; `--cf-space-xl` leaves 22rem and the ratio
+   bar's two direct labels fit at a 90/10 split, which is where they were clipping. */
+.fs-layout__desk .fs-panel {
+  padding: var(--cf-space-xl);
+  margin-bottom: var(--cf-space-xl);
+}
+
+/* ---- the masthead ---------------------------------------------------- */
+
+.fs-mast {
+  margin-bottom: var(--cf-space-2xl);
+}
+.fs-mast__crumb {
+  margin: 0 0 var(--cf-space-lg);
   font-size: var(--cf-text-md);
 }
-.fs-market__crumb a {
+.fs-mast__crumb a {
+  color: var(--cf-fg-mute);
+  text-decoration: none;
+}
+.fs-mast__crumb a:hover {
+  color: var(--cf-accent-text);
+  text-decoration: underline;
+}
+
+/*
+ * The band, and the reason the question sits ON it rather than under it.
+ *
+ * A market's question IS this page's thesis, and it was set two steps below a decorative
+ * illustration that took the full width above it. Now the illustration is the ground and the
+ * question is the figure: one object, one focal point, the picture unambiguously subordinate.
+ *
+ * The scrim is on the BAND, never on the `<img>`. `components/marketimage.tsx` argues at length
+ * that the picture is decoration and must not be dressed as evidence; a filter applied to the
+ * asset itself would be this stylesheet editing an artefact it does not own.
+ */
+.fs-mast__band {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--cf-line);
+  border-radius: var(--cf-radius-lg);
+  background: var(--cf-bg-raised);
+  overflow: hidden;
+}
+.fs-mast__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  object-fit: cover;
+  background: var(--cf-bg-sunken, var(--cf-bg-raised));
+}
+/*
+ * With a picture the plate is laid over its foot; with none it is the whole band. `--lit` is set
+ * from the markup rather than inferred with `:has()`, because the component renders no `<img>` at
+ * all for an image whose bytes this deployment cannot reach — the class and the element are
+ * decided by the same condition, in the same place.
+ */
+.fs-mast__plate {
+  position: relative;
+  padding: var(--cf-space-2xl);
+}
+.fs-mast__band--lit .fs-mast__plate {
+  margin-top: -30%;
+  /* Ash-900 at full strength under the text, transparent at the top: the question sits on ground
+     it can hold 4.5:1 against, and the picture is legible above it. */
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--cf-bg) 72%, transparent) 38%,
+    var(--cf-bg) 78%
+  );
+  padding-top: calc(var(--cf-space-3xl) * 2.5);
+}
+.fs-mast__question {
+  font-family: var(--cf-font-display);
+  /* The one thing on this page set at page-title scale. It was `--cf-text-3xl`, one step below,
+     and outranked by nothing — a thesis in a subheading's clothes. */
+  font-size: var(--cf-text-4xl);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  margin: 0;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+@container fs-page (max-width: 44rem) {
+  .fs-mast__question {
+    font-size: var(--cf-text-3xl);
+    max-width: none;
+  }
+  .fs-mast__plate {
+    padding: var(--cf-space-xl);
+  }
+  .fs-mast__band--lit .fs-mast__plate {
+    padding-top: var(--cf-space-3xl);
+    margin-top: -20%;
+  }
+}
+
+/*
+ * The tags, in the utility face.
+ *
+ * `--cf-font-mono` was only ever used here for NUMERALS (`cf-num`). Promoting it to the label face
+ * — uppercase, tracked, 11px — is the one type move that changes this page's character: the
+ * chrome now reads as a docket stamp rather than as more prose in the body face, and the body face
+ * is left to do nothing but body.
+ */
+.fs-mast__tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--cf-space-sm);
+  margin: 0 0 var(--cf-space-lg);
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.fs-mast__tag {
+  padding: var(--cf-space-2xs) var(--cf-space-sm);
+  border: 1px solid var(--cf-line-strong);
+  border-radius: var(--cf-radius-sm);
+  color: var(--cf-fg-dim);
+  background: color-mix(in srgb, var(--cf-bg) 55%, transparent);
+}
+.fs-mast__tag--clock {
+  color: var(--cf-fg);
+  border-color: var(--cf-accent);
+}
+.fs-mast__tag--outcome {
+  color: var(--cf-fg);
+  border-color: var(--cf-line-strong);
+  background: var(--cf-bg-raised);
+  font-weight: 600;
+}
+
+/* ---- the resolution document, and its seal --------------------------- */
+
+/*
+ * ── THE SIGNATURE ELEMENT ─────────────────────────────────────────────────────────────────────
+ *
+ * Foresight has one thing a bookmaker does not: the words that decide the payout are hashed into
+ * the contract, and `lib/market.ts` recomputes that hash IN THE READER'S BROWSER from the bytes
+ * this page was served. It is the only claim on the page that a reader can falsify themselves.
+ *
+ * It was a grey sentence in `--cf-text-md`, below a paragraph, indistinguishable from the four
+ * other grey sentences around it. It is now a stamp band across the top of the document it is
+ * about — so the claim and the thing claimed are one object, and the object looks like what it is.
+ *
+ * Never colour alone: the band carries a glyph (✓ / ■), a word ("Checked in your browser" /
+ * "Does not match") and the digest, so it survives forced-colors, a monochrome print and a reader
+ * who sees no colour at all. The failing branch is `role="alert"` in the markup and states in
+ * words that nobody should stake — the strongest thing this page can do short of removing the
+ * form, which it deliberately does not, because a page that hides the controls hides the problem.
+ */
+.fs-doc-seal {
+  border: 1px solid var(--cf-line);
+  border-radius: var(--cf-radius-md);
+  background: var(--cf-bg-sunken);
+  overflow: hidden;
+  margin: 0 0 var(--cf-space-lg);
+}
+.fs-doc-seal__band {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--cf-space-sm) var(--cf-space-lg);
+  margin: 0;
+  padding: var(--cf-space-md) var(--cf-space-xl);
+  border-bottom: 1px solid var(--cf-line);
+  font-size: var(--cf-text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--cf-fg-mute);
 }
-.fs-market__question {
-  font-family: var(--cf-font-display);
-  font-size: var(--cf-text-3xl);
-  line-height: 1.2;
-  margin: 0 0 var(--cf-space-md);
-  max-width: 40ch;
+.fs-doc-seal--ok .fs-doc-seal__band {
+  border-bottom-color: var(--cf-accent);
+  background: color-mix(in srgb, var(--cf-accent) 8%, var(--cf-bg-sunken));
 }
-.fs-market__head {
-  margin-bottom: var(--cf-space-2xl);
+.fs-doc-seal--bad .fs-doc-seal__band {
+  border-bottom-color: var(--cf-viz-crit);
+  background: color-mix(in srgb, var(--cf-viz-crit) 14%, var(--cf-bg-sunken));
+  color: var(--cf-fg);
+}
+.fs-doc-seal__mark {
+  font-size: var(--cf-text-md);
+  line-height: 1;
+}
+.fs-doc-seal--ok .fs-doc-seal__mark {
+  color: var(--cf-accent-text);
+}
+.fs-doc-seal--bad .fs-doc-seal__mark {
+  color: var(--cf-viz-crit);
+}
+.fs-doc-seal__label {
+  font-weight: 600;
+  color: var(--cf-fg-dim);
+}
+.fs-doc-seal--bad .fs-doc-seal__label {
+  color: var(--cf-fg);
+}
+/* Pushed to the far edge on one line, wrapping under on a narrow column rather than truncating —
+   a digest with its middle missing is a digest nobody can compare. */
+.fs-doc-seal__hash {
+  margin-left: auto;
+  word-break: break-all;
 }
 
 .fs-criteria {
-  margin: 0 0 var(--cf-space-xl);
-  max-width: 72ch;
+  margin: 0;
+  padding: var(--cf-space-xl);
+  max-width: 68ch;
   white-space: pre-wrap;
+  font-size: var(--cf-text-lg);
+  line-height: 1.6;
 }
+/*
+ * ── THE DOCKET ────────────────────────────────────────────────────────────────────────────────
+ *
+ * Six facts that decide a payout, and they were set as six rows of body-face prose with the label
+ * and the value the same size and the same weight, separated by hairlines. It read as a paragraph
+ * that happened to be right-aligned.
+ *
+ * Now the label is in the utility face — uppercase mono, 11px, tracked — and the value keeps the
+ * body face at reading size. That is the same device the masthead tags use, and it is doing the
+ * same job in both places: the CHROME of this page is mono, the CONTENT is Archivo, and a reader
+ * can tell which is which without reading either.
+ */
 .fs-terms {
   margin: 0 0 var(--cf-space-xl);
   display: grid;
-  gap: var(--cf-space-sm);
+  gap: 0;
 }
 .fs-terms > div {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--cf-space-lg);
+  align-items: baseline;
+  gap: var(--cf-space-md) var(--cf-space-lg);
   border-top: 1px solid var(--cf-line);
-  padding-top: var(--cf-space-sm);
+  padding: var(--cf-space-lg) 0;
   font-size: var(--cf-text-md);
+}
+.fs-terms > div:last-child {
+  border-bottom: 1px solid var(--cf-line);
 }
 .fs-terms dt {
   color: var(--cf-fg-mute);
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  /* Holds the value column's left edge steady down the list without a grid, which would break the
+     wrap-under behaviour a long source reference depends on. */
+  flex: 0 1 18ch;
 }
 .fs-terms dd {
   margin: 0;
@@ -653,27 +917,77 @@ a {
   font-size: var(--cf-text-sm);
 }
 .fs-terms__why {
-  margin: 0 0 var(--cf-space-lg);
-  padding: var(--cf-space-lg);
-  background: var(--cf-bg-sunken);
-  border-radius: var(--cf-radius);
+  margin: var(--cf-space-xl) 0 0;
+  padding: 0 0 0 var(--cf-space-lg);
+  border-left: 2px solid var(--cf-line-strong);
   color: var(--cf-fg-dim);
   font-size: var(--cf-text-md);
-  max-width: 74ch;
+  max-width: 68ch;
 }
 
+/*
+ * The sentence under the seal. It carries no glyph of its own any more — the band above it does,
+ * and two ticks about one fact is one tick too many. What it keeps is the failing branch's
+ * emphasis, because that branch is an instruction and not a caption.
+ */
 .fs-hash {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--cf-space-sm);
   margin: 0 0 var(--cf-space-lg);
+  max-width: 68ch;
   font-size: var(--cf-text-md);
-  color: var(--cf-fg-dim);
+  color: var(--cf-fg-mute);
 }
 .fs-hash--bad {
   color: var(--cf-viz-crit);
   font-weight: 600;
 }
+/* ---- the desk -------------------------------------------------------- */
+
+/*
+ * The pool card. It is a `.fs-desk` and not a `.fs-panel` because it is the one thing in the rail
+ * that must not be scanned past: the accent top rule and the sunken ground give it a weight the
+ * forms below it do not have, and it is the only element on the page that gets both.
+ *
+ * Everything inside it is short by construction. The rail is 24rem and this card's own padding
+ * takes it to a 20rem measure, which will not hold a paragraph of explanation — so the two long
+ * sentences the pool needs (the parimutuel caveat, the two-pots rule) are set at `--cf-text-sm`
+ * as `.fs-desk__note`, deliberately captions rather than body. They are not shortened: the
+ * disclosure obligations in docs/ecosystem/21 §5 and §7.6 are about what is SAID and where, and
+ * the words are unchanged.
+ */
+.fs-desk {
+  border: 1px solid var(--cf-line);
+  border-top: 3px solid var(--cf-accent);
+  border-radius: var(--cf-radius-lg);
+  background: var(--cf-bg-raised);
+  padding: var(--cf-space-xl);
+  margin-bottom: var(--cf-space-xl);
+}
+.fs-desk__title {
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cf-fg-mute);
+  margin: 0 0 var(--cf-space-lg);
+}
+.fs-desk__note {
+  margin: var(--cf-space-lg) 0 0;
+  font-size: var(--cf-text-sm);
+  color: var(--cf-fg-mute);
+  line-height: 1.5;
+}
+/*
+ * Two ratio bars in one card need a rule between them, or the second one's caption reads as more
+ * of the first one's key. `~` and not `+`: what sits between them is the stakers line and the
+ * house-seed disclosure, and the disclosure renders nothing on a market with no seed.
+ */
+.fs-desk .fs-pool ~ .fs-pool {
+  margin-top: var(--cf-space-xl);
+  padding-top: var(--cf-space-xl);
+  border-top: 1px solid var(--cf-line);
+}
+
 .fs-doc summary {
   cursor: pointer;
   font-size: var(--cf-text-md);
@@ -1090,32 +1404,116 @@ a {
 
 /* The Yes/No pair. A fieldset, so the legend names the group for a screen reader; the picked side
    is marked by the radio itself, which is a control the platform does not get to restyle away. */
-.fs-outcomes {
+/*
+ * ── THE SIDE ──────────────────────────────────────────────────────────────────────────────────
+ *
+ * `.fs-outcomes` was here: a legend reading "Outcome" over two inline radio buttons at 13px. The
+ * most consequential control on this surface, rendered smaller than the field label above it.
+ *
+ * These are the same two real radios in the same real `<fieldset>`. `appearance: none` and NOT
+ * `display: none` — a hidden input takes no focus, and a keyboard reader would have lost the arrow
+ * keys that make a radio group a radio group. The label is the hit target, so the whole tile is
+ * clickable and the focus ring lands on the tile via `:has(:focus-visible)`.
+ *
+ * Three channels on the chosen side and never colour alone: the border and dot take the side's own
+ * categorical slot — `--fs-yes` teal, `--fs-no` gold, the same two the ratio bar uses, so the side
+ * a reader picks here is the segment they watch there — the dot fills, and the tile's ground
+ * lifts. In forced-colors the dot and the border survive as CanvasText and the names never move.
+ */
+.fs-sides {
   margin: 0 0 var(--cf-space-xl);
   padding: 0;
   border: 0;
 }
-.fs-outcomes legend {
+.fs-sides__legend {
   padding: 0;
   margin-bottom: var(--cf-space-sm);
-  font-size: var(--cf-text-sm);
-  color: var(--cf-fg-mute);
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: var(--cf-fg-mute);
 }
-.fs-outcomes label {
-  display: inline-flex;
+.fs-sides__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cf-space-md);
+}
+.fs-side {
+  display: flex;
   align-items: center;
-  gap: var(--cf-space-xs);
-  margin-right: var(--cf-space-md);
-  padding: var(--cf-space-sm) var(--cf-space-lg);
+  gap: var(--cf-space-md);
+  padding: var(--cf-space-lg) var(--cf-space-xl);
   border: 1px solid var(--cf-line-strong);
   border-radius: var(--cf-radius);
-  font-size: var(--cf-text-lg);
+  background: var(--cf-bg-sunken, var(--cf-bg-raised));
   cursor: pointer;
+  /* The tile is the target, so its own text must not be draggable-selectable out from under a
+     press that was meant for the radio. */
+  user-select: none;
 }
-.fs-outcomes input {
-  accent-color: var(--cf-accent);
+.fs-side input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+}
+.fs-side__dot {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--cf-fg-mute);
+}
+.fs-side__name {
+  font-family: var(--cf-font-display);
+  font-size: var(--cf-text-xl);
+  line-height: 1;
+}
+.fs-side--on {
+  background: var(--cf-bg-raised);
+}
+.fs-side--yes.fs-side--on {
+  border-color: var(--fs-yes);
+}
+.fs-side--yes.fs-side--on .fs-side__dot {
+  border-color: var(--fs-yes);
+  background: var(--fs-yes);
+  box-shadow: inset 0 0 0 3px var(--cf-bg-raised);
+}
+.fs-side--no.fs-side--on {
+  border-color: var(--fs-no);
+}
+.fs-side--no.fs-side--on .fs-side__dot {
+  border-color: var(--fs-no);
+  background: var(--fs-no);
+  box-shadow: inset 0 0 0 3px var(--cf-bg-raised);
+}
+.fs-side:has(input:focus-visible) {
+  outline: 2px solid var(--cf-accent);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fs-side {
+    transition:
+      border-color 120ms ease,
+      background-color 120ms ease;
+  }
+}
+
+/*
+ * The last press. Full width because there is nothing left to compare it with by the time it
+ * appears, and because a button that commits money should not be the same size as one that asks a
+ * question — see the header of the branch that renders it in `components/custodialstake.tsx`.
+ */
+.fs-commit {
+  display: block;
+  width: 100%;
+  margin-top: var(--cf-space-lg);
+  text-align: center;
 }
 
 /*

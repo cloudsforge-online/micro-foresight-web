@@ -456,32 +456,50 @@ export function CustodialStakePanel({
             </p>
           )}
 
-          <fieldset className="fs-outcomes">
-            <legend>Outcome</legend>
-            <label>
-              <input
-                type="radio"
-                name="custodial-outcome"
-                checked={outcome === 0}
-                onChange={() => {
-                  setOutcome(0)
-                  reset()
-                }}
-              />{' '}
-              Yes
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="custodial-outcome"
-                checked={outcome === 1}
-                onChange={() => {
-                  setOutcome(1)
-                  reset()
-                }}
-              />{' '}
-              No
-            </label>
+          {/*
+            ── THE SIDE, AT THE SIZE OF THE DECISION ────────────────────────────────────────────
+
+            This was two 13px radio buttons under a legend reading "Outcome" — the single most
+            consequential choice on the page, set smaller than the label above the amount box, in
+            the same widget an address form uses for a country.
+
+            It is still a `<fieldset>` of two `<input type="radio">`. Nothing here is a div
+            pretending to be a control: the radios are real and keyboard-navigable with the arrow
+            keys, they are hidden with `appearance: none` rather than `display: none` so focus
+            still lands on them, and the label is the whole target. What changed is scale and the
+            channels — each side carries its own name, its own colour from the same categorical
+            slot the ratio bar uses for it, and a filled dot when chosen. Never colour alone.
+          */}
+          <fieldset className="fs-sides">
+            <legend className="fs-sides__legend">Which side?</legend>
+            <div className="fs-sides__row">
+              <label className={`fs-side fs-side--yes${outcome === 0 ? ' fs-side--on' : ''}`}>
+                <input
+                  type="radio"
+                  name="custodial-outcome"
+                  checked={outcome === 0}
+                  onChange={() => {
+                    setOutcome(0)
+                    reset()
+                  }}
+                />
+                <span className="fs-side__dot" aria-hidden="true" />
+                <span className="fs-side__name">Yes</span>
+              </label>
+              <label className={`fs-side fs-side--no${outcome === 1 ? ' fs-side--on' : ''}`}>
+                <input
+                  type="radio"
+                  name="custodial-outcome"
+                  checked={outcome === 1}
+                  onChange={() => {
+                    setOutcome(1)
+                    reset()
+                  }}
+                />
+                <span className="fs-side__dot" aria-hidden="true" />
+                <span className="fs-side__name">No</span>
+              </label>
+            </div>
           </fieldset>
 
           {phase !== 'quoted' && phase !== 'staking' && phase !== 'staked' && (
@@ -508,8 +526,27 @@ export function CustodialStakePanel({
                 <p className="cf-num fs-quote__rate">{rateLine(quote)}</p>
               )}
               <p className="fs-note">{quote.disclosure}</p>
+              {/*
+                THE BUTTON THAT COMMITS THE MONEY, AND IT CARRIED NO CLASS AT ALL.
+
+                It rendered as the browser's default `<button>` — grey, system-faced, 13px —
+                directly under an ember-filled `cf-btn--ember` that only asked for a quote. So the
+                page gave its strongest affordance to the harmless step and its weakest to the
+                irreversible one, and a reader who had just been quoted a rate went looking for a
+                control that looked like the one they had already pressed. It was reported as "the
+                next ugly button".
+
+                `--commit` is a full-width primary: this is the last press, it names the amount and
+                the side it is about to take, and there is nothing else in the panel competing with
+                it at that point.
+              */}
               {(phase === 'quoted' || phase === 'staking') && (
-                <button type="button" disabled={phase === 'staking'} onClick={() => void onStake()}>
+                <button
+                  type="button"
+                  className="cf-btn cf-btn--ember fs-commit"
+                  disabled={phase === 'staking'}
+                  onClick={() => void onStake()}
+                >
                   {phase === 'staking'
                     ? 'Placing it…'
                     : `Put ${quote.poolAmountFormatted} ${quote.poolAsset} on ${outcome === 0 ? 'Yes' : 'No'}`}
