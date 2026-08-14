@@ -36,20 +36,25 @@ import { ApiError } from '../lib/api.ts'
 import {
   createCustodialStake,
   getStakeAssets,
+  getStakeBalances,
   requestStakeQuote,
   type MarketView,
 } from '../lib/foresight.ts'
 import {
   conversionLine,
+  fromSmallestUnits,
   isAmountFor,
   parseStakeAssets,
+  parseStakeBalances,
   rateLine,
   stakeRefusalSentence,
   toSmallestUnits,
   type StakeAssetView,
   type StakeAssetsView,
+  type StakeBalancesView,
   type StakeQuoteView,
 } from '../lib/stakeassets.ts'
+import { hosts } from '../lib/hosts.ts'
 import { useSession } from '../lib/auth.tsx'
 
 type Phase = 'idle' | 'quoting' | 'quoted' | 'staking' | 'staked' | 'failed'
@@ -111,6 +116,9 @@ export function CustodialStakePanel({
   const [quote, setQuote] = useState<StakeQuoteView | null>(null)
   const [outcome, setOutcome] = useState<0 | 1>(0)
   const [message, setMessage] = useState<string | null>(null)
+  const [balances, setBalances] = useState<StakeBalancesView | null>(null)
+  /** Bumped after a stake: the money has moved, so the figure on screen is stale. */
+  const [reloadBalances, setReloadBalances] = useState(0)
 
   /**
    * The key is minted ONCE per attempt and reused for every retry of that attempt.
@@ -141,16 +149,62 @@ export function CustodialStakePanel({
     }
   }, [])
 
+  /**
+   * What the reader can actually spend, asked for only once they are signed in.
+   *
+   * Separate from the registry on purpose. The registry is public and decides whether this panel
+   * exists at all; the balances are this reader's and decide nothing — a balance that could not be
+   * read leaves the form working on a typed amount. Merging the two calls would have made a
+   * signed-out visitor's missing balance look like a missing registry and take the panel away.
+   */
+  useEffect(() => {
+    if (!signedIn) {
+      setBalances(null)
+      return
+    }
+    let live = true
+    void getStakeBalances()
+      .then((body) => {
+        if (live) setBalances(parseStakeBalances(body))
+      })
+      .catch(() => {
+        // No figure rather than a wrong one. The panel says so in words below.
+        if (live) setBalances(null)
+      })
+    return () => {
+      live = false
+    }
+  }, [signedIn, reloadBalances])
+
   const asset: StakeAssetView | null = useMemo(
     () => registry?.assets.find((a) => a.assetCode === assetCode) ?? null,
     [registry, assetCode],
   )
+
+  /** This reader's spendable amount of the selected asset, in smallest units. */
+  const held = useMemo(() => {
+    const row = balances?.assets.find((a) => a.assetCode === assetCode)
+    return row?.available ?? null
+  }, [balances, assetCode])
 
   const smallestUnits = useMemo(
     () => (asset === null ? null : toSmallestUnits(input, asset.decimals)),
     [asset, input],
   )
   const amountOk = asset !== null && isAmountFor(input, asset.decimals) && smallestUnits !== null
+  /**
+   * More than they hold, checked here so they find out before the quote rather than after it.
+   *
+   * Only ever true against a balance we actually read: an unknown balance blocks nothing. The
+   * service refuses an overdraft regardless — this is the sentence, not the enforcement.
+   */
+  const overdrawn =
+    held !== null && smallestUnits !== null && amountOk && smallestUnits > BigInt(held)
+  /** Every readable balance is zero — an account with nothing in it, which is its own sentence. */
+  const holdsNothing =
+    balances !== null &&
+    !balances.degraded &&
+    balances.assets.every((a) => a.available === null || a.available === '0')
 
   if (registry === null || !registry.custodialStakingAvailable) return null
   const enabled = registry.assets.filter((a) => a.enabled)
@@ -207,6 +261,7 @@ export function CustodialStakePanel({
       )
       setPhase('staked')
       idempotencyKey.current = ''
+      setReloadBalances((n) => n + 1)
       onStaked()
     } catch (err) {
       setPhase('failed')
@@ -222,66 +277,121 @@ export function CustodialStakePanel({
 
   return (
     <section className="fs-panel fs-panel--custodial" aria-labelledby="custodial-stake-heading">
+      <p className="fs-panel__eyebrow">Your CloudsForge balance</p>
       <h2 className="fs-panel__title" id="custodial-stake-heading">
-        Use bitcoin, ether or any coin we hold for you
+        Take a side with money you already hold here
       </h2>
-
-      <p className="fs-note">
-        Pick what you want to pay with and we will show you what it turns into before anything
-        moves. Every currency feeds the same pool, counted in {registry.poolAsset}, because that is
-        the one figure a contract can hold and divide on its own. From the moment you confirm, your
-        position, the odds and any winnings are {registry.poolAsset} and nothing else. The one
-        exception is a market that voids: then you get back exactly what you handed over, the same
-        amount of the same coin, whatever it happens to be worth that day.
+      <p className="fs-panel__lede">
+        No wallet, no extension. Pick a coin, and we show you what it turns into before anything
+        moves. Everything after that — your position, the odds, anything you collect — is counted in{' '}
+        {registry.poolAsset}.
       </p>
 
       {/* The platform's own sentence about what a custodial stake is and is not. Composed by the
-          service so every client shows the same one — never rewritten here. */}
+          service so every client shows the same one — never rewritten here, and never behind a
+          click: it is the difference between this panel and the one below it. */}
       <p className="fs-note fs-note--warn">{registry.disclosure}</p>
 
       {!signedIn ? (
         <p className="fs-note">
-          Sign in and whatever you have deposited with CloudsForge becomes available here.
+          Sign in and whatever you have deposited with CloudsForge can be staked from right here.
         </p>
       ) : (
         <>
-          <label className="fs-field">
-            <span className="fs-field__label">Pay with</span>
-            <select
-              className="fs-field__input"
-              value={assetCode}
-              onChange={(event) => {
-                setAssetCode(event.target.value)
-                reset()
-              }}
-            >
-              {enabled.map((option) => (
-                <option key={option.assetCode} value={option.assetCode}>
-                  {option.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
+          {/*
+            THE SIGNATURE OF THIS PANEL: the reader's own coins, as the thing they choose from.
+
+            A `<select>` of asset names asked somebody to remember what they had deposited before
+            they could bet with it. These are the same rows with the balance on them, so choosing
+            what to pay with and seeing whether you can are one glance rather than two screens.
+            An amount we could not read prints as an em dash and the row still selects — an
+            unreadable balance is not a reason to refuse a stake somebody typed.
+          */}
+          <ul className="fs-holdings" aria-label="What you hold">
+            {enabled.map((option) => {
+              const row = balances?.assets.find((a) => a.assetCode === option.assetCode)
+              const amount =
+                row?.available == null ? null : fromSmallestUnits(row.available, option.decimals)
+              const on = option.assetCode === assetCode
+              return (
+                <li key={option.assetCode}>
+                  <button
+                    type="button"
+                    className={`fs-holding${on ? ' fs-holding--on' : ''}`}
+                    aria-pressed={on}
+                    onClick={() => {
+                      setAssetCode(option.assetCode)
+                      reset()
+                    }}
+                  >
+                    <span className="fs-holding__code">{option.displayName}</span>
+                    <span className="fs-holding__amount cf-num">{amount ?? '—'}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+
+          {balances === null || balances.degraded ? (
+            <p className="fs-note" role="status">
+              We could not read your balances just now, so no figure is shown against a coin. Typing
+              an amount still works — what you hold is checked when the stake is taken.
+            </p>
+          ) : holdsNothing ? (
+            <p className="fs-note" role="status">
+              There is nothing in your account to stake yet.{' '}
+              {/* `hosts().wallet` and not an `account.` address: that row is a service that serves
+                  no HTML (`@cloudsforge/ui` surfaces.ts says so in as many words), and the wallet
+                  row already carries the `/wallet` base path. */}
+              <a href={hosts().wallet}>Deposit a coin</a> and it will appear here.
+            </p>
+          ) : null}
 
           <label className="fs-field">
             <span className="fs-field__label">Amount</span>
-            <input
-              className="fs-field__input"
-              // `inputMode` rather than `type="number"`: a number input hands back a float, and a
-              // float near an 8- or 18-decimal amount is how the bottom of it disappears.
-              inputMode="decimal"
-              value={input}
-              onChange={(event) => {
-                setInput(event.target.value)
-                reset()
-              }}
-            />
-            <span className="fs-field__unit">{asset?.displayName ?? ''}</span>
+            <span className="fs-field__row">
+              <input
+                className="fs-field__input cf-num"
+                // `inputMode` rather than `type="number"`: a number input hands back a float, and
+                // a float near an 8- or 18-decimal amount is how the bottom of it disappears.
+                inputMode="decimal"
+                value={input}
+                placeholder="0.0"
+                onChange={(event) => {
+                  setInput(event.target.value)
+                  reset()
+                }}
+              />
+              <span className="fs-field__unit">{asset?.displayName ?? ''}</span>
+            </span>
           </label>
+          {/* Only against a balance we read, and only when there is something in it. What it
+              fills in round-trips through `isAmountFor`, so the validator cannot refuse it. */}
+          {held !== null && held !== '0' && asset !== null && (
+            <button
+              type="button"
+              className="fs-holding__all"
+              onClick={() => {
+                const all = fromSmallestUnits(held, asset.decimals)
+                if (all !== null) {
+                  setInput(all)
+                  reset()
+                }
+              }}
+            >
+              Stake all {fromSmallestUnits(held, asset.decimals)} {asset.displayName}
+            </button>
+          )}
           {input.trim().length > 0 && !amountOk && asset !== null && (
             <p className="fs-note fs-note--warn">
               More than zero, and no finer than {asset.decimals} decimal places. {asset.displayName}{' '}
               does not divide any further than that.
+            </p>
+          )}
+          {overdrawn && asset !== null && held !== null && (
+            <p className="fs-note fs-note--warn" role="alert">
+              That is more than the {fromSmallestUnits(held, asset.decimals)} {asset.displayName} in
+              your account.
             </p>
           )}
 
@@ -314,7 +424,12 @@ export function CustodialStakePanel({
           </fieldset>
 
           {phase !== 'quoted' && phase !== 'staking' && phase !== 'staked' && (
-            <button type="button" disabled={!amountOk || phase === 'quoting'} onClick={() => void onQuote()}>
+            <button
+              type="button"
+              className="cf-btn cf-btn--ember"
+              disabled={!amountOk || overdrawn || phase === 'quoting'}
+              onClick={() => void onQuote()}
+            >
               {phase === 'quoting' ? 'Working out the rate…' : 'What does that come to?'}
             </button>
           )}

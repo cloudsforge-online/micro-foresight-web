@@ -218,11 +218,9 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
         </dl>
 
         <p className="fs-terms__why">
-          We pick the source that settles this question on the day it opens, then hash the whole
-          document above into the contract. Nobody can quietly trade it for a kinder one once money
-          is on the table. Should that source vanish before the answer is in, the market is{' '}
-          <strong>void</strong> and every stake goes back whole. No one here gets to call it
-          instead.
+          The source is fixed on the day the market opens and hashed into the contract, so nobody
+          can trade it for a kinder one. If it vanishes before the answer is in, the market is{' '}
+          <strong>void</strong> and every stake goes back whole.
         </p>
 
         {/* The hash, recomputed here rather than displayed on trust. */}
@@ -279,10 +277,9 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
           `takesStakes(market.status)`, so on a closed market it would point at nothing.
         */}
         <p className="fs-note">
-          Everyone backing this question pays into the same pool, whichever currency they arrived
-          with. The losing side&apos;s money is shared out among the winning side in proportion to
-          what each person put in. So your return moves with the split below until the market
-          closes, and nobody can hand you fixed odds.
+          The losing side&apos;s money is shared out among the winning side in proportion to what
+          each person put in, so your return moves with the split until the market closes. Nobody
+          here can hand you fixed odds.
         </p>
         {/*
           BEFORE the ratio bar, deliberately. Part of the two numbers below may be the platform's
@@ -302,11 +299,38 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
 
       {takesStakes(market.status) && (
         <>
-          <StakePanel market={market} pools={pools} poolIsKnown={poolIsKnown} onStaked={reload} />
-          {/* Separate section, separate heading, separate disclosure — never a second tab on the
-              wallet panel. Two stake paths that look alike and fail oppositely is the confusion
-              25-wallet-clients.md §1 names as the most dangerous thing this estate can build. */}
+          {/*
+            THE CUSTODIAL PANEL IS FIRST, AND THAT ORDER IS THE FIX FOR A REAL DEFECT.
+
+            A reader who has deposited coins with CloudsForge needs no wallet, no extension and no
+            EMBER to bet — and for the whole life of this page they met a demand for a browser
+            wallet first, with the path that already worked for them somewhere below it. The
+            majority of people who can act on this page can act through the ledger, so the ledger
+            goes on top.
+
+            Still a separate section, a separate heading and a separate disclosure — never a second
+            tab on the wallet panel. Two stake paths that look alike and fail oppositely is the
+            confusion 25-wallet-clients.md §1 names as the most dangerous thing this estate can
+            build; the ORDER changed, the separation did not.
+          */}
           <CustodialStakePanel market={market} onStaked={reload} />
+          {/*
+            Self-custody, demoted but not hidden. `<details>` keeps every word of it in the
+            document — the panel below explains what a wallet is, that nobody here can switch one
+            on for a reader, and where EMBER's chain details are — while giving the page one
+            primary way to act instead of two competing ones.
+          */}
+          <details className="fs-alt">
+            <summary className="fs-alt__summary">
+              Or stake from your own wallet, straight to the contract
+            </summary>
+            <p className="fs-alt__note">
+              A stake sent from your own address is yours in the contract, claimable with a wallet
+              and a block explorer even with every machine of ours switched off. It needs a browser
+              wallet and EMBER of your own.
+            </p>
+            <StakePanel market={market} pools={pools} poolIsKnown={poolIsKnown} onStaked={reload} />
+          </details>
         </>
       )}
 

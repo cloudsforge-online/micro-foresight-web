@@ -333,8 +333,8 @@ function NoWalletHelp() {
       </p>
       <p className="fs-note">
         The other way to bet is to pay with coins you have already deposited with CloudsForge, and
-        where that is running it appears as its own panel further down this page. If you cannot see
-        one, it is not switched on here yet.
+        where that is running it is the panel above this one. If you cannot see one, it is not
+        switched on here yet.
       </p>
     </div>
   )

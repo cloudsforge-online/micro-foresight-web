@@ -54,6 +54,27 @@ export interface StakeAssetsView {
 }
 
 /**
+ * One row of `GET /me/stake-balances`: a registry row with what the reader actually holds on it.
+ *
+ * `available` is SMALLEST UNITS as a decimal string, and `null` when the ledger could not be read.
+ * Those are two different answers and the panel says two different things about them: a zero is a
+ * fact about the account, a null is a fact about the estate. Neither is ever rendered as the other.
+ *
+ * The figure is the `available` purpose alone. Coins in `escrow` are already committed to a market
+ * and counting them as spendable would invite somebody to stake the same money twice.
+ */
+export interface StakeBalanceView extends StakeAssetView {
+  readonly available: string | null
+}
+
+export interface StakeBalancesView {
+  readonly poolAsset: string
+  /** True when the ledger was unreachable. Every `available` is null and no figure is invented. */
+  readonly degraded: boolean
+  readonly assets: readonly StakeBalanceView[]
+}
+
+/**
  * What `POST /markets/:id/stake-quote` answers with.
  *
  * Both rate legs are here because the cross rate is their quotient: a screen that showed only the
@@ -99,25 +120,8 @@ export function parseStakeAssets(body: unknown): StakeAssetsView | null {
 
   const assets: StakeAssetView[] = []
   for (const item of raw) {
-    const row = asRecord(item)
-    if (!row) continue
-    const assetCode = asString(row['assetCode'])
-    const displayName = asString(row['displayName'])
-    const decimals = row['decimals']
-    // Integer, in range, PRESENT. Not `?? 18`.
-    if (
-      assetCode === null ||
-      displayName === null ||
-      typeof decimals !== 'number' ||
-      !Number.isInteger(decimals) ||
-      decimals < 0 ||
-      decimals > 36
-    ) {
-      continue
-    }
-    const enabled = row['enabled'] === true
-    const blockedReason = asString(row['blockedReason'])
-    assets.push({ assetCode, displayName, decimals, enabled, blockedReason })
+    const row = parseAssetRow(item)
+    if (row !== null) assets.push(row)
   }
   return {
     poolAsset,
@@ -125,6 +129,60 @@ export function parseStakeAssets(body: unknown): StakeAssetsView | null {
     disclosure,
     assets,
   }
+}
+
+/** One registry row, or `null` for a row this cannot read. Never a repaired one. */
+function parseAssetRow(item: unknown): StakeAssetView | null {
+  const row = asRecord(item)
+  if (!row) return null
+  const assetCode = asString(row['assetCode'])
+  const displayName = asString(row['displayName'])
+  const decimals = row['decimals']
+  // Integer, in range, PRESENT. Not `?? 18`.
+  if (
+    assetCode === null ||
+    displayName === null ||
+    typeof decimals !== 'number' ||
+    !Number.isInteger(decimals) ||
+    decimals < 0 ||
+    decimals > 36
+  ) {
+    return null
+  }
+  return {
+    assetCode,
+    displayName,
+    decimals,
+    enabled: row['enabled'] === true,
+    blockedReason: asString(row['blockedReason']),
+  }
+}
+
+/**
+ * Read `GET /me/stake-balances`.
+ *
+ * **An unreadable amount is `null`, never `'0'`.** `units.ts` states the rule this follows — "a
+ * valuation of zero is a lie about a holding that exists" — and here the lie has a specific cost:
+ * a reader shown a zero they do not have stops trying to bet, and a reader shown a zero they DO
+ * have concludes their deposit was lost. So the only figures this returns are figures the service
+ * sent, as digit strings, unconverted.
+ */
+export function parseStakeBalances(body: unknown): StakeBalancesView | null {
+  const root = asRecord(body)
+  if (!root) return null
+  const poolAsset = asString(root['poolAsset'])
+  const raw = root['assets']
+  if (poolAsset === null || !Array.isArray(raw)) return null
+
+  const assets: StakeBalanceView[] = []
+  for (const item of raw) {
+    const base = parseAssetRow(item)
+    if (base === null) continue
+    const row = asRecord(item)
+    const available = row === null ? null : asString(row['available'])
+    assets.push({ ...base, available: available !== null && /^\d+$/.test(available) ? available : null })
+  }
+  return { poolAsset, degraded: root['degraded'] === true, assets }
 }
 
 /**
@@ -160,6 +218,29 @@ export function toSmallestUnits(text: string | null | undefined, decimals: numbe
   // nothing to truncate here. Truncating instead would stake a different number from the one typed.
   const fraction = decimals === 0 ? '' : (match[2] ?? '').padEnd(decimals, '0')
   return BigInt(whole) * 10n ** BigInt(decimals) + BigInt(fraction === '' ? '0' : fraction)
+}
+
+/**
+ * Smallest units back to something a person reads, at the asset's own scale.
+ *
+ * The inverse of `toSmallestUnits`, and it round-trips: what this prints can be typed back into
+ * the amount field and `isAmountFor` accepts it. That matters because the panel offers a "stake it
+ * all" control, and a control that filled the field with a number the validator then refused would
+ * be the panel arguing with itself.
+ *
+ * Trailing zeros of the fraction are cut and a whole amount prints with no point at all — 8 places
+ * of satoshi on every balance is noise, not precision. Nothing is rounded: every digit that
+ * survives is the digit the service sent.
+ */
+export function fromSmallestUnits(value: string, decimals: number): string | null {
+  if (!/^\d+$/.test(value)) return null
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 36) return null
+  if (decimals === 0) return BigInt(value).toString()
+  const units = BigInt(value)
+  const scale = 10n ** BigInt(decimals)
+  const whole = (units / scale).toString()
+  const fraction = (units % scale).toString().padStart(decimals, '0').replace(/0+$/, '')
+  return fraction.length > 0 ? `${whole}.${fraction}` : whole
 }
 
 /**

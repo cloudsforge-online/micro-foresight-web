@@ -396,6 +396,18 @@ export function getStakeAssets(signal?: AbortSignal): Promise<unknown> {
 }
 
 /**
+ * `GET /me/stake-balances` — the same registry, with what this reader can actually spend on it.
+ *
+ * Authenticated, so it is asked only once somebody is signed in. It answers `degraded: true` with
+ * every amount null when the ledger is unreachable, rather than a 503: the stake form still works
+ * on a typed amount, and taking the whole panel away because a balance could not be read would
+ * refuse a path that is not broken.
+ */
+export function getStakeBalances(signal?: AbortSignal): Promise<unknown> {
+  return api<unknown>('/me/stake-balances', { auth: true, ...signalOf(signal) })
+}
+
+/**
  * `POST /markets/:id/stake-quote` — price a stake without taking it.
  *
  * The amount is SMALLEST UNITS as a decimal string, never a JSON number and never a display
