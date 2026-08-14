@@ -1577,3 +1577,55 @@ a {
 .fs-imagepanel__facts dd {
   margin: 0;
 }
+
+/* ---- the reader's own custodial position ----------------------------- */
+/*
+ * ── WHY THIS PANEL LOOKS LIKE NEITHER POOL NOR STAKE FORM ─────────────────────────────────────
+ *
+ * A custodial stake leaves the reader nothing to keep: no hash, no explorer page, no entry in the
+ * contract carrying their address. This panel is the entire receipt. So it is sized and coloured
+ * as EVIDENCE — the accent edge that `.fs-hash` uses for a fact the reader can check, and the
+ * amounts at display scale, because the number is the point and everything else on it is caption.
+ *
+ * It borrows the warn edge from `.fs-panel--custodial` deliberately NOT: that edge means "a
+ * custodian is holding this", which is a caution about the path. This is a statement of what the
+ * reader owns, and dressing it as a warning would read as though their position were in doubt.
+ * The custodian fact is still said, in the `.fs-note--warn` at the foot, where the service's own
+ * disclosure text goes.
+ */
+.fs-panel--yours {
+  border-left: 4px solid var(--cf-accent);
+}
+.fs-yours {
+  margin: 0;
+  display: grid;
+  gap: var(--cf-space-md);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.fs-yours__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cf-space-2xs);
+  padding: var(--cf-space-lg);
+  border: 1px solid var(--cf-line);
+  border-radius: var(--cf-radius-md);
+  background: var(--cf-bg-sunken, var(--cf-bg-raised));
+}
+.fs-yours__side {
+  font-size: var(--cf-text-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cf-fg-mute);
+}
+.fs-yours__amount {
+  margin: 0;
+  font-size: var(--cf-text-2xl);
+  line-height: 1.15;
+}
+.fs-yours .fs-unit {
+  font-size: var(--cf-text-md);
+}
+.fs-panel--yours .fs-note {
+  margin: var(--cf-space-lg) 0 0;
+  max-width: 68ch;
+}

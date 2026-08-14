@@ -17,7 +17,7 @@
  * precisely so this page can render it, and a page that dropped it would make the whole
  * provenance apparatus decorative.
  */
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ClaimPanel } from '../components/claimpanel.tsx'
 import { HouseSeedNotice } from '../components/houseseed.tsx'
@@ -25,6 +25,7 @@ import { MarketImage, MarketImagePanel } from '../components/marketimage.tsx'
 import { PoolRatioBar } from '../components/pool.tsx'
 import { StakePanel } from '../components/stakepanel.tsx'
 import { CustodialStakePanel } from '../components/custodialstake.tsx'
+import { YourCustodialStake } from '../components/yourstake.tsx'
 import { Empty, Failed, Forbidden, Loading } from '../components/states.tsx'
 import { getMarket, type MarketDetail, type Provenance } from '../lib/foresight.ts'
 import { durationLabel, utcDateTime } from '../lib/format.ts'
@@ -119,6 +120,26 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
   const pools = poolsFrom(pool)
   const poolIsKnown = totalOf(pools) !== null && pool.asOf !== null
   const obs = observation(pool, now)
+  // The custodial book, when the service is new enough to send it. `undefined` is an older
+  // service and renders as one pool, exactly as this page did before — never as an empty book,
+  // which would be this app asserting that nobody has staked that way.
+  const custodial = detail.custodialPool
+  const custodialPools = useMemo(
+    () => (custodial === undefined ? null : poolsFrom(custodial)),
+    [custodial],
+  )
+  /**
+   * Bumped by a successful stake, and threaded into the reader's own position.
+   *
+   * `reload()` re-reads the MARKET; it cannot reach into a component that holds its own resource.
+   * Without this the receipt panel below went on showing the position from before the stake — on
+   * the one screen whose entire job is to prove the stake happened.
+   */
+  const [staked, setStaked] = useState(0)
+  const onStaked = useCallback(() => {
+    setStaked((n) => n + 1)
+    reload()
+  }, [reload])
   const document = checkDocument(detail)
   // The house seed, if there is one — 21 §7.6. Computed against the SAME `pools` the ratio bar
   // draws, so the share it reports and the split it explains are the same two numbers.
@@ -286,14 +307,70 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
           own money, and a reader who is told that after reading the odds has already formed a
           view from a figure whose composition they were not given. See `components/houseseed.tsx`.
         */}
+        {/*
+          ── TWO POTS, AND THE PAGE ONLY EVER SHOWED ONE ────────────────────────────────────────
+
+          A stake taken from a CloudsForge balance is a ledger entry; a stake sent from a wallet is
+          in the contract. They are two parimutuel pools on one question and they settle
+          independently — `foresight/src/custodialstakes.ts` refuses to add them for the reason
+          restated below. This page read only the contract's, so somebody who staked 10 EMBER from
+          their balance came back to a market that said nobody had staked at all.
+
+          The CloudsForge pot goes FIRST, for the same reason the CloudsForge stake panel does: it
+          is the one most readers here can act in.
+        */}
+        {custodialPools !== null && custodial !== undefined && (
+          <p className="fs-note">
+            There are two pots on this question and they are kept apart. What you stake from your
+            CloudsForge balance is paid out of the other CloudsForge stakes; what you send from your
+            own wallet is paid out of the contract. You are paid from the pot you staked into, at
+            that pot&apos;s split.
+          </p>
+        )}
+        {custodialPools !== null && custodial !== undefined && (
+          <>
+            <PoolRatioBar
+              pools={custodialPools}
+              title="Staked from CloudsForge balances"
+              sub="Money people already had here, whichever currency they arrived with, counted in EMBER from the moment it was staked."
+              emptyNote="Nobody has staked from a CloudsForge balance yet. Read that as an empty pot, not as even odds."
+              note="Read from our own ledger as this page loaded, so there is no chain to be behind."
+              tone="current"
+            />
+            <p className="fs-stakers">
+              {custodial.stakerCount > 0
+                ? `${custodial.stakerCount} ${custodial.stakerCount === 1 ? 'account has' : 'accounts have'} staked this way.`
+                : 'No account has staked this way yet.'}
+            </p>
+          </>
+        )}
         <HouseSeedNotice disclosure={houseSeed} />
-        <PoolRatioBar pools={pools} note={obs.text} tone={obs.tone} />
+        <PoolRatioBar
+          pools={pools}
+          title={custodialPools === null ? 'Pool split' : 'Staked on chain, from wallets'}
+          {...(custodialPools === null
+            ? {}
+            : {
+                sub: 'Stakes sent to the contract from people’s own addresses. Mirrored from the chain, so this one carries a reading time.',
+                emptyNote:
+                  'No wallet has staked into the contract yet. Read that as an empty pot, not as even odds.',
+              })}
+          note={obs.text}
+          tone={obs.tone}
+        />
         <p className="fs-stakers">
           {pool.stakerCount > 0
             ? `${pool.stakerCount} ${pool.stakerCount === 1 ? 'address has' : 'addresses have'} staked.`
             : 'No address has staked yet.'}
         </p>
       </section>
+
+      {/*
+        THE RECEIPT, directly under the pool and above the forms. A custodial stake leaves no hash
+        and no explorer entry, so this panel is the reader's only evidence it happened — and it is
+        placed where somebody who has just staked is already looking.
+      */}
+      <YourCustodialStake marketId={market.id} refreshKey={staked} />
 
       {/* ───────────────────────── act ───────────────────────── */}
 
@@ -313,7 +390,7 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
             confusion 25-wallet-clients.md §1 names as the most dangerous thing this estate can
             build; the ORDER changed, the separation did not.
           */}
-          <CustodialStakePanel market={market} onStaked={reload} />
+          <CustodialStakePanel market={market} onStaked={onStaked} />
           {/*
             Self-custody, demoted but not hidden. `<details>` keeps every word of it in the
             document — the panel below explains what a wallet is, that nobody here can switch one
@@ -329,7 +406,7 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
               and a block explorer even with every machine of ours switched off. It needs a browser
               wallet and EMBER of your own.
             </p>
-            <StakePanel market={market} pools={pools} poolIsKnown={poolIsKnown} onStaked={reload} />
+            <StakePanel market={market} pools={pools} poolIsKnown={poolIsKnown} onStaked={onStaked} />
           </details>
         </>
       )}
