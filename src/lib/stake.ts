@@ -96,7 +96,11 @@ export function blockerSentence(blocker: StakeBlocker, market: Pick<MarketView, 
     case 'signed_out':
       return 'You will need to sign in first. Reading is open to anyone; putting money down is checked against your account.'
     case 'no_wallet':
-      return 'Connect a wallet to go on. The money travels from you to the contract, and never through us.'
+      // NOT a bare instruction. This is the only blocker with no remedy on the page — `signed_out`
+      // has a button beside it, the two amount ones are typed away, the three market ones are
+      // facts about the market — so a reader who has already picked a side is left holding a
+      // requirement and no way to meet it. `StakePanel`'s `NoWalletHelp` prints the rest.
+      return 'You need a wallet in this browser to take a side. The money travels from you to the contract and never through us, so the signature has to come from whatever holds your key.'
     case 'no_amount':
       return 'Tell us how much you want to put down.'
     case 'bad_amount':

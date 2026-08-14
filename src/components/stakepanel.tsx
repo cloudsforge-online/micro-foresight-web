@@ -30,6 +30,7 @@ import {
   type StakeFlow,
   type StakePhase,
 } from '../lib/stake.ts'
+import { hosts } from '../lib/hosts.ts'
 import { formatBps, formatEmber, shortHex } from '../lib/units.ts'
 import {
   buildStakeTransaction,
@@ -252,6 +253,8 @@ export function StakePanel({
         </p>
       )}
 
+      {gate.blocker === 'no_wallet' && <NoWalletHelp />}
+
       <button
         type="button"
         className="cf-btn cf-btn--ember fs-stake__go"
@@ -281,6 +284,60 @@ export function StakePanel({
 /** The form is frozen while a request or a wallet prompt is in flight, and after it succeeded. */
 function isEditable(phase: StakePhase): boolean {
   return phase !== 'requesting' && phase !== 'awaiting_wallet' && phase !== 'submitted'
+}
+
+/**
+ * What a reader with no wallet is supposed to do about it.
+ *
+ * ── The dead end this ends ─────────────────────────────────────────────────────────────────────
+ *
+ * `no_wallet` is the only blocker `stakeGate` returns that has no remedy anywhere on the screen.
+ * A signed-out reader gets a button. A bad amount is retyped. The three market blockers are facts
+ * about the market and there is nothing to do about them. This one named a requirement, offered no
+ * way to meet it, and stopped — to a reader who had already picked a side and typed an amount, the
+ * page simply refused, on a product whose entire purpose is the next click.
+ *
+ * It was worse than that in practice. `CustodialStakePanel` — the second way to bet, with coins
+ * already deposited here — renders NOTHING when its registry cannot be read or when this
+ * deployment has no platform staking address, and for the whole life of that panel the gateway
+ * routed no `/stake-assets`, so it rendered nothing on every market page on both estates. The
+ * reader was left with a demand for a wallet and an empty space where the alternative should have
+ * been. Fixing the route (deploy/gateway/dynamic/estate-web.yml) makes the panel able to appear;
+ * this makes its ABSENCE mean something, which is the part a route cannot fix.
+ *
+ * ── Three things, and deliberately not a fourth ────────────────────────────────────────────────
+ *
+ * What a wallet is, because "connect a wallet" assumes a reader who already knows. That the
+ * requirement is structural rather than a setting somebody could switch on for them. And where the
+ * chain's own details are, because a wallet that has never heard of EMBER cannot send to a market
+ * until the network is added to it.
+ *
+ * **No wallet names and no download links.** This file cannot check that a third party still ships
+ * what it shipped, and a stale recommendation on the screen where somebody is about to move money
+ * is worse than no recommendation. The Network site is ours, is versioned with this, and is where
+ * the chain id and the endpoint are published.
+ */
+function NoWalletHelp() {
+  return (
+    <div className="fs-nowallet">
+      <p className="fs-note">
+        A wallet here means something in this browser that holds a key of yours and signs with it —
+        usually an extension. Any one that speaks Ethereum will do. EMBER runs on its own chain, so
+        it also needs that network added before it can send anything to a market:{' '}
+        <a href={`${hosts().network}#coin`}>the chain id and the endpoint are published here</a>.
+      </p>
+      <p className="fs-note">
+        There is nothing we can switch on to do this for you. A stake is a transaction from your
+        own address and we hold no key of yours to make one with. That is the same property that
+        lets you collect a win straight from the contract with every machine of ours switched off.
+      </p>
+      <p className="fs-note">
+        The other way to bet is to pay with coins you have already deposited with CloudsForge, and
+        where that is running it appears as its own panel further down this page. If you cannot see
+        one, it is not switched on here yet.
+      </p>
+    </div>
+  )
 }
 
 function StakeOutcome({ flow, market }: { flow: StakeFlow; market: MarketView }) {

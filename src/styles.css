@@ -1030,6 +1030,25 @@ a {
   color: var(--cf-fg-mute);
 }
 
+/* ---- the no-wallet explanation ---------------------------------------
+ *
+ * Three `fs-note`s that are one answer, so they are grouped and the stack of
+ * default margins between them is collapsed to a single gap. No border, no
+ * tone class and no accent: this is not a warning — the warning is the
+ * sentence above it — it is the paragraph that tells a reader what to do
+ * next, and giving it a colour of its own would make the two compete on the
+ * one screen where somebody is deciding whether to bet.
+ */
+.fs-nowallet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cf-space-sm);
+  margin: var(--cf-space-lg) 0;
+}
+.fs-nowallet .fs-note {
+  margin: 0;
+}
+
 /* ---- claim ----------------------------------------------------------- */
 
 .fs-claim__state {
