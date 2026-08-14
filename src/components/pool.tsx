@@ -40,11 +40,21 @@ export function PoolRatioBar({
   pools,
   note,
   tone,
+  title = 'Pool split',
+  sub = 'What you see below is how the money is split: the fraction of everything in the pool that sits on each answer. Nobody is publishing an opinion here.',
+  emptyNote = 'Not a penny has gone in, so there is no split to draw. Read that as an empty market, not as even odds.',
 }: {
   pools: Pools
   /** The observation line. Always rendered; see `market.observation`. */
   note: string
   tone: 'current' | 'stale' | 'never'
+  /**
+   * Which book this is. There are two on every market — the contract's and the platform's — and
+   * an unlabelled bar was how a custodial staker came to read the wrong one as theirs.
+   */
+  title?: string
+  sub?: string
+  emptyNote?: string
 }) {
   const total = totalOf(pools)
   const yesBps = oddsBps(pools, OUTCOME_YES)
@@ -54,11 +64,8 @@ export function PoolRatioBar({
   return (
     <figure className="fs-pool">
       <figcaption className="fs-pool__caption">
-        <span className="fs-pool__title">Pool split</span>
-        <span className="fs-pool__sub">
-          What you see below is how the money is split: the fraction of everything in the pool that
-          sits on each answer. Nobody is publishing an opinion here.
-        </span>
+        <span className="fs-pool__title">{title}</span>
+        <span className="fs-pool__sub">{sub}</span>
       </figcaption>
 
       {known ? (
@@ -91,9 +98,7 @@ export function PoolRatioBar({
         </div>
       ) : (
         <p className="fs-bar fs-bar--empty" role="status">
-          {total === null
-            ? 'We could not read the pool, so there is no split to draw.'
-            : 'Not a penny has gone in, so there is no split to draw. Read that as an empty market, not as even odds.'}
+          {total === null ? 'We could not read the pool, so there is no split to draw.' : emptyNote}
         </p>
       )}
 

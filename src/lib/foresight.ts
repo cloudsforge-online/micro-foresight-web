@@ -139,6 +139,42 @@ export interface PoolView {
   readonly stale: boolean
 }
 
+/**
+ * `CustodialPoolView` — the OTHER book on the same question, `foresight/src/custodialstakes.ts`.
+ *
+ * ══════════════════════════════════════════════════════════════════════════════════════════════
+ * **NEVER ADD THIS TO `pool`.** They are two parimutuel pools on one market and they settle
+ * independently: money staked through a CloudsForge balance is paid out of the custodial losers'
+ * money, and money staked from a wallet is paid out of the contract's. A sum of the two would
+ * quote somebody odds computed from money they cannot win.
+ *
+ * It is on the wire because leaving it off was a defect with a name: a reader who staked 10 EMBER
+ * from their balance watched this page keep saying `0` on both sides, because the only pool it
+ * knew about was the one their stake had never entered.
+ * ══════════════════════════════════════════════════════════════════════════════════════════════
+ */
+export interface CustodialPoolView {
+  readonly yes: string
+  readonly no: string
+  readonly total: string
+  readonly yesBps: number | null
+  readonly noBps: number | null
+  readonly stakerCount: number
+  /** The unit of every figure above — EMBER, and the service says so rather than this app assuming. */
+  readonly asset: string
+}
+
+/** The body of `GET /markets/:id/custodial-position` — `foresight/src/server.ts`. */
+export interface CustodialPositionResponse {
+  readonly marketId: string
+  /** Pool units. What a payout is counted in, whatever was brought to buy it. */
+  readonly asset: string
+  readonly yes: string
+  readonly no: string
+  /** The platform's own sentence about what a custodial position is. Rendered as sent. */
+  readonly disclosure: string
+}
+
 /** One source the idea pipeline found — `foresight/src/ideas.ts`. */
 export interface IdeaSource {
   readonly url: string
@@ -206,6 +242,12 @@ export interface HouseSeedView {
 export interface MarketDetail {
   readonly market: MarketView
   readonly pool: PoolView
+  /**
+   * The custodial book. Optional on this type only because a deploy of this app can outrun a
+   * deploy of the service — an older service omits the key, and the page renders the one book it
+   * was given rather than a zero it made up.
+   */
+  readonly custodialPool?: CustodialPoolView
   /**
    * `null` when no house seed exists for this market, and the service sends the explicit null
    * rather than omitting the key (`foresight/src/houseseed.test.ts`) — so "no seed" is
@@ -347,6 +389,24 @@ export function getPosition(
   return api<PositionResponse>(
     `/markets/${encodeURIComponent(marketId)}/positions/${encodeURIComponent(address)}`,
     { auth: false, ...signalOf(signal) },
+  )
+}
+
+/**
+ * `GET /markets/:id/custodial-position` — what THIS reader has on this market, staked from their
+ * CloudsForge balance.
+ *
+ * Authenticated and keyed by session rather than by address, because a custodial position has no
+ * address: it is a ledger entry against the signed-in subject (`foresight/src/custodialstakes.ts`).
+ * That is the whole difference between this and `getPosition`, and it is why both exist.
+ */
+export function getCustodialPosition(
+  marketId: string,
+  signal?: AbortSignal,
+): Promise<CustodialPositionResponse> {
+  return api<CustodialPositionResponse>(
+    `/markets/${encodeURIComponent(marketId)}/custodial-position`,
+    { auth: true, ...signalOf(signal) },
   )
 }
 
