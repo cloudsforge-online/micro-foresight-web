@@ -364,24 +364,21 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
 /**
  * The provenance panel — the cited sources, and everything else about where the question came from.
  *
- * `null` provenance is a real answer and a different one from "no sources": it means an operator
- * wrote the question themselves (`origin: 'operator'`, `foresight/src/server.ts`), which is a
- * fact worth stating rather than an absence worth hiding.
+ * ── AN EMPTY PROVENANCE RENDERS NOTHING, AND THAT IS THE POINT ────────────────────────────────
+ *
+ * `null` provenance means an operator wrote the question themselves (`origin: 'operator'`,
+ * `foresight/src/server.ts`). This used to spend a whole panel — heading, border, its own scroll
+ * position — on a paragraph whose entire content was that there was nothing to put in it: "there
+ * is no search behind it to show you. The criteria above remain the entire basis on which it will
+ * be decided." Both halves are already elsewhere on the page. The criteria are printed in full,
+ * with their hash recomputed in the reader's browser, immediately above; and a section that exists
+ * only to disclaim itself teaches a reader that panels on this page can be skipped.
+ *
+ * So: no sources, no section. The panel appears when there is something cited to show, which is
+ * the only state in which it was ever telling the reader something they could act on.
  */
 function ProvenancePanel({ provenance }: { provenance: Provenance | null }) {
-  if (provenance === null) {
-    return (
-      <section className="fs-panel" aria-labelledby="why-heading">
-        <h2 className="fs-panel__title" id="why-heading">
-          Why this market exists
-        </h2>
-        <p className="fs-note" role="status">
-          Somebody on our team wrote this question by hand, so there is no search behind it to show
-          you. The criteria above remain the entire basis on which it will be decided.
-        </p>
-      </section>
-    )
-  }
+  if (provenance === null) return null
 
   return (
     <section className="fs-panel" aria-labelledby="why-heading">

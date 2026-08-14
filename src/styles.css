@@ -960,6 +960,15 @@ a {
  * `aria-pressed` and not a radio group, because these are not a form field — they set which asset
  * the amount below is denominated in, and the picked one is stated on the unit beside the input.
  */
+/* The imperative above the grid. Without it the tiles read as a statement of an account rather
+   than a control, which is how somebody holding one coin ended up staking in another. */
+.fs-holdings__label {
+  margin: 0 0 var(--cf-space-2xs);
+  font-size: var(--cf-text-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cf-fg-mute);
+}
 .fs-holdings {
   list-style: none;
   margin: 0 0 var(--cf-space-lg);
@@ -996,6 +1005,23 @@ a {
   border-color: var(--cf-viz-warn);
   box-shadow: inset 3px 0 0 var(--cf-viz-warn);
   background: var(--cf-bg-raised);
+}
+/* Nothing in it: quieter, never disabled. The figure is still legible — a reader checking whether
+   a deposit has landed is reading exactly this row, and greying it into unreadability answers a
+   different question from the one they asked. */
+.fs-holding--empty {
+  opacity: 0.55;
+}
+.fs-holding--empty:hover,
+.fs-holding--on {
+  opacity: 1;
+}
+/* "Paying with this", printed only on the selected row. Reserves its line on every row so the
+   grid does not jump a few pixels each time somebody changes their mind. */
+.fs-holding__state {
+  min-height: 1rem;
+  font-size: var(--cf-text-sm);
+  color: var(--cf-viz-warn);
 }
 .fs-holding__code {
   font-size: var(--cf-text-sm);

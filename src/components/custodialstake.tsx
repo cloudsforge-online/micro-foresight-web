@@ -128,6 +128,11 @@ export function CustodialStakePanel({
    * It is cleared only when the stake succeeds or the reader changes what they are staking.
    */
   const idempotencyKey = useRef<string>('')
+  /**
+   * True once the reader has pressed a coin themselves. After that the selection is theirs and
+   * nothing below moves it — including a balance that arrives late.
+   */
+  const chosenByReader = useRef(false)
 
   useEffect(() => {
     let live = true
@@ -175,6 +180,47 @@ export function CustodialStakePanel({
       live = false
     }
   }, [signedIn, reloadBalances])
+
+  /*
+   * ── THE PANEL LANDS ON A COIN THE READER HAS, AND THAT IS A BUG FIX ───────────────────────────
+   *
+   * The registry effect above picks the FIRST ENABLED ASSET, which is the registry's order and not
+   * the reader's: alphabetically that is Bitcoin. So somebody holding 46,646 EMBER and nothing else
+   * arrived at a form denominated in Bitcoin, typed their EMBER figure into it, and was told "that
+   * is more than the 0 Bitcoin in your account" — with the row that would have fixed it looking
+   * like a label rather than a control. Pressing the coin they were already on did nothing, which
+   * reads exactly like a list that cannot be pressed. It was reported as one.
+   *
+   * The rule, in order:
+   *   1. the reader's own press wins, always, and forever after — `chosenByReader`;
+   *   2. otherwise, if what is selected is something they hold, leave it alone;
+   *   3. otherwise the POOL ASSET if they hold it, because a stake in EMBER is the one that needs
+   *      no conversion and no quote to reason about;
+   *   4. otherwise the first enabled coin they hold anything of.
+   *
+   * If they hold nothing at all, nothing moves — the registry's first asset stays, and the note
+   * below says there is nothing to stake yet. Balances that could not be read move nothing either:
+   * a selection changed on the strength of a figure we do not have is a guess about their money.
+   *
+   * It will not yank the form out from under somebody mid-stake: it is inert once anything has
+   * been typed or quoted, so the re-read after a successful stake cannot re-point the panel.
+   */
+  useEffect(() => {
+    if (chosenByReader.current) return
+    if (balances === null || balances.degraded || registry === null) return
+    if (input.trim().length > 0 || phase !== 'idle') return
+    const heldOf = (code: string): boolean => {
+      const row = balances.assets.find((a) => a.assetCode === code)
+      return row?.available != null && row.available !== '0'
+    }
+    if (heldOf(assetCode)) return
+    const codes = registry.assets.filter((a) => a.enabled).map((a) => a.assetCode)
+    const next =
+      (codes.includes(balances.poolAsset) && heldOf(balances.poolAsset)
+        ? balances.poolAsset
+        : undefined) ?? codes.find(heldOf)
+    if (next !== undefined && next !== assetCode) setAssetCode(next)
+  }, [balances, registry, assetCode, input, phase])
 
   const asset: StakeAssetView | null = useMemo(
     () => registry?.assets.find((a) => a.assetCode === assetCode) ?? null,
@@ -307,25 +353,40 @@ export function CustodialStakePanel({
             An amount we could not read prints as an em dash and the row still selects — an
             unreadable balance is not a reason to refuse a stake somebody typed.
           */}
-          <ul className="fs-holdings" aria-label="What you hold">
+          {/* A VISIBLE INSTRUCTION, because the rows did not read as controls. They carried an
+              `aria-label` a screen reader got and a sighted reader never did, and a grid of coins
+              with balances on it looks exactly like a summary of an account. One line of imperative
+              tells the reader the tiles are the choosing. */}
+          <p className="fs-holdings__label" id="custodial-pay-with">
+            Pick what you&apos;re paying with
+          </p>
+          <ul className="fs-holdings" aria-labelledby="custodial-pay-with">
             {enabled.map((option) => {
               const row = balances?.assets.find((a) => a.assetCode === option.assetCode)
               const amount =
                 row?.available == null ? null : fromSmallestUnits(row.available, option.decimals)
               const on = option.assetCode === assetCode
+              /* Nothing in it — dimmed, and still pressable. A reader with a deposit in flight is
+                 entitled to pick the coin it is arriving in; what they are not entitled to is a
+                 row that looks the same as one with money on it. */
+              const empty = row?.available === '0'
               return (
                 <li key={option.assetCode}>
                   <button
                     type="button"
-                    className={`fs-holding${on ? ' fs-holding--on' : ''}`}
+                    className={`fs-holding${on ? ' fs-holding--on' : ''}${empty ? ' fs-holding--empty' : ''}`}
                     aria-pressed={on}
                     onClick={() => {
+                      chosenByReader.current = true
                       setAssetCode(option.assetCode)
                       reset()
                     }}
                   >
                     <span className="fs-holding__code">{option.displayName}</span>
                     <span className="fs-holding__amount cf-num">{amount ?? '—'}</span>
+                    {/* The selected row says so in a word as well as a colour. Two markers, for the
+                        same reason the panel's own edge is doubled: the next press moves money. */}
+                    <span className="fs-holding__state">{on ? 'Paying with this' : ''}</span>
                   </button>
                 </li>
               )
