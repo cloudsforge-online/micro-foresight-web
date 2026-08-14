@@ -330,7 +330,7 @@ describe('the image on the page', () => {
       }),
     )
     const imageAt = html.indexOf(IMAGE.bytesUrl!)
-    const questionAt = html.indexOf('fs-market__question')
+    const questionAt = html.indexOf('fs-mast__question')
     assert.ok(imageAt >= 0, 'the market page did not render the image')
     assert.ok(imageAt < questionAt, 'the image is not above the question')
   })
@@ -339,7 +339,7 @@ describe('the image on the page', () => {
     const html = render(
       createElement(MarketArticle, { detail: detail(), reload: () => undefined }),
     )
-    assert.equal(html.includes('fs-market__image'), false)
+    assert.equal(html.includes('fs-mast__image'), false)
   })
 })
 
@@ -392,7 +392,7 @@ describe('the image is never presented as verified, attested, on-chain or anchor
     )
     // The window around the image, so the assertion is about the image rather than the page: the
     // criteria panel legitimately says "hashed into the contract" about the DOCUMENT.
-    const at = html.indexOf('fs-market__image')
+    const at = html.indexOf('fs-mast__image')
     assert.ok(at >= 0)
     const around = html.slice(Math.max(0, at - 600), at + 600).toLowerCase()
     for (const forbidden of ['verified', 'attested', 'anchored', 'on-chain', 'authentic']) {
