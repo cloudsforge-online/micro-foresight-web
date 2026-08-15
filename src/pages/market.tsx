@@ -1,27 +1,33 @@
 /**
- * One market: everything a person needs to judge it, and the desk they act at.
+ * One market: read the terms, then take a side — three full-width bands, in that order.
  *
- * ── THE READING AND THE DESK ───────────────────────────────────────────────────────────────────
+ * ── DOCKET, PROVENANCE, ACT ───────────────────────────────────────────────────────────────────
  *
- * This page used to be nine identical bordered boxes in one 1168px column, each opening with a
- * heading and two or three sentences of prose, with the only thing that MOVES — the pool — buried
- * in the middle of them and the only thing a reader came to DO two and a half thousand pixels
- * down. Every box had the same weight, so none of them had any.
+ * The page is three bands stacked down the full width of the measure, each one internally two
+ * columns where it has two things to say:
  *
- * It is now two things side by side. On the left, THE READING: the resolution document with its
- * seal, the docket of terms, and where the question came from — static, long, and the reason a
- * person can judge this market at all. On the right, THE DESK: the pools, this reader's own
- * position, and the way to take a side — live, short, and `position: sticky`, so the numbers stay
- * on screen while the terms are read.
+ *   DOCKET      what settles this  │  the terms          — the contract, side by side
+ *   PROVENANCE  one folded line                          — open it and it is the whole audit trail
+ *   ACT         where the money is │  how to take a side — the pools, then the form
  *
- * ── AND THE ORDERING ARGUMENT SURVIVES THE CHANGE ──────────────────────────────────────────────
+ * There is no rail. Two earlier shapes put the forms in a 24rem column beside the reading, and the
+ * inventory that column has to carry — two pools, a house disclosure, a stake form, a receipt,
+ * sometimes a claim panel — made it about 2,000px tall at that width. Sticky with its own
+ * scrollbar it swallowed the page's scroll and the form could not be found; unsticky it was a
+ * ribbon of small print running past the bottom of everything else. Both were reported, the second
+ * one twice. Width is the fix: the same content across 1168px is a third of the height, and a band
+ * that ends is a band the next one can follow. Nothing was deleted to get there — docs/ecosystem/21
+ * §5 and §7.6 make every item on this page mandatory. `styles.css` carries the full account under
+ * "market detail".
  *
- * The old header said: the criteria are a contract with strangers (19-new-products.md §2.3.3), so
- * putting the stake button above the terms is a signature line above a contract. That still holds
- * and is still obeyed. Under 60rem there is ONE column and the order is exactly what it was — the
- * question, the terms, the provenance, then the pool and the forms. Above it, the terms are not
- * BELOW the button, they are BESIDE it at the same eye level and cannot be scrolled away from,
- * which is a stronger version of the same guarantee than a reader who scrolled past them.
+ * ── WHY THE READING STAYS FIRST ────────────────────────────────────────────────────────────────
+ *
+ * The criteria are a contract with strangers (19-new-products.md §2.3.3), so a stake button above
+ * the terms is a signature line above a contract, and BJ-FOR-01 gates the document order for
+ * exactly that reason. The complaint the redesign answers was never "the reading is in the way" —
+ * it was that the control was unreachable. Two columns and a folded provenance make the reading
+ * about 700px instead of 2,600px, so the form is on the first screen after it without the ordering
+ * being traded away.
  *
  * ── The sources are the point, not a footnote ─────────────────────────────────────────────────
  *
@@ -214,11 +220,11 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
         )}
       </header>
 
-      <div className="fs-layout">
+      <div className="fs-market__body">
 
-      {/* ═══════════════════════ the reading: what this market actually says ═══════════════════ */}
+      {/* ═════════ THE DOCKET: the document, then the six facts that decide the payout ═════════ */}
 
-      <div className="fs-layout__read">
+      <div className="fs-docket">
       <section className="fs-panel" aria-labelledby="terms-heading">
         <h2 className="fs-panel__title" id="terms-heading">
           What settles this
@@ -331,10 +337,165 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
           <strong>void</strong> and every stake goes back whole.
         </p>
       </section>
+      </div>
 
       {/* ───────────────────────── why this market exists ───────────────────────── */}
 
       <ProvenancePanel provenance={provenance} />
+
+      {/* ═══════════════════════ the act: the money, and what you can do about it ══════════════ */}
+
+      <section className="fs-act" aria-label="Where the money is, and how to take a side">
+        <div className="fs-act__money">
+          <section className="fs-desk" aria-labelledby="pool-heading">
+            <h2 className="fs-desk__title" id="pool-heading">
+              Where the money is
+            </h2>
+            {/*
+              ── TWO POTS, AND THE PAGE ONLY EVER SHOWED ONE ────────────────────────────────────
+
+              A stake taken from a CloudsForge balance is a ledger entry; a stake sent from a
+              wallet is in the contract. They are two parimutuel pools on one question and they
+              settle independently — `foresight/src/custodialstakes.ts` refuses to add them. This
+              page read only the contract's, so somebody who staked 10 EMBER from their balance
+              came back to a market that said nobody had staked at all.
+
+              The CloudsForge pot goes FIRST, for the same reason the CloudsForge stake panel
+              does: it is the one most readers here can act in.
+            */}
+            {custodialPools !== null && custodial !== undefined && (
+              <>
+                <p className="fs-desk__note">
+                  Two pots, kept apart. You are paid from the one you stake into.
+                </p>
+                <PoolRatioBar
+                  pools={custodialPools}
+                  title="From CloudsForge balances"
+                  sub="Money people already had here, whichever currency they arrived with, counted in EMBER from the moment it was staked."
+                  emptyNote="Nobody has staked from a CloudsForge balance yet. Read that as an empty pot, not as even odds."
+                  note="Read from our own ledger as this page loaded, so there is no chain to be behind."
+                  tone="current"
+                />
+                <p className="fs-stakers">
+                  {custodial.stakerCount > 0
+                    ? `${custodial.stakerCount} ${custodial.stakerCount === 1 ? 'account has' : 'accounts have'} staked this way.`
+                    : 'No account has staked this way yet.'}
+                </p>
+              </>
+            )}
+            {/*
+              BEFORE the ratio bar it explains, deliberately. Part of the two numbers below may be
+              the platform's own money, and a reader told that after reading the odds has already
+              formed a view from a figure whose composition they were not given. It stays a
+              bordered block at body size with a heading of its own — see
+              `components/houseseed.tsx` for why a badge would satisfy the letter of the disclosure
+              and none of it.
+            */}
+            <HouseSeedNotice disclosure={houseSeed} />
+            <PoolRatioBar
+              pools={pools}
+              title={custodialPools === null ? 'Pool split' : 'On chain, from wallets'}
+              {...(custodialPools === null
+                ? {}
+                : {
+                    sub: 'Stakes sent to the contract from people’s own addresses. Mirrored from the chain, so this one carries a reading time.',
+                    emptyNote:
+                      'No wallet has staked into the contract yet. Read that as an empty pot, not as even odds.',
+                  })}
+              note={obs.text}
+              tone={obs.tone}
+            />
+            <p className="fs-stakers">
+              {pool.stakerCount > 0
+                ? `${pool.stakerCount} ${pool.stakerCount === 1 ? 'address has' : 'addresses have'} staked.`
+                : 'No address has staked yet.'}
+            </p>
+            {/*
+              FOLDED, because it is the same sentence on every market in the estate. A reader
+              meeting parimutuel odds for the first time opens it once; every reader after that has
+              it out of the way. The words are unchanged and still in the document.
+            */}
+            <details className="fs-desk__more">
+              <summary>How the payout is worked out</summary>
+              <p className="fs-desk__note">
+                The losing side&apos;s money is shared out among the winning side in proportion to
+                what each person put in, so your return moves with the split until the market
+                closes. Nobody here can hand you fixed odds.
+              </p>
+            </details>
+          </section>
+        </div>
+
+        <div className="fs-act__do">
+          {takesStakes(market.status) && (
+            <>
+              {/*
+                THE CUSTODIAL PANEL IS FIRST, AND THAT ORDER IS THE FIX FOR A REAL DEFECT.
+
+                A reader who has deposited coins with CloudsForge needs no wallet, no extension and
+                no EMBER to bet — and for the whole life of this page they met a demand for a
+                browser wallet first, with the path that already worked for them somewhere below
+                it. The majority of people who can act on this page can act through the ledger, so
+                the ledger goes on top.
+
+                Still a separate section, a separate heading and a separate disclosure — never a
+                second tab on the wallet panel. Two stake paths that look alike and fail oppositely
+                is the confusion 25-wallet-clients.md §1 names as the most dangerous thing this
+                estate can build; the ORDER changed, the separation did not.
+              */}
+              <CustodialStakePanel market={market} onStaked={onStaked} />
+              {/*
+                Self-custody, demoted but not hidden. `<details>` keeps every word of it in the
+                document — the panel below explains what a wallet is, that nobody here can switch
+                one on for a reader, and where EMBER's chain details are — while giving the page
+                one primary way to act instead of two competing ones.
+              */}
+              <details className="fs-alt">
+                <summary className="fs-alt__summary">
+                  Or stake from your own wallet, straight to the contract
+                </summary>
+                <p className="fs-alt__note">
+                  A stake sent from your own address is yours in the contract, claimable with a
+                  wallet and a block explorer even with every machine of ours switched off. It
+                  needs a browser wallet and EMBER of your own.
+                </p>
+                <StakePanel
+                  market={market}
+                  pools={pools}
+                  poolIsKnown={poolIsKnown}
+                  onStaked={onStaked}
+                />
+              </details>
+            </>
+          )}
+
+          {/*
+            THE RECEIPT, directly UNDER the form. A custodial stake leaves no hash and no explorer
+            entry, so this panel is the reader's only evidence it happened, and the place somebody
+            who has just staked is already looking is the place they just clicked.
+          */}
+          <YourCustodialStake marketId={market.id} refreshKey={staked} />
+
+          {/* Collecting is acting, so it belongs beside staking and not at the foot of the
+              reading — a reader who came back to a resolved market came back for this. */}
+          {(market.status === 'resolved' ||
+            market.status === 'settled' ||
+            market.status === 'void') && (
+            <ClaimPanel
+              mirror={{
+                contractAddress: market.contractAddress,
+                marketStatus: market.status,
+                resolvedAt: market.resolvedAt,
+                disputeWindowSeconds: market.disputeWindowSeconds,
+                stale: pool.stale,
+                stakedYes: null,
+                stakedNo: null,
+              }}
+              address={wallet.address}
+            />
+          )}
+        </div>
+      </section>
 
       {/*
         LAST in the reading column, and only for an operator — `MarketImagePanel` returns null
@@ -343,161 +504,6 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
         route.
       */}
       <MarketImagePanel market={market} onChanged={reload} />
-      </div>
-
-      {/* ═══════════════════════ the desk: where the money is, and what you can do ═════════════ */}
-
-      {/*
-        `position: sticky` on wide screens, in normal flow below the reading on narrow ones. The
-        pool is the only thing on this page that MOVES, and it belonged next to the reader's
-        attention rather than a screen and a half away from it.
-      */}
-      <aside className="fs-layout__desk" aria-label="The pool, and how to take a side">
-        <section className="fs-desk" aria-labelledby="pool-heading">
-          <h2 className="fs-desk__title" id="pool-heading">
-            Where the money is
-          </h2>
-          {/*
-            ── TWO POTS, AND THE PAGE ONLY EVER SHOWED ONE ──────────────────────────────────────
-
-            A stake taken from a CloudsForge balance is a ledger entry; a stake sent from a wallet
-            is in the contract. They are two parimutuel pools on one question and they settle
-            independently — `foresight/src/custodialstakes.ts` refuses to add them. This page read
-            only the contract's, so somebody who staked 10 EMBER from their balance came back to a
-            market that said nobody had staked at all.
-
-            The CloudsForge pot goes FIRST, for the same reason the CloudsForge stake panel does:
-            it is the one most readers here can act in.
-          */}
-          {custodialPools !== null && custodial !== undefined && (
-            <>
-              <p className="fs-desk__note">Two pots, kept apart. You are paid from the one you stake into.</p>
-              <PoolRatioBar
-                pools={custodialPools}
-                title="From CloudsForge balances"
-                sub="Money people already had here, whichever currency they arrived with, counted in EMBER from the moment it was staked."
-                emptyNote="Nobody has staked from a CloudsForge balance yet. Read that as an empty pot, not as even odds."
-                note="Read from our own ledger as this page loaded, so there is no chain to be behind."
-                tone="current"
-              />
-              <p className="fs-stakers">
-                {custodial.stakerCount > 0
-                  ? `${custodial.stakerCount} ${custodial.stakerCount === 1 ? 'account has' : 'accounts have'} staked this way.`
-                  : 'No account has staked this way yet.'}
-              </p>
-            </>
-          )}
-          {/*
-            BEFORE the ratio bar it explains, deliberately. Part of the two numbers below may be
-            the platform's own money, and a reader told that after reading the odds has already
-            formed a view from a figure whose composition they were not given. It stays a bordered
-            block at body size with a heading of its own — see `components/houseseed.tsx` for why
-            a badge would satisfy the letter of the disclosure and none of it.
-          */}
-          <HouseSeedNotice disclosure={houseSeed} />
-          <PoolRatioBar
-            pools={pools}
-            title={custodialPools === null ? 'Pool split' : 'On chain, from wallets'}
-            {...(custodialPools === null
-              ? {}
-              : {
-                  sub: 'Stakes sent to the contract from people’s own addresses. Mirrored from the chain, so this one carries a reading time.',
-                  emptyNote:
-                    'No wallet has staked into the contract yet. Read that as an empty pot, not as even odds.',
-                })}
-            note={obs.text}
-            tone={obs.tone}
-          />
-          <p className="fs-stakers">
-            {pool.stakerCount > 0
-              ? `${pool.stakerCount} ${pool.stakerCount === 1 ? 'address has' : 'addresses have'} staked.`
-              : 'No address has staked yet.'}
-          </p>
-          {/*
-            FOLDED, because it is the same sentence on every market in the estate and it was the
-            last ~90px between the split and the control that acts on it. A reader meeting
-            parimutuel odds for the first time opens it once; every reader after that has it out of
-            the way. The words are unchanged and still in the document.
-          */}
-          <details className="fs-desk__more">
-            <summary>How the payout is worked out</summary>
-            <p className="fs-desk__note">
-              The losing side&apos;s money is shared out among the winning side in proportion to
-              what each person put in, so your return moves with the split until the market closes.
-              Nobody here can hand you fixed odds.
-            </p>
-          </details>
-        </section>
-
-        {takesStakes(market.status) && (
-          <>
-            {/*
-              THE CUSTODIAL PANEL IS FIRST, AND THAT ORDER IS THE FIX FOR A REAL DEFECT.
-
-              A reader who has deposited coins with CloudsForge needs no wallet, no extension and
-              no EMBER to bet — and for the whole life of this page they met a demand for a browser
-              wallet first, with the path that already worked for them somewhere below it. The
-              majority of people who can act on this page can act through the ledger, so the ledger
-              goes on top.
-
-              Still a separate section, a separate heading and a separate disclosure — never a
-              second tab on the wallet panel. Two stake paths that look alike and fail oppositely
-              is the confusion 25-wallet-clients.md §1 names as the most dangerous thing this
-              estate can build; the ORDER changed, the separation did not.
-            */}
-            <CustodialStakePanel market={market} onStaked={onStaked} />
-            {/*
-              Self-custody, demoted but not hidden. `<details>` keeps every word of it in the
-              document — the panel below explains what a wallet is, that nobody here can switch one
-              on for a reader, and where EMBER's chain details are — while giving the page one
-              primary way to act instead of two competing ones.
-            */}
-            <details className="fs-alt">
-              <summary className="fs-alt__summary">
-                Or stake from your own wallet, straight to the contract
-              </summary>
-              <p className="fs-alt__note">
-                A stake sent from your own address is yours in the contract, claimable with a wallet
-                and a block explorer even with every machine of ours switched off. It needs a
-                browser wallet and EMBER of your own.
-              </p>
-              <StakePanel
-                market={market}
-                pools={pools}
-                poolIsKnown={poolIsKnown}
-                onStaked={onStaked}
-              />
-            </details>
-          </>
-        )}
-
-        {/*
-          THE RECEIPT, directly UNDER the form now rather than above it. A custodial stake leaves no
-          hash and no explorer entry, so this panel is the reader's only evidence it happened, and
-          the place somebody who has just staked is already looking is the place they just clicked.
-          Above the form it was ~100px of the reason the form itself fell below the fold.
-        */}
-        <YourCustodialStake marketId={market.id} refreshKey={staked} />
-
-        {/* Collecting is acting, so it belongs at the desk beside staking and not at the foot of
-            the reading — a reader who came back to a resolved market came back for this. */}
-        {(market.status === 'resolved' ||
-          market.status === 'settled' ||
-          market.status === 'void') && (
-          <ClaimPanel
-            mirror={{
-              contractAddress: market.contractAddress,
-              marketStatus: market.status,
-              resolvedAt: market.resolvedAt,
-              disputeWindowSeconds: market.disputeWindowSeconds,
-              stale: pool.stale,
-              stakedYes: null,
-              stakedNo: null,
-            }}
-            address={wallet.address}
-          />
-        )}
-      </aside>
       </div>
     </article>
   )
@@ -518,15 +524,31 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
  *
  * So: no sources, no section. The panel appears when there is something cited to show, which is
  * the only state in which it was ever telling the reader something they could act on.
+ *
+ * ── AND IT IS FOLDED ──────────────────────────────────────────────────────────────────────────
+ *
+ * It has to be above the stake form (BJ-FOR-01: "the provenance precedes the form"), and open it
+ * is ~380px of search query, model id, prompt hash and retrieval times — reference material for
+ * the reader who wants to audit the question, not something a person decides with. Folded it is
+ * one line that says what is inside and how many sources it cites, so the guarantee is kept at a
+ * twentieth of the cost. Every word is still in the document: `<details>` hides nothing from find
+ * -in-page, from a screen reader that walks the tree, or from `textContent`.
  */
 function ProvenancePanel({ provenance }: { provenance: Provenance | null }) {
   if (provenance === null) return null
 
+  const cited = provenance.sources.length
+
   return (
-    <section className="fs-panel" aria-labelledby="why-heading">
-      <h2 className="fs-panel__title" id="why-heading">
-        Why this market exists
-      </h2>
+    <details className="fs-panel fs-why">
+      <summary className="fs-why__summary">
+        <span className="fs-why__title">Why this market exists</span>
+        <span className="fs-why__count">
+          {cited === 0
+            ? 'no sources recorded'
+            : `${cited} ${cited === 1 ? 'source' : 'sources'} cited`}
+        </span>
+      </summary>
       <p className="fs-provenance__lede">
         {provenance.origin === 'model'
           ? 'A model drafted this question from the reading below. Somebody on our team then went through the sources, made whatever edits it needed, and put it live. A model cannot open a market on its own.'
@@ -591,6 +613,6 @@ function ProvenancePanel({ provenance }: { provenance: Provenance | null }) {
         themselves. That ties a draft to exactly what produced it while the text stays out of the
         record.
       </p>
-    </section>
+    </details>
   )
 }

@@ -61,7 +61,32 @@ export function HouseSeedNotice({ disclosure }: { disclosure: HouseDisclosure | 
       {/* The sentence. 21 §5 words it; the service composes it once; this renders it as sent. */}
       <p className="fs-house__sentence">{disclosure.sentence}</p>
 
-      <p className="fs-house__why">
+      {/*
+        ── THE SENTENCE IS THE DISCLOSURE; THE REST IS THE EVIDENCE FOR IT ──────────────────────
+
+        Everything below this line — why the platform seeds at all, the five figures, the two
+        transaction hashes — used to be open, and it made a mandatory disclosure the single
+        largest object on the market page: taller than the odds it explains and taller than the
+        form. A disclosure that dwarfs the thing it qualifies is not read more carefully, it is
+        scrolled past, and it pushed the control this page exists for below the fold.
+
+        What 21 §5 and §7.6 require is that the reader is TOLD, in running text, before the odds,
+        that some of the money is ours. That is the title and the sentence, and both are still
+        open, at body size, above the bar. The evidence is one click away behind a summary that
+        names it, and `<details>` removes it from nothing: not find-in-page, not the accessibility
+        tree, not `textContent`, not print.
+
+        `open={symmetryFailed}` is the exception that proves it. When the figures do not support
+        the sentence, the evidence IS the disclosure, and it opens itself.
+      */}
+      <details className="fs-house__more" open={symmetryFailed}>
+        <summary className="fs-house__summary">
+          {disclosure.state === 'staked'
+            ? 'How much, why we do it, and the transactions'
+            : 'How much, why we do it, and where it will come from'}
+        </summary>
+
+        <p className="fs-house__why">
         {disclosure.state === 'staked' ? (
           <>
             A pool with one person in it just hands that person their money back, so CloudsForge
@@ -76,9 +101,9 @@ export function HouseSeedNotice({ disclosure }: { disclosure: HouseDisclosure | 
             an equal amount sits on both answers, sent from the address below.
           </>
         )}
-      </p>
+        </p>
 
-      <dl className="fs-house__facts">
+        <dl className="fs-house__facts">
         <div>
           <dt>On each outcome</dt>
           <dd className="cf-num">{amount(disclosure.perOutcomeWei)}</dd>
@@ -104,24 +129,24 @@ export function HouseSeedNotice({ disclosure }: { disclosure: HouseDisclosure | 
             )}
           </dd>
         </div>
-        {disclosure.houseAddress !== null && (
-          <div>
-            <dt>Platform address</dt>
-            <dd className="cf-num" title={disclosure.houseAddress}>
-              {shortHex(disclosure.houseAddress)}
-            </dd>
-          </div>
-        )}
-        {disclosure.stakedAt !== null && (
-          <div>
-            <dt>Staked at</dt>
-            <dd className="cf-num">{utcDateTime(disclosure.stakedAt) ?? disclosure.stakedAt}</dd>
-          </div>
-        )}
-      </dl>
+          {disclosure.houseAddress !== null && (
+            <div>
+              <dt>Platform address</dt>
+              <dd className="cf-num" title={disclosure.houseAddress}>
+                {shortHex(disclosure.houseAddress)}
+              </dd>
+            </div>
+          )}
+          {disclosure.stakedAt !== null && (
+            <div>
+              <dt>Staked at</dt>
+              <dd className="cf-num">{utcDateTime(disclosure.stakedAt) ?? disclosure.stakedAt}</dd>
+            </div>
+          )}
+        </dl>
 
-      {disclosure.evidence.length > 0 && (
-        <p className="fs-house__evidence">
+        {disclosure.evidence.length > 0 && (
+          <p className="fs-house__evidence">
           On chain as{' '}
           {disclosure.evidence.map((item, index) => (
             <span key={item.txHash}>
@@ -132,10 +157,11 @@ export function HouseSeedNotice({ disclosure }: { disclosure: HouseDisclosure | 
               </code>
             </span>
           ))}
-          . Both of those are the same <code className="cf-num">stake(uint8)</code> call anybody
-          here makes. There is no back door into this contract, and we do not have one.
-        </p>
-      )}
+            . Both of those are the same <code className="cf-num">stake(uint8)</code> call anybody
+            here makes. There is no back door into this contract, and we do not have one.
+          </p>
+        )}
+      </details>
 
       {symmetryFailed && (
         <p className="fs-house__alarm">
