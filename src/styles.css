@@ -626,21 +626,24 @@ a {
     grid-template-columns: minmax(0, 1.35fr) 24rem;
     gap: var(--cf-space-3xl);
   }
+  /*
+    ── THE DESK SCROLLS WITH THE PAGE. IT USED TO SCROLL BY ITSELF. ──────────────────────────
+
+    This was `position: sticky` + `max-height: 100vh` + `overflow-y: auto`, reasoning that a desk
+    taller than the viewport should scroll rather than pin a panel whose bottom nobody could
+    reach. The reasoning was right and the cure was worse: a pinned rail with its own private
+    scrollbar swallows the page's scroll. The stake control sat ~700px down that rail, so a
+    reader turned the wheel, watched the whole page move, and never found the one control the
+    page exists for. It was reported as the submission being hidden.
+
+    A sticky rail is worth having only when the reader never has to scroll it. There is no width
+    at which that is guaranteed here — a resolved market adds a claim panel, a long question adds
+    lines — so the rail is now an ordinary column. One page, one scrollbar, nothing below a fold
+    that does not move.
+  */
   .fs-layout__desk {
-    position: sticky;
-    /* Clears the shared `.cf-bar` header, which is sticky itself. */
-    top: var(--cf-space-2xl);
-    /* The desk can be taller than the viewport on a resolved market with a claim panel; it
-       scrolls itself rather than pinning a panel the reader cannot reach the bottom of. */
-    max-height: calc(100vh - var(--cf-space-3xl));
-    overflow-y: auto;
-    scrollbar-width: thin;
+    align-self: start;
   }
-}
-/* A sticky element that scrolls needs its own scroll padding, or a focused control at its foot
-   lands under the edge. */
-.fs-layout__desk {
-  scroll-padding-block: var(--cf-space-xl);
 }
 /* The desk's panels are narrower than the page's, so they carry less air. `--cf-space-2xl` of
    padding inside a 24rem rail leaves a 20rem measure; `--cf-space-xl` leaves 22rem and the ratio
@@ -976,6 +979,21 @@ a {
   font-size: var(--cf-text-sm);
   color: var(--cf-fg-mute);
   line-height: 1.5;
+}
+/* The one explanation that is identical on every market, folded so it costs a line instead of a
+   paragraph. Set at the note's own size and colour: it is a footnote that happens to open, not a
+   second heading competing with "Where the money is". */
+.fs-desk__more > summary {
+  cursor: pointer;
+  margin-top: var(--cf-space-lg);
+  font-size: var(--cf-text-sm);
+  color: var(--cf-fg-mute);
+}
+.fs-desk__more > summary:hover {
+  color: var(--cf-fg-dim);
+}
+.fs-desk__more .fs-desk__note {
+  margin-top: var(--cf-space-md);
 }
 /*
  * Two ratio bars in one card need a rule between them, or the second one's caption reads as more
