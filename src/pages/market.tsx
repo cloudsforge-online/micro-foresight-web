@@ -371,10 +371,7 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
           */}
           {custodialPools !== null && custodial !== undefined && (
             <>
-              <p className="fs-desk__note">
-                Two pots, kept apart. You are paid out of the one you staked into, at that pot&apos;s
-                split.
-              </p>
+              <p className="fs-desk__note">Two pots, kept apart. You are paid from the one you stake into.</p>
               <PoolRatioBar
                 pools={custodialPools}
                 title="From CloudsForge balances"
@@ -416,19 +413,21 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
               ? `${pool.stakerCount} ${pool.stakerCount === 1 ? 'address has' : 'addresses have'} staked.`
               : 'No address has staked yet.'}
           </p>
-          <p className="fs-desk__note">
-            The losing side&apos;s money is shared out among the winning side in proportion to what
-            each person put in, so your return moves with the split until the market closes. Nobody
-            here can hand you fixed odds.
-          </p>
+          {/*
+            FOLDED, because it is the same sentence on every market in the estate and it was the
+            last ~90px between the split and the control that acts on it. A reader meeting
+            parimutuel odds for the first time opens it once; every reader after that has it out of
+            the way. The words are unchanged and still in the document.
+          */}
+          <details className="fs-desk__more">
+            <summary>How the payout is worked out</summary>
+            <p className="fs-desk__note">
+              The losing side&apos;s money is shared out among the winning side in proportion to
+              what each person put in, so your return moves with the split until the market closes.
+              Nobody here can hand you fixed odds.
+            </p>
+          </details>
         </section>
-
-        {/*
-          THE RECEIPT, directly under the pool and above the forms. A custodial stake leaves no
-          hash and no explorer entry, so this panel is the reader's only evidence it happened — and
-          it is placed where somebody who has just staked is already looking.
-        */}
-        <YourCustodialStake marketId={market.id} refreshKey={staked} />
 
         {takesStakes(market.status) && (
           <>
@@ -471,6 +470,14 @@ export function MarketArticle({ detail, reload }: { detail: MarketDetail; reload
             </details>
           </>
         )}
+
+        {/*
+          THE RECEIPT, directly UNDER the form now rather than above it. A custodial stake leaves no
+          hash and no explorer entry, so this panel is the reader's only evidence it happened, and
+          the place somebody who has just staked is already looking is the place they just clicked.
+          Above the form it was ~100px of the reason the form itself fell below the fold.
+        */}
+        <YourCustodialStake marketId={market.id} refreshKey={staked} />
 
         {/* Collecting is acting, so it belongs at the desk beside staking and not at the foot of
             the reading — a reader who came back to a resolved market came back for this. */}
