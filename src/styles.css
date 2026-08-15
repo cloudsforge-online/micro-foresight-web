@@ -586,71 +586,141 @@ a {
 
 /* ═══════════════════════════ market detail ════════════════════════════════════════════════════
  *
- * ── THE READING AND THE DESK ──────────────────────────────────────────────────────────────────
+ * ── BANDS, NOT A RAIL ─────────────────────────────────────────────────────────────────────────
  *
- * This page was nine bordered boxes of identical weight in one 1168px column: masthead, terms,
- * provenance, pool, receipt, custodial form, wallet form, authoring, claim. Every one of them
- * opened with a 24px display heading and two or three sentences of prose, so nothing on the page
- * said which box a reader had come for — and the box they HAD come for, the stake form, was two
- * and a half thousand pixels down, under everything else.
+ * Three shapes have now been tried on this page and only the third one works.
  *
- * The split is by TEMPERATURE, not by importance. The reading column is cold: the resolution
- * document, the docket of terms, where the question came from — long, static, and the only reason
- * anybody can judge this market. The desk is warm: the two pools, this reader's own position, and
- * the forms — short, live, moving while you look at it, and therefore `position: sticky`.
+ *   1. Nine bordered boxes of identical weight in one 1168px column. Nothing said which box a
+ *      reader had come for, and the box they HAD come for — the stake form — was two and a half
+ *      thousand pixels down.
  *
- * The measure does the rest of the work. The reading gets `minmax(0, 1.35fr)` and holds a 62ch
- * paragraph; the desk gets a fixed 24rem, which is narrow enough that nothing in it can grow into
- * an essay. A rail that cannot hold prose is a rail nobody puts prose in.
+ *   2. A reading column and a 24rem sticky DESK beside it, split by temperature: cold document
+ *      on the left, warm money on the right. The desk holds two pools, a house disclosure, a
+ *      stake form, a receipt and sometimes a claim panel — so at 24rem it came out roughly
+ *      2,000px tall. Pinned with `overflow-y: auto` it ate the page's scroll and the form was
+ *      unreachable; unpinned it became a thin ribbon of small print running past the bottom of
+ *      everything else on the page. Both were reported, in those words.
  *
- * ── AND WHY IT IS A CONTAINER QUERY ───────────────────────────────────────────────────────────
+ *   3. This one. Nothing is a rail. The page is three full-width bands stacked in the order a
+ *      person uses them — DOCKET, then ACT, then whatever is left — and each band is internally
+ *      two columns, so the page gets short by getting wide rather than by hiding anything.
+ *
+ * ── WHY WIDTH IS THE WHOLE FIX ────────────────────────────────────────────────────────────────
+ *
+ * Height was what was wrong, both times. The inventory this page must render is fixed: a
+ * resolution document with its seal, a docket of six terms, a provenance record, two parimutuel
+ * pools, a house-seed disclosure, a stake form, a receipt, sometimes a claim panel. None of it
+ * can be dropped — docs/ecosystem/21 §5 and §7.6 say what must be said and where — so the only
+ * variable is how many pixels it is spread over.
+ *
+ * At 24rem that inventory is about 2,600px tall. In two ~34rem columns per band it is about 900,
+ * because almost every element in it is a caption, a figure or a field that was wrapping to three
+ * lines and now fits on one. Nothing was removed. The two reading panels sit side by side; the
+ * two ratio bars sit beside the form rather than above it; the provenance folds to its summary.
+ *
+ * ── THE ORDERING ARGUMENT IS OBEYED, NOT TRADED AWAY ──────────────────────────────────────────
+ *
+ * `pages/market.tsx` has always held that the criteria are a contract with strangers (19 §2.3.3),
+ * so a stake button above the terms is a signature line above a contract; BJ-FOR-01 asserts it in
+ * document order. The docket is still first, in the DOM and on the screen, at every width. What
+ * changed is that meeting it now costs a reader ~340px instead of ~700, which is the difference
+ * between a control below the fold and a control at it.
+ *
+ * ── AND WHY THEY ARE CONTAINER QUERIES ────────────────────────────────────────────────────────
  *
  * `.fs-page` is `container-type: inline-size` (see the header of that rule): `.fs-main` is
- * `min(100vw, --cf-max-w) - 2 * --cf-space-xl`, so the width this grid actually gets stops growing
- * at 1168px however wide the window is. A `@media` rule would be asking about the viewport, which
- * is not the number that decides whether two columns fit.
+ * `min(100vw, --cf-max-w) - 2 * --cf-space-xl`, so the width this grid actually gets stops
+ * growing at 1168px however wide the window is. A `@media` rule would be asking about the
+ * viewport, which is not the number that decides whether two columns fit.
  *
- * Under 60rem it collapses to one column and the source order is the reading first — which is the
- * ORIGINAL order of this page, terms before the stake button, the ordering argument in
- * `pages/market.tsx`'s header held exactly. Above 60rem the terms are not below the button, they
- * are beside it and cannot be scrolled away from.
+ * Under 60rem every band is one column and the whole page is a single stack in source order —
+ * question, criteria, terms, provenance, pool, form. That is the narrow layout this page has
+ * always had, minus the rail it never had room for anyway.
  */
 
-.fs-layout {
+.fs-market__body {
   display: grid;
   gap: var(--cf-space-2xl);
+}
+
+/* ---- the act: the money, and the one control the page exists for ------ */
+
+.fs-act {
+  display: grid;
+  gap: var(--cf-space-xl);
   align-items: start;
 }
 @container fs-page (min-width: 60rem) {
-  .fs-layout {
-    grid-template-columns: minmax(0, 1.35fr) 24rem;
-    gap: var(--cf-space-3xl);
-  }
-  /*
-    ── THE DESK SCROLLS WITH THE PAGE. IT USED TO SCROLL BY ITSELF. ──────────────────────────
-
-    This was `position: sticky` + `max-height: 100vh` + `overflow-y: auto`, reasoning that a desk
-    taller than the viewport should scroll rather than pin a panel whose bottom nobody could
-    reach. The reasoning was right and the cure was worse: a pinned rail with its own private
-    scrollbar swallows the page's scroll. The stake control sat ~700px down that rail, so a
-    reader turned the wheel, watched the whole page move, and never found the one control the
-    page exists for. It was reported as the submission being hidden.
-
-    A sticky rail is worth having only when the reader never has to scroll it. There is no width
-    at which that is guaranteed here — a resolved market adds a claim panel, a long question adds
-    lines — so the rail is now an ordinary column. One page, one scrollbar, nothing below a fold
-    that does not move.
-  */
-  .fs-layout__desk {
-    align-self: start;
+  .fs-act {
+    /*
+      Near-equal, with the act half a hair wider. The money side is a fixed inventory — two bars,
+      two counts, one disclosure — and does not grow; the act side holds a form whose fields want
+      every pixel they can get, and it is what a reader came to use.
+    */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: var(--cf-space-2xl);
   }
 }
-/* The desk's panels are narrower than the page's, so they carry less air. `--cf-space-2xl` of
-   padding inside a 24rem rail leaves a 20rem measure; `--cf-space-xl` leaves 22rem and the ratio
-   bar's two direct labels fit at a 90/10 split, which is where they were clipping. */
-.fs-layout__desk .fs-panel {
+/* The band's panels sit in ~34rem columns rather than the page's 1168px, so they carry a little
+   less air than a full-width panel and a little more than the old rail's. */
+.fs-act .fs-panel {
   padding: var(--cf-space-xl);
   margin-bottom: var(--cf-space-xl);
+}
+.fs-act__do > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---- the docket: the reading, above the act and made short enough to be --- */
+
+/*
+ * The reading is two FULL-WIDTH bands, not two columns.
+ *
+ * Side by side they were 1.15fr of document against 1fr of six-field list, and the two never came
+ * out the same height — the document ended at 250px and the list ran to 500, so a quarter of the
+ * screen between the question and the money was blank. Stacking them costs nothing now that the
+ * terms are a strip: document ~230px, terms ~110px, and a reader crosses 340px of reading to
+ * reach the form instead of 700px of it or 500px of hole.
+ *
+ * The document keeps a measure. `.fs-criteria` is capped at 68ch and `.fs-hash` at 68ch, so at
+ * 1168px the panel is wide but the SENTENCES are not — a 140-character line is unreadable however
+ * short the page it is on.
+ */
+.fs-docket .fs-panel {
+  margin-bottom: 0;
+}
+
+/*
+ * The provenance, folded. A closed `<details>` that is also a `.fs-panel` needs its padding to
+ * collapse to one line's worth, or the page pays panel-sized air for a summary — which is most of
+ * what folding it was for.
+ */
+.fs-why {
+  margin-bottom: 0;
+  padding: var(--cf-space-lg) var(--cf-space-xl);
+}
+.fs-why[open] {
+  padding-bottom: var(--cf-space-2xl);
+}
+.fs-why__summary {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--cf-space-md);
+}
+.fs-why__title {
+  font-family: var(--cf-font-display);
+  font-size: var(--cf-text-lg);
+  font-weight: 600;
+  color: var(--cf-fg);
+}
+.fs-why__count {
+  font-size: var(--cf-text-sm);
+  color: var(--cf-fg-mute);
+}
+.fs-why[open] .fs-why__summary {
+  margin-bottom: var(--cf-space-lg);
 }
 
 /* ---- the masthead ---------------------------------------------------- */
@@ -690,10 +760,20 @@ a {
   background: var(--cf-bg-raised);
   overflow: hidden;
 }
+/*
+ * 21:9, CAPPED AT 15rem.
+ *
+ * Uncapped, 21:9 of the 1168px this page gets is a 500px photograph — half a laptop viewport spent
+ * on an asset that `components/marketimage.tsx` argues at length is decoration and must never be
+ * read as evidence. The masthead was the single largest thing standing between a reader and the
+ * control they came for. The cap crops rather than letterboxes (`object-fit: cover`), so the
+ * illustration still fills its band; it is simply a band and not a poster.
+ */
 .fs-mast__image {
   display: block;
   width: 100%;
   aspect-ratio: 21 / 9;
+  max-height: 15rem;
   object-fit: cover;
   background: var(--cf-bg-sunken, var(--cf-bg-raised));
 }
@@ -708,7 +788,11 @@ a {
   padding: var(--cf-space-2xl);
 }
 .fs-mast__band--lit .fs-mast__plate {
-  margin-top: -30%;
+  /* A LENGTH, not a percentage. A percentage margin resolves against the container's INLINE size,
+     so `-30%` was -350px against a 1168px page — which worked only while the image happened to be
+     500px tall. It is capped at 15rem now (see `.fs-mast__image`), and -350px would have lifted
+     the plate clear off the top of the picture. */
+  margin-top: -7rem;
   /* Ash-900 at full strength under the text, transparent at the top: the question sits on ground
      it can hold 4.5:1 against, and the picture is legible above it. */
   background: linear-gradient(
@@ -717,7 +801,7 @@ a {
     color-mix(in srgb, var(--cf-bg) 72%, transparent) 38%,
     var(--cf-bg) 78%
   );
-  padding-top: calc(var(--cf-space-3xl) * 2.5);
+  padding-top: calc(var(--cf-space-3xl) * 1.5);
 }
 .fs-mast__question {
   font-family: var(--cf-font-display);
@@ -741,7 +825,9 @@ a {
   }
   .fs-mast__band--lit .fs-mast__plate {
     padding-top: var(--cf-space-3xl);
-    margin-top: -20%;
+    /* Also a length, for the reason given at the wide rule. Under 44rem the picture is 21:9 of a
+       narrow column and shorter than the cap, so the overlap is smaller. */
+    margin-top: -4rem;
   }
 }
 
@@ -801,12 +887,16 @@ a {
  * words that nobody should stake — the strongest thing this page can do short of removing the
  * form, which it deliberately does not, because a page that hides the controls hides the problem.
  */
+/* Capped at the measure of the criteria it wraps. Full-bleed across 1168px it put the digest a
+   thousand pixels from the words that say what the digest is, which is a caption nobody connects
+   to its subject. */
 .fs-doc-seal {
   border: 1px solid var(--cf-line);
   border-radius: var(--cf-radius-md);
   background: var(--cf-bg-sunken);
   overflow: hidden;
   margin: 0 0 var(--cf-space-lg);
+  max-width: 76ch;
 }
 .fs-doc-seal__band {
   display: flex;
@@ -863,34 +953,53 @@ a {
   line-height: 1.6;
 }
 /*
- * ── THE DOCKET ────────────────────────────────────────────────────────────────────────────────
+ * ── THE TERMS: A STRIP, NOT A COLUMN ──────────────────────────────────────────────────────────
  *
- * Six facts that decide a payout, and they were set as six rows of body-face prose with the label
- * and the value the same size and the same weight, separated by hairlines. It read as a paragraph
- * that happened to be right-aligned.
+ * Six facts that decide a payout. They have been three things on this page and the third is right.
  *
- * Now the label is in the utility face — uppercase mono, 11px, tracked — and the value keeps the
- * body face at reading size. That is the same device the masthead tags use, and it is doing the
- * same job in both places: the CHROME of this page is mono, the CONTENT is Archivo, and a reader
- * can tell which is which without reading either.
+ *   1. Six rows of body-face prose, label and value the same size and weight, hairline between.
+ *      It read as a paragraph that happened to be right-aligned.
+ *   2. A label/value list in a panel beside the criteria. In a half-width column an 18ch label
+ *      column left the values 400px away from their own labels, "RESOLUTION SOURCE, NAMED AT
+ *      OPEN" broke over three lines, and the panel came out 500px tall next to a 250px one — a
+ *      quarter of a screen of nothing, photographed and reported.
+ *   3. This: a full-width strip of `auto-fit` cells, label over value, each about 14rem. Six
+ *      facts fit on one row at 1168px and reflow to three, two and one as the page narrows. The
+ *      whole docket is ~110px instead of ~500, and every value sits directly under the words that
+ *      name it.
+ *
+ * The label keeps the utility face — uppercase mono, 11px, tracked — and the value keeps the body
+ * face at reading size. That is the same device the masthead tags use, and it does the same job in
+ * both places: the CHROME of this page is mono, the CONTENT is Archivo, and a reader can tell
+ * which is which without reading either.
  */
 .fs-terms {
-  margin: 0 0 var(--cf-space-xl);
+  margin: 0;
   display: grid;
-  gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--cf-space-lg) var(--cf-space-2xl);
 }
 .fs-terms > div {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--cf-space-md) var(--cf-space-lg);
-  border-top: 1px solid var(--cf-line);
-  padding: var(--cf-space-lg) 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  row-gap: var(--cf-space-xs);
+  min-width: 0;
+  padding-left: var(--cf-space-lg);
+  border-left: 2px solid var(--cf-line);
   font-size: var(--cf-text-md);
 }
-.fs-terms > div:last-child {
-  border-bottom: 1px solid var(--cf-line);
+/*
+ * The labels are not the same length — "Chain" is one line and "Resolution source, named at open"
+ * is two — so without this the values start at different heights across the row and the strip
+ * reads as six unrelated cells. `subgrid` puts every cell's label and value on the SAME two rows,
+ * which is the one thing a flex column cannot do. Chrome, Firefox and Safari have all shipped it;
+ * where it is missing the `@supports` block simply does not apply and the cells stack as before.
+ */
+@supports (grid-template-rows: subgrid) {
+  .fs-terms > div {
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+  }
 }
 .fs-terms dt {
   color: var(--cf-fg-mute);
@@ -898,34 +1007,36 @@ a {
   font-size: var(--cf-text-2xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  /* Holds the value column's left edge steady down the list without a grid, which would break the
-     wrap-under behaviour a long source reference depends on. */
-  flex: 0 1 18ch;
+  line-height: 1.4;
 }
 .fs-terms dd {
   margin: 0;
-  text-align: right;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   gap: 2px;
+}
+.fs-terms__kind {
+  text-transform: capitalize;
 }
 .fs-terms__ref {
   color: var(--cf-fg-dim);
-  word-break: break-all;
-  max-width: 46ch;
+  font-size: var(--cf-text-sm);
+  /* A source reference is a URL. It wraps rather than truncating: a reference with its middle
+     missing is one nobody can check, which is the whole point of naming it at open. */
+  overflow-wrap: anywhere;
 }
 .fs-terms__gloss {
   color: var(--cf-fg-mute);
   font-size: var(--cf-text-sm);
 }
 .fs-terms__why {
-  margin: var(--cf-space-xl) 0 0;
+  margin: var(--cf-space-2xl) 0 0;
   padding: 0 0 0 var(--cf-space-lg);
   border-left: 2px solid var(--cf-line-strong);
   color: var(--cf-fg-dim);
   font-size: var(--cf-text-md);
-  max-width: 68ch;
+  max-width: 78ch;
 }
 
 /*
@@ -946,16 +1057,17 @@ a {
 /* ---- the desk -------------------------------------------------------- */
 
 /*
- * The pool card. It is a `.fs-desk` and not a `.fs-panel` because it is the one thing in the rail
- * that must not be scanned past: the accent top rule and the sunken ground give it a weight the
- * forms below it do not have, and it is the only element on the page that gets both.
+ * The pool card. It is a `.fs-desk` and not a `.fs-panel` because it is the one thing in the act
+ * band that must not be scanned past: the accent top rule gives it a weight the form beside it
+ * does not have, and it is the only element on the page that gets one.
  *
- * Everything inside it is short by construction. The rail is 24rem and this card's own padding
- * takes it to a 20rem measure, which will not hold a paragraph of explanation — so the two long
- * sentences the pool needs (the parimutuel caveat, the two-pots rule) are set at `--cf-text-sm`
- * as `.fs-desk__note`, deliberately captions rather than body. They are not shortened: the
- * disclosure obligations in docs/ecosystem/21 §5 and §7.6 are about what is SAID and where, and
- * the words are unchanged.
+ * `.fs-desk__note` used to be 14px because the desk was a 24rem rail whose real measure was 20rem,
+ * and a paragraph at body size in 20rem is eight lines of ladder. The desk now gets half a
+ * 1168px band, so the two sentences the pool owes a reader — the two-pots rule and the parimutuel
+ * caveat — are set at body size like every other sentence on the page. They were never shortened:
+ * the disclosure obligations in docs/ecosystem/21 §5 and §7.6 are about what is SAID and where,
+ * and a disclosure set two steps below the text around it is one that has been made hard to read
+ * without being removed.
  */
 .fs-desk {
   border: 1px solid var(--cf-line);
@@ -976,9 +1088,10 @@ a {
 }
 .fs-desk__note {
   margin: var(--cf-space-lg) 0 0;
-  font-size: var(--cf-text-sm);
-  color: var(--cf-fg-mute);
-  line-height: 1.5;
+  font-size: var(--cf-text-md);
+  color: var(--cf-fg-dim);
+  line-height: 1.55;
+  max-width: 62ch;
 }
 /* The one explanation that is identical on every market, folded so it costs a line instead of a
    paragraph. Set at the note's own size and colour: it is a footnote that happens to open, not a
