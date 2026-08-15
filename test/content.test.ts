@@ -253,11 +253,20 @@ describe('the browse page points at the registry instead of restating its length
     assert.ok(markets, 'src/pages/markets.tsx was not found; this whole file is checking nothing')
   })
 
-  it('the card names the list rather than its size', () => {
+  /*
+   * The claim moved out of a card and into the folded primer when the browse page became a board
+   * (`pages/markets.tsx`), and it was shortened on the way. What is asserted is the INVARIANT, not
+   * the old sentence: the page must point at the market page as the place the accepted set is
+   * enumerated, and must not enumerate or count it here. A regex over the whole line rather than
+   * the exact wording, so a copy edit that keeps the pointer does not fail this.
+   */
+  it('the primer names the list rather than its size', () => {
     assert.match(
       markets?.code ?? '',
-      /The currencies listed on any market page are accepted/,
-      'the "bring the coin you already hold" card no longer names where the list lives',
+      /a market page lists is accepted/,
+      'the "bring the coin you already hold" entry no longer names where the list lives. It must ' +
+        'point at the market page, whose `CustodialStakePanel` renders the fetched registry — a ' +
+        'set restated by hand here has already shipped wrong twice.',
     )
   })
 
