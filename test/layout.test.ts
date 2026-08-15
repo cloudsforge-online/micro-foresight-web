@@ -60,39 +60,46 @@ const declarations = css.replace(/\/\*[\s\S]*?\*\//g, '')
 const markup = markets.replace(/\/\*[\s\S]*?\*\//g, '')
 
 describe('the primer above the markets', () => {
-  it('is the named-count grid, not the auto-fill one', () => {
+  /*
+   * The primer is no longer four raised tiles in a grid — it is a folded `<details>` whose body is
+   * a four-entry `<dl>` (`pages/markets.tsx`). The DEFECT it can still ship is identical, so these
+   * tests moved with it rather than being deleted: four items in an intrinsic grid lay out
+   * three-then-one at every width this page is ever offered, and a short last row of text columns
+   * is milder than a short last row of tiles but is still the thing the arithmetic in this file's
+   * header rules out.
+   */
+  it('is folded, so the questions are the first thing on the page', () => {
     assert.match(
       markup,
-      /className="fs-rules fs-rules--primer"/,
-      'the four-tile primer must carry `fs-rules--primer`; plain `.fs-rules` is the auto-fill grid ' +
-        'the rules page uses, and four items in it lay out three-then-one at every width from ' +
-        '1024px up',
+      /<details className="fs-primer">/,
+      'the primer must stay folded. Unfolded it was four panels and ~360 words standing between a ' +
+        'reader and the first market, which is the defect the board layout was written to end.',
     )
   })
 
-  it('holds a tile count that every column step divides', () => {
-    const primer = markup.slice(markup.indexOf('fs-rules--primer'), markup.indexOf('fs-filters'))
-    const tiles = primer.match(/className="fs-rule"/g)?.length ?? 0
-    assert.ok(tiles > 0, 'the primer has no tiles — this test is looking in the wrong place')
+  it('holds an entry count that every column step divides', () => {
+    const primer = markup.slice(markup.indexOf('fs-primer__body'), markup.indexOf('fs-filters'))
+    const entries = primer.match(/<dt>/g)?.length ?? 0
+    assert.ok(entries > 0, 'the primer has no entries — this test is looking in the wrong place')
     for (const columns of [1, 2, 4]) {
       assert.equal(
-        tiles % columns,
+        entries % columns,
         0,
-        `${tiles} tiles do not fill ${columns} columns, so the last row is short. The grid steps ` +
-          `1 → 2 → 4; either write the new tile as a PAIR, or move the steps in styles.css with it.`,
+        `${entries} entries do not fill ${columns} columns, so the last row is short. The grid ` +
+          `steps 1 → 2 → 4; either write the new entry as a PAIR, or move the steps in styles.css.`,
       )
     }
   })
 
   it('steps 1 → 2 → 4 and never 3', () => {
-    const rule = declarations.slice(declarations.indexOf('.fs-rules--primer'))
-    assert.match(rule, /\.fs-rules--primer\s*\{\s*grid-template-columns:\s*1fr;/)
+    const rule = declarations.slice(declarations.indexOf('.fs-primer__body'))
+    assert.match(rule, /\.fs-primer__body\s*\{[\s\S]*?grid-template-columns:\s*1fr;/)
     assert.match(rule, /@container fs-page \(min-width: 34rem\)[\s\S]*?repeat\(2, 1fr\)/)
     assert.match(rule, /@container fs-page \(min-width: 64rem\)[\s\S]*?repeat\(4, 1fr\)/)
     assert.doesNotMatch(
-      rule.slice(0, rule.indexOf('.fs-rule ')),
+      rule.slice(0, rule.indexOf('.fs-hero')),
       /repeat\(3, 1fr\)|repeat\(auto-f(it|ill)/,
-      'three columns orphans the fourth tile, and an intrinsic track listing cannot avoid three ' +
+      'three columns orphans the fourth entry, and an intrinsic track listing cannot avoid three ' +
         'while allowing four — see the header of this file',
     )
   })
@@ -103,6 +110,89 @@ describe('the primer above the markets', () => {
       /\.fs-page\s*\{[^}]*container-type:\s*inline-size/,
       '`@container fs-page` needs a container to ask; without `container-type` on `.fs-page` the ' +
         'queries never match and the primer is one column at every width',
+    )
+  })
+})
+
+/**
+ * The board, and the one thing about it that can regress into what it replaced.
+ *
+ * The page was a grid of identically sized raised panels in which the majority of the ink was a
+ * constant — `feeBps` is 200 on every market in the estate and was printed on every card. What
+ * makes the board a board is that rows sit on the page ground with hairline separators and are
+ * broken into counted groups, so the tests here are the two facts that stop it drifting back:
+ * nothing on this page may restate a per-market constant, and the rows may not become panels.
+ */
+describe('the board', () => {
+  it('does not print the fee on every row', () => {
+    const rows = markup.slice(markup.indexOf('function Row('))
+    assert.doesNotMatch(
+      rows,
+      /feeBps/,
+      'the fee is the same on every market in the estate, so a row that prints it prints a ' +
+        'constant once per market — which is most of what made the old card grid unreadable. It ' +
+        'is stated once in the folded primer and in full on the market page, where the pool it ' +
+        'applies to actually is.',
+    )
+  })
+
+  it('does not label every countdown with the same word', () => {
+    const rows = markup.slice(markup.indexOf('function Row('), markup.indexOf('function phaseWord('))
+    assert.doesNotMatch(
+      rows,
+      /'to close'/,
+      'a note reading "to close" under every countdown is `feeBps` in a smaller font: identical on ' +
+        'every row, at a fixed pitch, and therefore ink that teaches a reader to skip a column. ' +
+        'The group heading above already says "Closing this month". The note belongs only where ' +
+        'the big figure is NOT a countdown, because there it differs from row to row.',
+    )
+  })
+
+  it('does not list the market it just promoted', () => {
+    assert.match(
+      markup,
+      /markets\.data\.markets\.filter\(\(market\) => market\.id !== hero\.id\)/,
+      'the hero has to cost the list its copy of that market. Without this the soonest market is ' +
+        'rendered twice in one screenful and the group under it reads "Closing this week — 1" ' +
+        'pointing at the band directly above.',
+    )
+  })
+
+  it('lays rows on the page rather than in panels', () => {
+    /*
+     * The RESTING state only. `.fs-row__link:hover` does raise the ground and should — the point
+     * is that a row is flat until it is pointed at, not that the token is banned from the file. So
+     * the two resting blocks are matched by their exact selectors rather than by slicing a span,
+     * which would have swept the hover rule in with them.
+     */
+    const blocks = ['.fs-row', '.fs-row__link'].map((selector) => {
+      const found = new RegExp(`\\${selector}\\s*\\{([^}]*)\\}`).exec(declarations)
+      assert.ok(found, `no \`${selector} { … }\` rule found — this test is looking in the wrong place`)
+      return { selector, body: found[1] ?? '' }
+    })
+    for (const { selector, body } of blocks) {
+      assert.doesNotMatch(
+        body,
+        /background:\s*var\(--cf-bg-raised\)/,
+        `${selector} fills its ground, which makes a row a card again. The category rail ` +
+          '(`.fs-row__link::before`) and the hairline carry the separation; the raised ground is ' +
+          'reserved for hover.',
+      )
+      assert.doesNotMatch(
+        body,
+        /border-radius/,
+        `${selector} is rounded. Rounding a row turns the board back into the grid of panels this ` +
+          'layout replaced.',
+      )
+    }
+  })
+
+  it('groups carry a count, because that is what earns the header its line', () => {
+    assert.match(
+      markup,
+      /className="fs-group__count cf-num">\{group\.markets\.length\}/,
+      'a group header that only names a bucket is decoration. The count tells a reader how much ' +
+        'of the page is theirs before they scroll it.',
     )
   })
 })

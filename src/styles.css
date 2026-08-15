@@ -183,100 +183,511 @@ a {
   color: var(--cf-accent-ink);
 }
 
-/* ---- market cards ---------------------------------------------------- */
+/* ==== the board: the browse page ======================================
+ *
+ * `.fs-cards` and the whole `.fs-card*` family were here and are deleted. They were a
+ * `repeat(auto-fill, minmax(320px, 1fr))` grid of raised, rounded, identically padded panels, and
+ * every one of them ended in the same four-row definition list. Two of those rows held values
+ * that are the SAME on every market in the estate — `feeBps` is 200 everywhere and
+ * `resolutionSourceKind` takes three values across the table — so the majority of the ink on the
+ * page was a constant printed fifteen times at a fixed pitch. That is the literal description of
+ * the complaint that produced this rewrite, and no amount of restyling a card fixes it: the
+ * problem was that the layout carried no information.
+ *
+ * What replaces it is a BOARD. Rows on the page ground rather than panels floating on it, hairline
+ * separators instead of borders on four sides, grouped by the axis that actually varies — see
+ * `groupingFor` in `pages/markets.tsx` — with a group header every few rows to break the pitch. A
+ * market's countdown, in the mono face at 21px, is the largest thing in its row, so scanning the
+ * board is scanning a column of DIFFERENT numbers.
+ *
+ * The signature is `Fork`: the product mark (`brand/assets/foresight`) turned on its side and fed
+ * the market's own open and close times. Its geometry is in the component, not here, because it is
+ * drawn from data; this file only sizes it and hands it a tone.
+ * ====================================================================== */
 
-.fs-cards {
-  list-style: none;
+/* ---- masthead -------------------------------------------------------- */
+
+.fs-board__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cf-space-xl);
+  margin-bottom: var(--cf-space-xl);
+}
+/* The crest. A real asset rather than a drawn approximation of one — and the same drawing the
+   rows use as a diagram, which is why it is worth the request. */
+.fs-board__mark {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--cf-radius);
+  /* The mark ships on its own near-black ground. On the light scheme that square is a deliberate
+     anchor, so it gets a hairline rather than a scrim to keep it from floating. */
+  box-shadow: 0 0 0 1px var(--cf-line);
+}
+.fs-board__headtext {
+  min-width: 0;
+}
+.fs-board__title {
+  font-family: var(--cf-font-display);
+  font-size: var(--cf-text-4xl);
+  line-height: 1.1;
+  margin: 0 0 var(--cf-space-sm);
+  max-width: 20ch;
+  text-wrap: balance;
+}
+.fs-board__lede {
   margin: 0;
-  padding: 0;
+  max-width: 58ch;
+  color: var(--cf-fg-dim);
+}
+@container fs-page (max-width: 34rem) {
+  .fs-board__mark {
+    width: 40px;
+    height: 40px;
+  }
+  .fs-board__title {
+    font-size: var(--cf-text-3xl);
+  }
+}
+
+/* ---- the folded primer ----------------------------------------------- */
+
+/*
+ * Four claims that used to be four panels of body copy — around 360 words — standing between the
+ * page title and the first market. Folded, they cost one line until somebody wants them.
+ *
+ * Rules rather than a panel: this is a seam in the page, not an object on it, and giving it a
+ * background would put a fifth box back on a page whose whole complaint was boxes.
+ */
+.fs-primer {
+  border-top: 1px solid var(--cf-line);
+  border-bottom: 1px solid var(--cf-line);
+  padding: var(--cf-space-md) 0;
+  margin-bottom: var(--cf-space-2xl);
+}
+.fs-primer__summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--cf-space-lg);
+  cursor: pointer;
+  /* Both spellings: `list-style` covers Firefox and the modern engines, the pseudo-element covers
+     the WebKit build that still draws a disclosure triangle regardless. */
+  list-style: none;
+}
+.fs-primer__summary::-webkit-details-marker {
+  display: none;
+}
+.fs-primer__summary:focus-visible {
+  outline: 2px solid var(--cf-accent);
+  outline-offset: 3px;
+}
+.fs-primer__q {
+  font-family: var(--cf-font-display);
+  font-size: var(--cf-text-lg);
+}
+/* The utility face doing chrome, as it does on the market page's tags. */
+.fs-primer__hint {
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cf-fg-mute);
+  white-space: nowrap;
+}
+.fs-primer__hint::after {
+  content: ' +';
+}
+.fs-primer[open] .fs-primer__hint::after {
+  content: ' −';
+}
+/* On a phone the hint is `white-space: nowrap` and takes half the line, which forces "How a payout
+   works" to wrap into two. The `+` on the summary already says the row opens, so the count of what
+   is inside is the part that goes. */
+@container fs-page (max-width: 26rem) {
+  .fs-primer__hint {
+    display: none;
+  }
+  .fs-primer__summary::after {
+    content: '+';
+    font-family: var(--cf-font-mono);
+    color: var(--cf-fg-mute);
+  }
+  .fs-primer[open] .fs-primer__summary::after {
+    content: '−';
+  }
+}
+.fs-primer__body {
+  margin: var(--cf-space-xl) 0 var(--cf-space-sm);
   display: grid;
   gap: var(--cf-space-xl);
-  /* `min(100%, 320px)` for the reason given on `.fs-rules`: a bare 320px floor overflowed a
-     288px page at a 320px viewport, and this list is the one a phone arrives on. */
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  /* 1 → 2 → 4 and never 3, for the arithmetic recorded at `.fs-rules--primer`'s old home: with
+     four items the only orphan-free counts are 1, 2 and 4, and no `auto-fit` floor admits four
+     while skipping three. These are columns of text with no border, so an orphan is milder here
+     than it was on tiles — but the fix costs two rules and is already derived. */
+  grid-template-columns: 1fr;
 }
-.fs-card {
+@container fs-page (min-width: 34rem) {
+  .fs-primer__body {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@container fs-page (min-width: 64rem) {
+  .fs-primer__body {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.fs-primer__body dt {
+  font-size: var(--cf-text-md);
+  margin-bottom: var(--cf-space-2xs);
+}
+.fs-primer__body dd {
+  margin: 0;
+  font-size: var(--cf-text-sm);
+  line-height: 1.5;
+  color: var(--cf-fg-dim);
+}
+
+/* ---- the hero: the market closing soonest ---------------------------- */
+
+.fs-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cf-space-xl);
+  padding: var(--cf-space-2xl);
+  margin-bottom: var(--cf-space-2xl);
   border: 1px solid var(--cf-line);
   border-radius: var(--cf-radius-lg);
   background: var(--cf-bg-raised);
-  padding: var(--cf-space-xl);
-  display: flex;
-  flex-direction: column;
-  gap: var(--cf-space-md);
-}
-.fs-card__link {
+  color: inherit;
   text-decoration: none;
+  position: relative;
+  overflow: hidden;
 }
-
-/*
- * The header image, on a card and on the market page.
- *
- * `aspect-ratio` with `object-fit: cover` rather than a free height, because the picture arrives
- * at whatever size somebody uploaded and a grid of cards that each reflow to their own image's
- * proportions is a grid that jumps as the images load. The ratio is reserved before the bytes
- * arrive, so nothing below the image moves when it does.
- *
- * `background` is the placeholder WHILE loading, not a placeholder for a missing image: the
- * component renders no `<img>` at all when there is nothing to show, so this box only ever exists
- * around a real picture.
- */
-.fs-card__image {
-  display: block;
-  width: 100%;
-  object-fit: cover;
-  background: var(--cf-bg-sunken, var(--cf-bg-raised));
-  border-radius: var(--cf-radius-md);
-  aspect-ratio: 16 / 9;
-  margin-bottom: var(--cf-space-md);
+/* The category tone, as a rule across the top. The one filled colour on the page. */
+.fs-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--fs-tone, var(--cf-accent));
 }
-.fs-card__question {
-  font-size: var(--cf-text-xl);
-  line-height: 1.35;
-  margin: 0;
+.fs-hero:hover {
+  border-color: var(--cf-fg-mute);
 }
-.fs-card__link:hover .fs-card__question {
+.fs-hero:hover .fs-hero__question {
   color: var(--cf-accent-text);
 }
-.fs-card__meta {
+.fs-hero:focus-visible {
+  outline: 2px solid var(--cf-accent);
+  outline-offset: 2px;
+}
+.fs-hero__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--cf-radius);
+  /* The placeholder WHILE loading, not a stand-in for a missing image: `MarketImage` renders no
+     `<img>` at all when there is nothing to show, so this box only ever wraps a real picture. */
+  background: var(--cf-bg-sunken, var(--cf-bg-raised));
+}
+.fs-hero__body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+@container fs-page (min-width: 46rem) {
+  .fs-hero {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--cf-space-2xl);
+  }
+  /* Flex rather than a grid track, so that a market with no image is a band with one child instead
+     of a band with a hole. No `:has()` needed to tell the two apart. */
+  .fs-hero__image {
+    flex: 0 0 17rem;
+    width: 17rem;
+    aspect-ratio: 4 / 3;
+  }
+}
+.fs-hero__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-space-xs);
+  margin: 0 0 var(--cf-space-sm);
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--cf-fg-mute);
+}
+.fs-hero__question {
+  font-family: var(--cf-font-display);
+  font-size: var(--cf-text-3xl);
+  line-height: 1.15;
+  margin: 0 0 var(--cf-space-xl);
+  max-width: 24ch;
+  text-wrap: balance;
+}
+.fs-hero__clock {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--cf-space-lg);
+}
+.fs-hero__until {
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-3xl);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.fs-hero__untilnote {
+  font-size: var(--cf-text-sm);
+  color: var(--cf-fg-mute);
+}
+.fs-hero__foot {
+  margin: var(--cf-space-lg) 0 0;
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cf-fg-mute);
+}
+
+/* ---- groups ---------------------------------------------------------- */
+
+.fs-group {
+  margin-bottom: var(--cf-space-3xl);
+}
+.fs-group:last-child {
+  margin-bottom: 0;
+}
+/*
+ * The header is a label, its count, and then a rule running out to the margin. The count is the
+ * reason it earns a line — "Closing this week — 3" tells a reader how much of the page is theirs
+ * before they scroll it, and a heading that only names a bucket does not.
+ *
+ * The count sits AGAINST the label rather than flush right. Flushed right, across a 1168px measure,
+ * it was a lone digit eleven inches from the only words that explained it: nothing bound the two
+ * together, and it read as a stray numeral in the margin. Adjacency is the binding.
+ */
+.fs-group__head {
+  display: flex;
+  align-items: center;
+  gap: var(--cf-space-sm);
+  margin: 0 0 var(--cf-space-xs);
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--cf-fg-mute);
+}
+.fs-group__rule {
+  flex: 1 1 auto;
+  height: 1px;
+  margin-left: var(--cf-space-xs);
+  background: var(--cf-line);
+}
+.fs-group__count {
+  padding: 1px var(--cf-space-2xs);
+  border: 1px solid var(--cf-line);
+  border-radius: var(--cf-radius-sm);
+  color: var(--cf-fg-dim);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+/* ---- one row --------------------------------------------------------- */
+
+.fs-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fs-row {
+  border-bottom: 1px solid var(--cf-line);
+}
+.fs-row:first-child {
+  border-top: 1px solid var(--cf-line);
+}
+.fs-row__link {
+  position: relative;
+  display: grid;
+  grid-template-columns: 7rem auto minmax(0, 1fr) 1.5rem;
+  align-items: center;
+  gap: var(--cf-space-xl);
+  padding: var(--cf-space-lg) var(--cf-space-md) var(--cf-space-lg) var(--cf-space-xl);
+  color: inherit;
+  text-decoration: none;
+}
+/* The category rail. Down a group this is a column of alternating hues at irregular intervals,
+   which is the cheapest possible cure for a page that read as one repeating pattern. It is never
+   the only channel: the tag beside it says the category in words. */
+.fs-row__link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--fs-tone, var(--cf-line-strong));
+  opacity: 0.55;
+}
+.fs-row__link:hover {
+  background: var(--cf-bg-raised);
+}
+.fs-row__link:hover::before {
+  opacity: 1;
+}
+.fs-row__link:focus-visible {
+  outline: 2px solid var(--cf-accent);
+  outline-offset: -2px;
+}
+.fs-row__link:hover .fs-row__question {
+  color: var(--cf-accent-text);
+}
+.fs-row__clock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fs-row__until {
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-xl);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.fs-row__unitnote {
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cf-fg-mute);
+  white-space: nowrap;
+}
+.fs-fork {
+  display: block;
+  flex: none;
+}
+.fs-row__main {
+  min-width: 0;
+}
+.fs-row__question {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--cf-font-display);
+  font-size: var(--cf-text-lg);
+  line-height: 1.3;
+  margin-bottom: var(--cf-space-2xs);
+}
+.fs-row__meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--cf-space-sm);
-  margin: 0;
   font-size: var(--cf-text-sm);
   color: var(--cf-fg-mute);
 }
-.fs-card__sep {
-  opacity: 0.5;
+.fs-row__sep {
+  opacity: 0.4;
 }
-.fs-card__facts {
-  margin: 0;
-  display: grid;
-  gap: var(--cf-space-sm);
-  font-size: var(--cf-text-md);
+.fs-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cf-space-2xs);
+  font-family: var(--cf-font-mono);
+  font-size: var(--cf-text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
-.fs-card__facts > div {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--cf-space-lg);
-  border-top: 1px solid var(--cf-line);
-  padding-top: var(--cf-space-sm);
+.fs-tag__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
 }
-.fs-card__facts dt {
+/*
+ * The arrow is held back until the row is pointed at, and the same reasoning removed the "to close"
+ * note: thirty rows each ending in an identical glyph at an identical pitch is a column of ink that
+ * says the same thing thirty times. The row is already a link — the question changes colour and the
+ * cursor changes shape — so at rest the arrow is redundant, and on approach it is a target.
+ *
+ * `opacity` rather than `display`, so the column keeps its width and nothing shifts under the
+ * cursor. Where there is no pointer to hover with, it is simply always there.
+ */
+.fs-row__go {
+  justify-self: end;
+  font-size: var(--cf-text-lg);
   color: var(--cf-fg-mute);
+  opacity: 0;
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease,
+    color 0.12s ease;
 }
-.fs-card__facts dd {
-  margin: 0;
-  text-align: right;
+.fs-row__link:hover .fs-row__go,
+.fs-row__link:focus-visible .fs-row__go {
+  opacity: 1;
 }
-.fs-card__more {
-  margin-top: auto;
-  font-size: var(--cf-text-md);
+@media (hover: none) {
+  .fs-row__go {
+    opacity: 1;
+  }
+}
+.fs-row__link:hover .fs-row__go {
   color: var(--cf-accent-text);
-  text-decoration: none;
+  transform: translateX(3px);
 }
-.fs-card__more:hover {
-  text-decoration: underline;
+@media (prefers-reduced-motion: reduce) {
+  .fs-row__go {
+    transition: none;
+  }
+  .fs-row__link:hover .fs-row__go {
+    transform: none;
+  }
+}
+
+/*
+ * Narrow. The fork goes rather than shrinking: at 104px it is already the smallest it can be and
+ * still read as a fork, and every fact in it is in words in the same row — it is the one element
+ * on the page that can be dropped without losing anything. The clock moves up beside the arrow and
+ * the question takes the full width underneath, so all four cells are placed explicitly rather
+ * than left to auto-placement with a hole in the flow.
+ */
+@container fs-page (max-width: 40rem) {
+  .fs-row__link {
+    grid-template-columns: minmax(0, 1fr) 1.5rem;
+    gap: var(--cf-space-sm) var(--cf-space-md);
+    padding-left: var(--cf-space-lg);
+  }
+  .fs-row .fs-fork {
+    display: none;
+  }
+  .fs-row__clock {
+    grid-column: 1;
+    grid-row: 1;
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--cf-space-sm);
+  }
+  .fs-row__until {
+    font-size: var(--cf-text-lg);
+  }
+  .fs-row__go {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .fs-row__main {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 
 /* ---- phase: a word and a shape, never a colour on its own ------------- */
@@ -1878,45 +2289,28 @@ a {
 }
 
 /*
- * ── THE FOUR-TILE PRIMER ON THE BROWSE PAGE, AND WHY IT IS NOT `auto-fit` ─────────────────────
+ * ── `.fs-rules--primer` WAS HERE. IT IS GONE, AND THE ARITHMETIC IT CARRIED IS NOT ────────────
  *
- * `markets.tsx` states four things a stranger needs before the first market. Four tiles in the
- * `auto-fill` grid above laid out as THREE AND THEN ONE, at every width from 1024px up to and
- * including the widest window there is — the page's measure caps at 1168px, so three columns of
- * 379px was the answer forever rather than at one unlucky size. A row of one reads as a tile that
- * failed to load.
+ * It named a column count — 1 → 2 → 4, never 3 — for the four-tile primer that used to stand
+ * between the browse page's title and its first market. The reasoning is worth keeping because it
+ * is general, and `.fs-primer__body` now uses it verbatim: with FOUR items the only orphan-free
+ * column counts are 1, 2 and 4; `auto-fit`/`auto-fill` produce a MONOTONE sequence as the
+ * container grows — 1, 2, 3, 4 — and three columns fit strictly more easily than four, so there
+ * is no `minmax()` floor that admits four and skips three. Any `repeat(auto-fit, minmax(<n>rem,
+ * 1fr))` with four children therefore has a band of widths that lays out three-then-one, and with
+ * this app's measure capped at 1168px that band was every desktop. A row of one reads as a tile
+ * that failed to load.
  *
- * An intrinsic track listing cannot fix it, and the reason is arithmetic rather than taste. With
- * four items the only orphan-free column counts are 1, 2 and 4; `auto-fit`/`auto-fill` produce a
- * MONOTONE sequence — as the container grows the count goes 1, 2, 3, 4 — and three columns fit
- * strictly more easily than four, so there is no floor value that admits four and skips three.
- * Any `repeat(auto-fit, minmax(<n>rem, 1fr))` here therefore has a band of widths that orphans;
- * the only choice it offers is WHICH widths, and with the measure capped at 1168px the band that
- * matters is every desktop.
- *
- * So the count is named, and the container says when: 1 → 2 → 4, never 3. The two thresholds are
- * derived from the smallest tile each count may produce rather than from any device —
+ * The thresholds come from the smallest tile each count may produce, not from any device:
  *   34rem: two tiles of at least (544 − 16) / 2 = 264px
  *   64rem: four tiles of at least (1024 − 48) / 4 = 244px
  * — which is why they are `rem` against the container and not `px` against a phone.
  *
- * Verified with the real stylesheet in headless Chrome at container widths from 288px to 1168px:
- * rows are [1,1,1,1] below 544px, [2,2] to 1024px and [4] above it, and no width in that sweep
- * produces a row of one.
+ * The primer itself is gone for a different reason: four panels of body copy, ~360 words, stood
+ * between a reader and the questions they came to read. It is a folded `<details>` now, and the
+ * tiles it used are not needed by any other page — `pages/rules.tsx` uses plain `.fs-rules` and
+ * `.fs-rules--refusals`, both of which survive above and below.
  */
-.fs-rules--primer {
-  grid-template-columns: 1fr;
-}
-@container fs-page (min-width: 34rem) {
-  .fs-rules--primer {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@container fs-page (min-width: 64rem) {
-  .fs-rules--primer {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
 
 .fs-rule {
   border: 1px solid var(--cf-line);
