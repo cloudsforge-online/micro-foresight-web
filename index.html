@@ -88,7 +88,13 @@
       property="og:description"
       content="Prediction markets on Hearth. Parimutuel, settled by the contract, with every market's sources and resolution criteria published before you stake."
     />
-    <meta property="og:image" content="/og-1200x630.png" />
+    <!--
+      ── THE MOUNT IS IN THIS BY HAND ────────────────────────────────────────────────────────────
+      vite rewrites `src` and `href` against `base` and does NOT touch `content`, so a
+      root-relative card survives the build and resolves to MICRO-SITE's on the apex. It never
+      404s, which is why the same line went unnoticed on seven surfaces until 2026-08-20.
+    -->
+    <meta property="og:image" content="/foresight/og-1200x630.png" />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>

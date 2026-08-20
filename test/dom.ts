@@ -55,6 +55,7 @@
 import assert from 'node:assert/strict'
 import { Window } from 'happy-dom'
 import type { ReactElement } from 'react'
+import { BASE, publicPath } from '../src/lib/routes.ts'
 
 /* ── the globals a React tree touches ───────────────────────────────────────────────────────── */
 
@@ -341,7 +342,22 @@ function tabbablesIn(doc: Document): Element[] {
 }
 
 export async function mount(element: ReactElement, options: MountOptions = {}): Promise<Screen> {
-  const url = options.url ?? 'https://market.cloudsforge.online/'
+  // ── SCENARIOS NAME ROUTER PATHS; THE ADDRESS BAR TAKES PUBLIC ONES ──────────────────────────
+  //
+  // Every `url` a scenario passes is a route this app owns — `/markets`, `/portfolio`. Since
+  // wave 3i those are not addresses: the public one is `/foresight/markets`, and the router is mounted
+  // with `basename` so it sees `/markets` again once the shell loads. Opening at the unmounted
+  // address makes react-router refuse to render at all, which is a blank page and a pile of
+  // identical failures that say nothing about the scenario.
+  //
+  // Converting HERE keeps every scenario written in the vocabulary it reasons in. The default
+  // front door moves with it, and stops naming `market.` — a leftover from the template.
+  const asked = options.url ?? `https://cloudsforge.online/foresight/`
+  const parsedAsked = new URL(asked)
+  if (!parsedAsked.pathname.startsWith(`${BASE}/`) && parsedAsked.pathname !== BASE) {
+    parsedAsked.pathname = publicPath(parsedAsked.pathname)
+  }
+  const url = parsedAsked.toString()
   const win = new Window({ url })
   const doc = win.document as unknown as Document
 
@@ -420,7 +436,14 @@ export async function mount(element: ReactElement, options: MountOptions = {}): 
     const call: Wire = {
       method,
       url: raw,
-      path: `${parsed.pathname}${parsed.search}`,
+      // `path` IS WHAT micro-foresight SEES. The client calls `<apex>/foresight/markets` and the gateway
+      // routes it with `stripPrefix`, so the request reaching the service is `/markets` — exactly
+      // what it served before. This harness stands in for the gateway, so it strips too: a
+      // scenario's routes and its `wire[].path` assertions are claims about what the SERVICE was
+      // asked. `url` keeps the whole address for the tests that want to prove the mount is on it.
+      path: `${
+        parsed.pathname.startsWith(`${BASE}/`) ? parsed.pathname.slice(BASE.length) : parsed.pathname
+      }${parsed.search}`,
       headers,
       body,
       json,

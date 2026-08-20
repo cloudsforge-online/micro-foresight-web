@@ -48,8 +48,22 @@ describe('foresightBase', () => {
     assert.equal(foresightBase(at('https://foresight.staging.internal:8443')), 'https://foresight.staging.internal:8443')
   })
 
-  it('drops any basePath the registry carries, because a base URL is an origin', () => {
-    assert.equal(foresightBase(at('https://foresight.example.dev/somewhere')), 'https://foresight.example.dev')
+  it('KEEPS the basePath, because a mounted surface serves its API under it', () => {
+    // ── THIS TEST ASSERTED THE OPPOSITE UNTIL WAVE 3i, AND THE OPPOSITE WAS RIGHT THEN ────────
+    //
+    // `foresightBase` called `.origin`, and while this surface had a hostname to itself the
+    // registry value and its origin were the same string, so nothing was lost. Since the mount
+    // the value is `https://<apex>/foresight` and dropping the path composes `<apex>/markets` —
+    // an address micro-site answers with its SPA shell, 200, HTML where JSON was expected.
+    //
+    // Recorded as a REVERSAL rather than quietly rewritten: the old name said "because a base URL
+    // is an origin", which was a rule, and the rule turned out to hold only for unmounted
+    // surfaces. `deploy/docs/apex-consolidation.md` states the general form after wave 3h's
+    // fallout — a consumer that calls `.origin` on a registry URL is one a mount breaks.
+    assert.equal(
+      foresightBase(at('https://foresight.example.dev/somewhere')),
+      'https://foresight.example.dev/somewhere',
+    )
   })
 })
 
@@ -57,8 +71,10 @@ describe('resolveApiBase', () => {
   it('is relative when the page and the service share an origin', () => {
     // Production: nginx serves the bundle and the service serves the routes behind one hostname.
     assert.equal(
-      resolveApiBase('https://foresight.cloudsforge.online', at('https://foresight.cloudsforge.online')),
-      '',
+      resolveApiBase('https://cloudsforge.online', at('https://cloudsforge.online/foresight')),
+      // The MOUNT, not `''`. Still relative — no hostname is baked in — but a bare `/markets`
+      // from a page at `/foresight/portfolio` resolves at the apex root, which is micro-site's.
+      '/foresight',
     )
   })
 
@@ -86,9 +102,13 @@ describe('apiBase, from a real window', () => {
     assert.equal(apiBase(), 'http://localhost:4021')
   })
 
-  it('is relative when the page is served from the service’s own host', () => {
-    installWindow('https://foresight.cloudsforge.online/markets')
-    assert.equal(apiBase(), '')
+  it('is relative — to the MOUNT — when the page and the service share an origin', () => {
+    // The address is the mounted one: on the retired hostname the registry no longer strips
+    // `foresight.`, so the whole name reads as an apex and everything derived from it goes a
+    // level too deep. And the answer is `/foresight` rather than `''`: still relative, still no
+    // hostname baked in, but a bare `/markets` would resolve at the apex root — micro-site's.
+    installWindow('https://cloudsforge.online/foresight/markets')
+    assert.equal(apiBase(), '/foresight')
   })
 
   it('is read per call rather than cached, so one bundle serves every environment', () => {

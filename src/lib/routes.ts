@@ -17,6 +17,23 @@
  * does not have to boot a browser to find out what the routes are.
  */
 
+/**
+ * The folder this bundle is mounted at — wave 3i, the last of the apex consolidation.
+ *
+ * `/foresight`, and it is a router `basename`: react-router STRIPS it before `useLocation()` sees
+ * anything, so every path in the table below is unchanged. The mount appears in four other
+ * places and nowhere else — `vite.config.ts`'s `base`, the Dockerfile's COPY target, `nginx.conf`
+ * and the registry row — and `deploy/scripts/check-base-paths-agree.py` holds all five equal.
+ */
+export const BASE = '/foresight'
+
+/** A router path as a PUBLIC one. No trailing slash: the market is `/foresight`. */
+export function publicPath(path: string): string {
+  const rooted = path.startsWith('/') ? path : `/${path}`
+  return rooted === '/' ? BASE : `${BASE}${rooted}`
+}
+
+
 export interface ForesightRoute {
   /** The top-level path segment, without a leading slash. `''` is the index route. */
   readonly path: string

@@ -16,6 +16,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { BASE } from '../src/lib/routes.ts'
 
 const at = (p: string) => fileURLToPath(new URL(`../${p}`, import.meta.url))
 const HTML = readFileSync(at('index.html'), 'utf8')
@@ -39,7 +40,10 @@ test('index.html links every icon it ships, and ships every icon it links', () =
     assert.ok(HTML.includes(f), `index.html does not link /${f}`)
   }
   for (const m of HTML.matchAll(/href="\/(favicon[^"]*)"/g)) {
-    assert.ok(existsSync(at(`public/${m[1]}`)), `index.html links /${m[1]}, which is not in public/`)
+    // vite DOES rewrite `href` against `base`, so these carry the mount in the built artefact;
+    // `public/` is the unmounted tree either way.
+    const rel = `/${m[1]}`.startsWith(`${BASE}/`) ? `/${m[1]}`.slice(BASE.length + 1) : (m[1] as string)
+    assert.ok(existsSync(at(`public/${rel}`)), `index.html links /${m[1]}, which is not in public/`)
   }
 })
 
@@ -49,7 +53,14 @@ test('a shared link renders as a card, not a bare URL', () => {
   const img = /property="og:image" content="([^"]+)"/.exec(HTML)?.[1]
   assert.ok(img, 'og:image has no content')
   if (img.startsWith('/')) {
-    assert.ok(existsSync(at(`public${img}`)), `og:image points at ${img}, which is not in public/`)
+    // The mount comes off before the disk: index.html names the PUBLIC address because vite does
+    // not rewrite `content` against `base`, while the FILE is at `public/og-1200x630.png` — that
+    // folder is created by the Dockerfile's COPY, not by this tree.
+    const onDisk = img.startsWith(`${BASE}/`) ? img.slice(BASE.length) : img
+    assert.ok(
+      existsSync(at(`public${onDisk}`)),
+      `og:image points at ${img}, not in public/ (looked for public${onDisk})`,
+    )
   }
 })
 

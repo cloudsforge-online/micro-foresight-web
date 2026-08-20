@@ -49,7 +49,21 @@ export function hosts(): CloudsForgeHosts {
  * shape every other app has.
  */
 export function foresightBase(hosts: CloudsForgeHosts): string {
-  return new URL(hosts.foresight).origin
+  // ── THE WHOLE URL, NOT ITS ORIGIN — AND `.origin` WAS THE DEFECT ───────────────────────────
+  //
+  // `.origin` was right while this surface had a hostname to itself: the registry value was
+  // `https://foresight.<apex>` and its origin was the same string. Since wave 3i the value is
+  // `https://<apex>/foresight`, and taking the origin throws the mount away — so every read
+  // composes `<apex>/markets`, which micro-site answers with its SPA shell: 200, an HTML body
+  // where JSON was expected.
+  //
+  // This is precisely the pattern `deploy/docs/apex-consolidation.md` records after wave 3h's
+  // cross-repo fallout: "the consumers that call `.origin` on a registry URL are exactly the
+  // ones a mount breaks — silently, with a 200". That sweep looked at what OTHER repositories
+  // compose and missed the surface's own, which is the easiest one to assume is fine.
+  //
+  // The trailing slash is stripped so that appending `/markets` cannot produce `//markets`.
+  return hosts.foresight.replace(/\/+$/, '')
 }
 
 /**
@@ -64,12 +78,42 @@ export function foresightBase(hosts: CloudsForgeHosts): string {
  * build-time constant and this repository has none: an image built for production and opened on
  * localhost would then point at a host that is not there.
  */
+/** The same four names `cloudsforgeHosts()` treats as development. */
+function isLocal(hostname: string): boolean {
+  return (
+    hostname === '' ||
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.endsWith('.local')
+  )
+}
+
 export function resolveApiBase(pageOrigin: string, hosts: CloudsForgeHosts): string {
   const own = foresightBase(hosts)
   // With no page origin there is nothing for a relative URL to resolve against, so the absolute
   // form is the only correct answer.
   if (!pageOrigin) return own
-  return new URL(own).origin === pageOrigin ? '' : own
+  const parsed = new URL(own)
+  if (parsed.origin !== pageOrigin) {
+    // ── A DEV STACK HAS NO GATEWAY TO STRIP THE MOUNT ─────────────────────────────────────────
+    //
+    // Cross-origin is the production answer when the reader is viewing the sibling estate, and
+    // under `pnpm dev` it is how this bundle reaches micro-foresight: a different port on
+    // localhost. But the registry composes a dev URL as `http://localhost:4021` PLUS the
+    // basePath, and the service binds that port directly — nothing in front of it takes
+    // `/foresight` back off, so every read would 404.
+    return isLocal(parsed.hostname) ? parsed.origin : own
+  }
+  // ── SAME ORIGIN, AND THE ANSWER IS THE MOUNT RATHER THAN THE EMPTY STRING ───────────────────
+  //
+  // `''` meant "issue a relative request, we are already here", which was complete while this
+  // surface had a hostname to itself. Since wave 3i a relative `/markets` from a page at
+  // `/foresight/portfolio` resolves at the APEX ROOT — micro-site's — which answers its SPA
+  // shell with a 200 and an HTML body where JSON was expected. That is decision 4's failure, and
+  // it is sharper here than anywhere: these are UNVERSIONED root paths, so `/markets` and `/me`
+  // at the apex are names the marketing site could plausibly want.
+  const mount = parsed.pathname.replace(/\/+$/, '')
+  return mount === '' ? '' : mount
 }
 
 /**

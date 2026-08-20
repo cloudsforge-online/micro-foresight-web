@@ -22,7 +22,10 @@ import { apiBase } from '../src/lib/hosts.ts'
 import { setViewedNetwork, viewedNetwork } from '../src/lib/viewed.ts'
 
 /** A real address on this surface, on the mainnet estate. */
-const PAGE = 'https://foresight.cloudsforge.online/'
+// The page is `<apex>/foresight` since wave 3i. On the retired hostname the registry no longer
+// strips `foresight.` — it is not a known subdomain any more — so the whole name reads as an apex
+// and every derived address goes one level too deep.
+const PAGE = 'https://cloudsforge.online/foresight/'
 /** A development address: no sibling estate exists, so nothing here can point anywhere. */
 const DEV = 'http://localhost:5173/'
 
@@ -42,7 +45,7 @@ describe('the in-place network view', () => {
   it('starts on the network the hostname names, and says so', () => {
     at(PAGE, () => {
       assert.equal(viewedNetwork(), 'mainnet')
-      assert.equal(apiBase(), '')
+      assert.equal(apiBase(), '/foresight')
     })
   })
 
@@ -53,7 +56,14 @@ describe('the in-place network view', () => {
       // `-testnet` on the API host, not a different path and not a different product. The web
       // hostname is retired and 302s to its mainnet sibling; `/v1` on it is exempt and still
       // answers from the testnet service, which is what makes this readable at all.
-      assert.equal(apiBase(), 'https://foresight-testnet.cloudsforge.online')
+      // ── THE TESTNET APEX PLUS THE SAME MOUNT ──────────────────────────────────────────────
+      //
+      // This was `https://foresight-testnet.cloudsforge.online` — a per-surface testnet hostname.
+      // Since wave 3i there is no such name: both estates serve this market from the SAME path,
+      // and switching network changes only which apex is in front of it. Which estate
+      // (`viewed.ts`) and where under it (`routes.ts` BASE) stay separate questions; conflating
+      // them is what broke agora's switcher in wave 3c.
+      assert.equal(apiBase(), 'https://testnet.cloudsforge.online/foresight')
     })
   })
 
@@ -62,7 +72,7 @@ describe('the in-place network view', () => {
       setViewedNetwork('testnet')
       setViewedNetwork('mainnet')
       assert.equal(viewedNetwork(), 'mainnet')
-      assert.equal(apiBase(), '')
+      assert.equal(apiBase(), '/foresight')
     })
   })
 
