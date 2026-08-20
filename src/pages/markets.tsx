@@ -48,7 +48,7 @@ import { listMarkets, type MarketStatus, type MarketView } from '../lib/foresigh
 import { instant, untilLabel, utcDateTime } from '../lib/format.ts'
 import { phaseLabel, phaseOf, type MarketPhase } from '../lib/market.ts'
 import { useResource } from '../lib/resource.ts'
-import { marketPath } from '../lib/routes.ts'
+import { marketPath, publicPath } from '../lib/routes.ts'
 
 /**
  * The filters offered, and no others.
@@ -156,7 +156,14 @@ export function MarketsPage() {
           diagram the rows use: a stem rising from a baseline to a node, and two branches leaving
           it — one taken, one not.
         */}
-        <img className="fs-board__mark" src="/mark-256.png" alt="" aria-hidden="true" width="52" height="52" />
+        <img
+          className="fs-board__mark"
+          src={publicPath('/mark-256.png')}
+          alt=""
+          aria-hidden="true"
+          width="52"
+          height="52"
+        />
         <div className="fs-board__headtext">
           <h1 className="fs-board__title">Back your read on what happens next</h1>
           <p className="fs-board__lede">
