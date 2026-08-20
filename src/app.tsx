@@ -24,10 +24,11 @@ import { MarketsPage } from './pages/markets.tsx'
 import { NotFoundPage } from './pages/not-found.tsx'
 import { PortfolioPage } from './pages/portfolio.tsx'
 import { RulesPage } from './pages/rules.tsx'
+import { BASE } from './lib/routes.ts'
 
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={BASE}>
       <ScrollToTop />
       <AuthProvider>
         <Routes>

@@ -1029,7 +1029,7 @@ describe('BJ-FORESIGHT-404 — an unowned address answers 404', () => {
     .join('\n')
 
   it('BJ-FORESIGHT-404 T2: nginx serves the shell through error_page 404, never try_files', () => {
-    assert.match(directives, /error_page\s+404\s+\/index\.html/)
+    assert.match(directives, /error_page\s+404\s+\/foresight\/index\.html/)
     assert.doesNotMatch(directives, /try_files\s+\$uri\s+(\$uri\/\s+)?\/index\.html/)
   })
 

@@ -27,6 +27,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
+import { BASE } from '../src/lib/routes.ts'
 
 const nginx = readFileSync(new URL('../nginx.conf', import.meta.url), 'utf8')
 
@@ -55,25 +56,41 @@ function body(matcher: string): string {
 }
 
 /** Every block that answers with the app shell rather than with a file or a literal. */
-const SHELL_BLOCKS = ['= /', '~ ^/markets(/|$)', '~ ^/(portfolio|rules)(/|$)'] as const
+// ── EVERY MATCHER CARRIES THE MOUNT SINCE WAVE 3i, AND THE FRONT DOOR IS TWO ─────────────────
+//
+// `= /foresight` and `= /foresight/` are different paths to nginx's `=` matcher, a link in the wild will use
+// either, and a block that answers one and 404s the other is broken for half its inbound
+// traffic. `= /` is gone entirely: on the apex that address belongs to micro-site.
+const SHELL_BLOCKS = [
+  '= /foresight',
+  '= /foresight/',
+  '~ ^/foresight/markets(/|$)',
+  '~ ^/foresight/(portfolio|rules)(/|$)',
+] as const
 
 /** The one the gateway splits on `Accept`, and the only one entitled to say so. */
-const NEGOTIATED = '~ ^/markets(/|$)'
+const NEGOTIATED = '~ ^/foresight/markets(/|$)'
 
 describe('the app shell', () => {
   it('is served by the blocks this file thinks it is', () => {
     // Guards every assertion below against passing because a block was renamed and `body()` was
     // reading something that no longer serves the shell.
     for (const matcher of SHELL_BLOCKS) {
-      assert.match(body(matcher), /try_files\s+\/index\.html\s+=404;/, `${matcher} does not serve the shell`)
+      // The shell is named by its FULL path since wave 3i: nginx resolves a `try_files` argument
+      // against `root`, which is `html`, and the bundle sits one level down at the mount.
+      assert.match(
+        body(matcher),
+        new RegExp(`try_files\\s+${BASE}\\/index\\.html\\s+=404;`),
+        `${matcher} does not serve the shell`,
+      )
     }
   })
 
   it('is never stored, at any address it is served from', () => {
     // The shell names the current asset hashes. A stored copy pins a browser to a deploy that no
-    // longer exists — which is why `location = /index.html` has always been `no-store`, and the
+    // longer exists — which is why `location = /foresight/index.html` has always been `no-store`, and the
     // defect was that the addresses people actually visit reach the same file by another route.
-    for (const matcher of [...SHELL_BLOCKS, '= /index.html']) {
+    for (const matcher of [...SHELL_BLOCKS, '= /foresight/index.html']) {
       assert.match(
         body(matcher),
         /add_header\s+Cache-Control\s+"no-store"\s+always;/,
@@ -86,7 +103,7 @@ describe('the app shell', () => {
     // add_header does not accumulate: a location declaring ANY add_header inherits NONE from the
     // level above. This file records three earlier instances of that trap; adding Cache-Control to
     // the shell blocks would have been the fourth, silently dropping nosniff from every page.
-    for (const matcher of [...SHELL_BLOCKS, '= /index.html']) {
+    for (const matcher of [...SHELL_BLOCKS, '= /foresight/index.html']) {
       const block = body(matcher)
       for (const header of [
         /add_header\s+X-Content-Type-Options\s+"nosniff"\s+always;/,

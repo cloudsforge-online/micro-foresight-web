@@ -169,7 +169,7 @@ jobs:
           set -uo pipefail
           directives=$(grep -v '^[[:space:]]*#' nginx.conf)
           if printf '%s\n' "$directives" | grep -nE 'try_files[[:space:]]+\$uri[[:space:]]+(\$uri/[[:space:]]+)?/index\.html'; then
-            echo "::error::unknown paths must 404; serve the shell through error_page 404 /index.html"
+            echo "::error::unknown paths must 404; serve the shell through error_page 404 /foresight/index.html"
             exit 1
           fi
           # `grep -q PATTERN <<<"$var"` rather than `printf '%s\n' "$var" | grep -q PATTERN`.
@@ -177,7 +177,7 @@ jobs:
           # and `pipefail` promoted that SIGPIPE (exit 141) to a failed step — a gate that failed for
           # no reason and passed on re-run, which teaches re-running instead of reading. The here-string
           # is byte-identical input with the same exit status and no pipe, so the rule is unchanged.
-          grep -q 'error_page 404 /index.html' <<<"$directives"
+          grep -q 'error_page 404 /foresight/index.html' <<<"$directives"
           echo "ok: unknown paths answer 404"
 
       - name: The auth callback is redeemed before the app renders
@@ -262,8 +262,18 @@ jobs:
         run: |
           set -euo pipefail
           docker run -d --name ci-foresight-web -p 127.0.0.1:55480:8080 foresight-web:ci
+          # ── TWO ADDRESSES THAT MUST BE EMPTY ──────────────────────────────────────────────
+          # This image is built for `/foresight` and copied there by the Dockerfile. `/` answering 200
+          # would mean it went to the document root instead — on the apex, micro-site's home page.
+          # `/robots.txt` for the sharper version: a crawler reads it at the ORIGIN ROOT and nowhere
+          # else, so a folder has none and micro-site owns that address.
+          sleep 2
+          root=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/ || true)
+          [ "$root" = 404 ] || { echo "::error::/ answered $root; this image belongs at /foresight"; exit 1; }
+          robots=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/robots.txt || true)
+          [ "$robots" = 404 ] || { echo "::error::/robots.txt answered $robots; a folder has none"; exit 1; }
           for attempt in $(seq 1 20); do
-            code=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/ || true)
+            code=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/foresight/ || true)
             [ "$code" = "200" ] && break
             sleep 1
           done
@@ -271,7 +281,7 @@ jobs:
 
           # A route this app OWNS must survive a hard refresh. A market page is the address people
           # paste at each other, so it is the one worth proving.
-          deep=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/markets/11111111-2222-3333-4444-555555555555 || true)
+          deep=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/foresight/markets/11111111-2222-3333-4444-555555555555 || true)
           [ "$deep" = "200" ] || { echo "::error::a market deep link returned $deep — an owned route must be served the shell"; exit 1; }
 
           # ── AND IT MUST DESCRIBE ITSELF HONESTLY, OR THE 200 ABOVE IS WORTHLESS (micro-org#234)
@@ -285,7 +295,7 @@ jobs:
           # test/cache-headers.test.ts asserts the same three facts by reading nginx.conf. This
           # asserts them over HTTP, from the built image, which is the version that still fails if
           # nginx stops honouring the file.
-          headers=$(curl -s -m 5 -D - -o /dev/null http://127.0.0.1:55480/markets/11111111-2222-3333-4444-555555555555 || true)
+          headers=$(curl -s -m 5 -D - -o /dev/null http://127.0.0.1:55480/foresight/markets/11111111-2222-3333-4444-555555555555 || true)
           grep -qi '^vary: *Accept' <<<"$headers" \
             || { echo "::error::the market shell does not send Vary: Accept; a cache will serve it to a JSON fetch"; printf '%s\n' "$headers"; exit 1; }
           grep -qi '^cache-control: *no-store' <<<"$headers" \
@@ -295,20 +305,20 @@ jobs:
 
           # The shell at `/` is storable-by-heuristic for the same reason and must not be, but it
           # is NOT negotiated, so it must NOT claim to vary either.
-          root=$(curl -s -m 5 -D - -o /dev/null http://127.0.0.1:55480/ || true)
+          root=$(curl -s -m 5 -D - -o /dev/null http://127.0.0.1:55480/foresight/ || true)
           grep -qi '^cache-control: *no-store' <<<"$root" \
             || { echo "::error::the shell at / is storable"; printf '%s\n' "$root"; exit 1; }
           if grep -qi '^vary:' <<<"$root"; then
             echo "::error::/ claims to vary, and the gateway negotiates nothing at that address"; printf '%s\n' "$root"; exit 1
           fi
 
-          portfolio=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/portfolio/0x00112233445566778899aabbccddeeff00112233 || true)
+          portfolio=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/foresight/portfolio/0x00112233445566778899aabbccddeeff00112233 || true)
           [ "$portfolio" = "200" ] || { echo "::error::a positions deep link returned $portfolio"; exit 1; }
 
           # A route it does NOT own must answer 404 while still serving the shell, so the reader
           # gets a real page and the status line tells the truth. This is the assertion the org's
           # reusable image job cannot make, because it requires a 200 for any deep link.
-          unknown=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/nope/not/a/route || true)
+          unknown=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/foresight/nope/not/a/route || true)
           [ "$unknown" = "404" ] || { echo "::error::an unknown address returned $unknown; it must be 404"; exit 1; }
           # NOT A PIPE INTO `grep -q` — the hazard this file already avoids with here-strings
           # elsewhere, on the one check that still had it. grep -q exits at its first match and
@@ -321,14 +331,14 @@ jobs:
           # micro-hub-web#16 then failed here twice in a row with the build green in the same run.
           # Measured 2026-08-10 — micro-org#347. Capturing first leaves no pipe to close early, and
           # `case` is an exact glob rather than a regex.
-          shell_404=$(curl -s -m 5 http://127.0.0.1:55480/nope/not/a/route || true)
+          shell_404=$(curl -s -m 5 http://127.0.0.1:55480/foresight/nope/not/a/route || true)
           case "$shell_404" in
             *'<div id="root">'*) ;;
             *) echo "::error::the 404 did not serve the app shell"; exit 1 ;;
           esac
 
           # A missing asset must 404 on its own terms rather than being answered with HTML.
-          asset=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/assets/does-not-exist.js || true)
+          asset=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:55480/foresight/assets/does-not-exist.js || true)
           [ "$asset" = "404" ] || { echo "::error::a missing asset returned $asset"; exit 1; }
 
           # The image must carry no environment file.

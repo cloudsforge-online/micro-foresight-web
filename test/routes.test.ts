@@ -16,7 +16,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
-import { NAV, NON_INDEX_PATHS, ROUTES, marketPath, portfolioPath } from '../src/lib/routes.ts'
+import { BASE, NAV, NON_INDEX_PATHS, ROUTES, marketPath, portfolioPath } from '../src/lib/routes.ts'
 
 const read = (file: string): string => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
 
@@ -44,7 +44,16 @@ const directives = nginx
  * block would then have concluded that this app no longer serves /portfolio.
  */
 function nginxPaths(): string[] {
-  const blocks = [...directives.matchAll(/location\s+~\s+\^\/\(?([^)$]+?)\)?\((?:\/\|\$)\)/g)]
+  // Both blocks are mounted since wave 3i — `^<BASE>/markets(/|$)` and
+  // `^<BASE>/(portfolio|rules)(/|$)`. The mount goes into the PATTERN and comes back off the
+  // RESULT, so every caller below keeps comparing against the ROUTER paths `src/lib/routes.ts`
+  // declares, which is the source this file exists to hold nginx against.
+  const mount = BASE.replace(/\//g, '\\/')
+  const blocks = [
+    ...directives.matchAll(
+      new RegExp(`location\\s+~\\s+\\^${mount}\\/\\(?([^)$]+?)\\)?\\((?:\\/\\|\\$)\\)`, 'g'),
+    ),
+  ]
   assert.ok(blocks.length > 0, 'nginx.conf has no enumerated route block')
   return blocks.flatMap((match) => (match[1] ?? '').split('|').map((p) => p.trim()))
 }
@@ -152,7 +161,7 @@ describe('nginx', () => {
   })
 
   it('serves the index explicitly', () => {
-    assert.match(nginx, /location\s+=\s+\/\s*\{/)
+    assert.match(nginx, /location\s+=\s+\/foresight\s*\{/)
   })
 
   it('never falls back to index.html with a 200 for an unknown path', () => {
@@ -161,7 +170,7 @@ describe('nginx', () => {
       false,
       'the catch-all falls back to the shell with a 200',
     )
-    assert.ok(directives.includes('error_page 404 /index.html'))
+    assert.ok(directives.includes(`error_page 404 ${BASE}/index.html`))
     // …and the comment that explains the rule is still there, since it is the only reason anybody
     // reading this file later will understand why the routes are enumerated by hand.
     assert.match(nginx, /404, not 200/)
@@ -169,15 +178,19 @@ describe('nginx', () => {
 
   it('does not let a missing asset fall through to the shell', () => {
     // A JavaScript request answered with HTML fails with a syntax error naming the wrong file.
-    assert.match(directives, /location\s+\/assets\/\s*\{[\s\S]*?try_files\s+\$uri\s+=404;/)
+    assert.match(directives, /location\s+\/foresight\/assets\/\s*\{[\s\S]*?try_files\s+\$uri\s+=404;/)
   })
 
   it('serves the deep link CI probes, and 404s one it does not own', () => {
     // The workflow asserts a REAL route returns 200 and an unknown one 404s. `deep-link-path` in
     // ci.yml must therefore be an address this block matches.
-    const block = new RegExp(`^/(${nginxPaths().join('|')})(/|$)`)
-    assert.ok(block.test('/markets/11111111-2222-3333-4444-555555555555'))
-    assert.ok(block.test('/portfolio/0x00112233445566778899aabbccddeeff00112233'))
+    // `nginxPaths()` returns ROUTER paths, so the mount goes back on here — this regex is
+    // matched against the PUBLIC address a CI probe requests.
+    const block = new RegExp(`^${BASE}/(${nginxPaths().join('|')})(/|$)`)
+    // The addresses a CI probe requests are PUBLIC ones — the container serves the mount and
+    // nothing else. The regex above carries `BASE`, so these must too.
+    assert.ok(block.test(`${BASE}/markets/11111111-2222-3333-4444-555555555555`))
+    assert.ok(block.test(`${BASE}/portfolio/0x00112233445566778899aabbccddeeff00112233`))
     assert.equal(block.test('/nope/not/a/route'), false)
   })
 

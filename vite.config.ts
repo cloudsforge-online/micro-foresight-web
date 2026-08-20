@@ -12,6 +12,11 @@ import { defineConfig } from 'vite'
  * build if `import.meta.env.VITE_` ever reappears.
  */
 export default defineConfig({
+  // The mount, WITH the trailing slash — it rewrites every `src` and `href` in index.html and
+  // every asset URL in the bundle. Without it the built shell asks for `/assets/…` at the APEX
+  // ROOT, which is micro-site's, and the application never loads. It does NOT rewrite `content`,
+  // which is why the og:image carries the mount by hand.
+  base: '/foresight/',
   plugins: [react()],
   resolve: {
     // @cloudsforge/ui is a linked package, so its own node_modules holds a second copy of React.
