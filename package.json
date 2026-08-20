@@ -1,6 +1,6 @@
 {
   "name": "@cloudsforge/foresight-web",
-  "version": "2026.8.90",
+  "version": "2026.8.91",
   "packageManager": "pnpm@11.9.0",
   "private": true,
   "description": "Forge Foresight — the public prediction market. Browse markets, read why each one exists, stake from your own wallet, and claim from the contract.",
